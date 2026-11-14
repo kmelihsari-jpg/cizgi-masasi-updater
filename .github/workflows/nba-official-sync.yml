@@ -30,8 +30,8 @@ jobs:
       - name: Kutuphaneleri kur
         run: pip install requests pdfplumber beautifulsoup4
 
-      - name: NBA PDF testini calistir
+      - name: NBA resmi raporunu D1'e aktar
         env:
           NBA_IMPORT_TOKEN: ${{ secrets.NBA_IMPORT_TOKEN }}
           WORKER_URL: https://cizgi-masasi-api.k-melihsari.workers.dev
-        run: python scripts/nba_official.py --dry-run
+        run: python scripts/nba_official.py
