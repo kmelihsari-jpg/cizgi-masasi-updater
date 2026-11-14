@@ -1,0 +1,105 @@
+name: Cizgi Masasi Veri Ayristirma Testi
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parse-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: DVP ve TeamRankings gercek tablo kontrolu
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import html
+          import re
+          import json
+          import urllib.request
+          from collections import Counter
+
+          HEADERS = {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8',
+          }
+
+          def get(url, referer=None):
+              headers = dict(HEADERS)
+              if referer:
+                  headers['Referer'] = referer
+              request = urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(request, timeout=25) as response:
+                  if response.status != 200:
+                      raise RuntimeError(f'HTTP {response.status}')
+                  return response.read(3_000_000).decode('utf-8', 'replace')
+
+          results = []
+          errors = []
+
+          # Eski guncelle.ps1 ile ayni HTML regex yapisi ve 150 satir kontrolu.
+          print('--- HASHTAG DVP ---', flush=True)
+          try:
+              page = get('https://hashtagbasketball.com/nba-defense-vs-position',
+                         'https://hashtagbasketball.com/')
+              rows = re.findall(r'<tr>\s*<td>(PG|SG|SF|PF|C)</td>(.*?)</tr>',
+                                page, re.S)
+              pattern = r'ContentPlaceHolder1_GridView1_Label\d+_\d+">([^<]*)</span>[^<]*<span[^>]*>(\d+)</span>'
+              team_map = {'NY':'NYK','NO':'NOP','GS':'GSW','SA':'SAS','PHO':'PHX'}
+              teampos = set()
+              invalid = []
+              for pos, raw in rows:
+                  cells = re.findall(pattern, raw)
+                  if len(cells) != 10:
+                      invalid.append((pos, len(cells)))
+                      continue
+                  team = html.unescape(cells[0][0]).strip()
+                  team = team_map.get(team, team)
+                  for value, rank in cells[1:]:
+                      float(value.strip().replace(',', ''))
+                      int(rank)
+                  teampos.add((team, pos))
+              print(f'HTML satiri: {len(rows)} | Gecerli takim/pozisyon: {len(teampos)} | Hatalar: {len(invalid)}', flush=True)
+              if len(rows) != 150 or len(teampos) != 150 or invalid:
+                  raise ValueError('DVP 150 satir dogrulamasi gecmedi; JSON yazilmamali')
+              teams = {team for team, pos in teampos}
+              if len(teams) != 30:
+                  raise ValueError(f'DVP takim sayisi 30 degil: {len(teams)}')
+              results.append('DVP: BASARILI - 30 takim x 5 pozisyon, 9 istatistik + siralar')
+          except Exception as e:
+              errors.append('DVP: ' + str(e))
+              results.append('DVP: BASARISIZ - ' + str(e))
+
+          # 147 sayfa yerine yalnizca 2 ornek slug: HTML tablo alanlari dogru mu?
+          for slug in ['points-per-game', 'opponent-points-per-game']:
+              print(f'--- TEAMRANKINGS: {slug} ---', flush=True)
+              try:
+                  page = get('https://www.teamrankings.com/nba/stat/' + slug,
+                             'https://www.teamrankings.com/nba/team-stats/')
+                  body_match = re.search(r'<tbody>(.*?)</tbody>', page, re.S | re.I)
+                  if not body_match:
+                      raise ValueError('tbody bulunamadi')
+                  trs = re.findall(r'<tr[^>]*>(.*?)</tr>', body_match.group(1), re.S | re.I)
+                  parsed = 0
+                  for tr in trs:
+                      cells = re.findall(r'<td[^>]*>(.*?)</td>', tr, re.S | re.I)
+                      cells = [html.unescape(re.sub('<[^>]+>', '', cell)).strip() for cell in cells]
+                      if len(cells) >= 8 and cells[1]:
+                          parsed += 1
+                  print(f'Tablo satiri: {len(trs)} | 8+ sutunlu satir: {parsed}', flush=True)
+                  if parsed != 30:
+                      raise ValueError(f'Beklenen 30 takim yerine {parsed} tablo satiri')
+                  results.append(f'{slug}: BASARILI - 30 takim')
+              except Exception as e:
+                  errors.append(f'{slug}: {e}')
+                  results.append(f'{slug}: BASARISIZ - {e}')
+
+          print('\n=== SONUC ===', flush=True)
+          for result in results:
+              print(result, flush=True)
+          if errors:
+              raise SystemExit('Tablo ayristirma testi tam gecmedi; mevcut JSON dosyalari korunmali.')
+          print('TUM TESTLER BASARILI. Veri dosyasi degistirilmedi.', flush=True)
+          PY
