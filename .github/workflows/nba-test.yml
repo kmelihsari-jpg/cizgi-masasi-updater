@@ -1,0 +1,86 @@
+
+name: NBA Sakatlik PDF Testi
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-reader:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Python kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Kutuphaneleri yukle
+        run: pip install requests beautifulsoup4 pdfplumber
+
+      - name: NBA PDF dosyasini oku
+        shell: bash
+        run: |
+          python - <<'PY'
+          import io
+          import re
+          import requests
+          import pdfplumber
+          from bs4 import BeautifulSoup
+          from urllib.parse import urljoin
+
+          page_url = (
+              "https://official.nba.com/"
+              "nba-injury-report-2026-27-season/"
+          )
+
+          response = requests.get(
+              page_url, timeout=30
+          )
+          response.raise_for_status()
+
+          soup = BeautifulSoup(
+              response.text, "html.parser"
+          )
+
+          links = []
+          for a in soup.find_all("a", href=True):
+              url = urljoin(page_url, a["href"])
+              if re.search(
+                  r"Injury-Report_"
+                  r"\d{4}-\d{2}-\d{2}_"
+                  r"\d{2}_\d{2}(?:AM|PM)\.pdf",
+                  url, re.I
+              ):
+                  links.append(url)
+
+          if not links:
+              raise RuntimeError(
+                  "NBA PDF baglantisi bulunamadi"
+              )
+
+          pdf_url = sorted(set(links))[-1]
+          print("Bulunan rapor:", pdf_url)
+
+          pdf_response = requests.get(
+              pdf_url, timeout=30
+          )
+          pdf_response.raise_for_status()
+
+          if not pdf_response.content.startswith(b"%PDF-"):
+              raise RuntimeError(
+                  "Gelen dosya PDF degil"
+              )
+
+          with pdfplumber.open(
+              io.BytesIO(pdf_response.content)
+          ) as pdf:
+              print("Sayfa sayisi:", len(pdf.pages))
+
+              for page in pdf.pages[:2]:
+                  text = page.extract_text() or ""
+                  print("---- PDF ICERIGI ----")
+                  print(text[:4000])
+
+          print("NBA PDF okuma testi tamamlandi")
+          PY
