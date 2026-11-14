@@ -1,0 +1,46 @@
+name: Cizgi Masasi - Yerel Tracking Verisini Birlestir
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'seed/tracking-local.json'
+permissions:
+  contents: write
+concurrency:
+  group: cizgi-masasi-veri-yazma
+  cancel-in-progress: false
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Kaynak ve dosya varligini kontrol et
+        run: |
+          test -f seed/data.json
+          test -f seed/tracking-local.json
+          test -f scripts/merge_tracking.py
+      - name: Once test et, sonra birlestir
+        run: |
+          python scripts/merge_tracking.py --dry-run
+          python scripts/merge_tracking.py
+          python -m json.tool seed/data.json > /dev/null
+      - name: Dogrulanmis takip verilerini kaydet
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add seed/data.json
+          if git diff --cached --quiet; then
+            echo 'Yeni tracking verisi yok; dosya degismedi.'
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'data: merge validated NBA tracking'
+            git push origin HEAD:main
+            echo 'BASARILI: tracking verileri seed/data.json icine birlestirildi.'
+          fi
