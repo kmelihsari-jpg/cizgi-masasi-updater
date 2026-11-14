@@ -1,17 +1,16 @@
 
+import argparse
 import io
 import json
 import os
 import re
+from collections import Counter
 from datetime import datetime
 from urllib.parse import urljoin, urlparse
 
 import pdfplumber
 import requests
 from bs4 import BeautifulSoup
-
-
-# CIZGI MASASI - NBA OFFICIAL INJURY READER
 
 PAGE = (
     "https://official.nba.com/"
@@ -24,77 +23,39 @@ PDF_RX = re.compile(
     re.I
 )
 
-STATUSES = (
-    "Questionable|Available|Doubtful|Probable|Out"
-)
-
-PLAYER_RX = re.compile(
-    r"(?P<last>[A-Za-zÀ-ÿ.'’-]+),"
-    r"(?P<first>[A-Za-zÀ-ÿ.'’-]+)"
-    r"\s+(?P<status>" + STATUSES + r")\b",
-    re.I
-)
-
-HEADER_RX = re.compile(
-    r"^Injury Report:|^GameDate\s|^Page\d+of\d+",
-    re.I
-)
+STATUSES = {
+    "OUT", "QUESTIONABLE", "DOUBTFUL",
+    "PROBABLE", "AVAILABLE"
+}
 
 TEAMS = [
-    "AtlantaHawks",
-    "BostonCeltics",
-    "BrooklynNets",
-    "CharlotteHornets",
-    "ChicagoBulls",
-    "ClevelandCavaliers",
-    "DallasMavericks",
-    "DenverNuggets",
-    "DetroitPistons",
-    "GoldenStateWarriors",
-    "HoustonRockets",
-    "IndianaPacers",
-    "LAClippers",
-    "LosAngelesLakers",
-    "MemphisGrizzlies",
-    "MiamiHeat",
-    "MilwaukeeBucks",
-    "MinnesotaTimberwolves",
-    "NewOrleansPelicans",
-    "NewYorkKnicks",
-    "OklahomaCityThunder",
-    "OrlandoMagic",
-    "Philadelphia76ers",
-    "PhoenixSuns",
-    "PortlandTrailBlazers",
-    "SacramentoKings",
-    "SanAntonioSpurs",
-    "TorontoRaptors",
-    "UtahJazz",
-    "WashingtonWizards"
+    "AtlantaHawks", "BostonCeltics",
+    "BrooklynNets", "CharlotteHornets",
+    "ChicagoBulls", "ClevelandCavaliers",
+    "DallasMavericks", "DenverNuggets",
+    "DetroitPistons", "GoldenStateWarriors",
+    "HoustonRockets", "IndianaPacers",
+    "LAClippers", "LosAngelesLakers",
+    "MemphisGrizzlies", "MiamiHeat",
+    "MilwaukeeBucks", "MinnesotaTimberwolves",
+    "NewOrleansPelicans", "NewYorkKnicks",
+    "OklahomaCityThunder", "OrlandoMagic",
+    "Philadelphia76ers", "PhoenixSuns",
+    "PortlandTrailBlazers", "SacramentoKings",
+    "SanAntonioSpurs", "TorontoRaptors",
+    "UtahJazz", "WashingtonWizards"
 ]
 
-TEAM_RX = re.compile(
-    "|".join(
-        sorted(
-            map(re.escape, TEAMS),
-            key=len,
-            reverse=True
-        )
-    )
-)
+TEAM_MAP = {t.upper(): t for t in TEAMS}
 
 SESSION = requests.Session()
-
 SESSION.headers.update({
     "User-Agent": "Mozilla/5.0",
     "Accept": "text/html,application/pdf"
 })
 
 
-def find_latest():
-    print("NBA resmi rapor sayfasi kontrol ediliyor...",
-          flush=True)
-
+def latest_report():
     response = SESSION.get(PAGE, timeout=30)
 
     print(
@@ -110,11 +71,10 @@ def find_latest():
         "html.parser"
     )
 
-    reports = []
+    found = []
 
-    for anchor in soup.find_all("a", href=True):
-        url = urljoin(PAGE, anchor["href"])
-
+    for link in soup.find_all("a", href=True):
+        url = urljoin(PAGE, link["href"])
         parsed = urlparse(url)
         match = PDF_RX.search(parsed.path)
 
@@ -124,134 +84,196 @@ def find_latest():
         if parsed.hostname != "ak-static.cms.nba.com":
             continue
 
-        date, hour, minute, ampm = match.groups()
+        day, hour, minute, ampm = match.groups()
 
-        try:
-            dt = datetime.strptime(
-                f"{date} {hour}:{minute} {ampm.upper()}",
-                "%Y-%m-%d %I:%M %p"
-            )
-        except ValueError:
-            continue
+        stamp = datetime.strptime(
+            f"{day} {hour}:{minute} {ampm}",
+            "%Y-%m-%d %I:%M %p"
+        )
 
-        reports.append((dt, url))
+        found.append((stamp, url))
+
+    if not found:
+        raise RuntimeError(
+            "NBA sayfasinda PDF bulunamadi"
+        )
 
     print(
-        "Bulunan PDF sayisi:",
-        len(reports),
+        "Bulunan PDF:",
+        len(found),
         flush=True
     )
 
-    if not reports:
-        raise RuntimeError(
-            "NBA sayfasinda PDF linki bulunamadi"
+    return max(found, key=lambda x: x[0])
+
+
+def lines_by_position(words):
+    lines = []
+
+    ordered = sorted(
+        words,
+        key=lambda w: (w["top"], w["x0"])
+    )
+
+    for word in ordered:
+        row = next(
+            (
+                r for r in reversed(lines[-5:])
+                if abs(r[0] - word["top"]) <= 3
+            ),
+            None
         )
 
-    dt, url = max(
-        reports,
-        key=lambda item: item[0]
+        if row is None:
+            row = [word["top"], []]
+            lines.append(row)
+
+        row[1].append(word)
+
+    return [
+        sorted(row[1], key=lambda w: w["x0"])
+        for row in sorted(lines, key=lambda r: r[0])
+    ]
+
+
+def normalize_name(raw):
+    last, first = raw.rsplit(",", 1)
+
+    first = first.strip()
+    last = last.strip()
+
+    if not first or not last:
+        raise ValueError(
+            "Gecersiz oyuncu adi: " + raw
+        )
+
+    return (
+        f"{first} {last}"
+        .replace(", Jr.", " Jr.")
+        .replace(", Sr.", " Sr.")
     )
 
-    return dt, url
 
-
-def normalize_player(last, first):
-    last = re.sub(
-        r"(Jr\.|Jr|Sr\.|Sr|II|III|IV)$",
-        r" \1",
-        last
-    )
-
-    return f"{first} {last}".replace(
-        "  ", " "
-    ).strip()
-
-
-def parse_pdf(raw):
+def parse_pdf(content):
     records = []
-    unsubmitted = []
+    missing = set()
 
-    team = None
+    current_team = None
     current = None
 
-    with pdfplumber.open(io.BytesIO(raw)) as pdf:
+    with pdfplumber.open(
+        io.BytesIO(content)
+    ) as pdf:
+
         print(
-            "PDF sayfa sayisi:",
+            "PDF sayfalari:",
             len(pdf.pages),
             flush=True
         )
 
         for page in pdf.pages:
-            text = page.extract_text() or ""
+            width = page.width
 
-            for raw_line in text.splitlines():
-                line = raw_line.strip()
+            words = page.extract_words(
+                x_tolerance=2,
+                y_tolerance=3
+            )
 
-                if not line:
-                    continue
+            for row in lines_by_position(words):
 
-                if HEADER_RX.match(line):
-                    current = None
-                    continue
+                def column(start, end):
+                    selected = [
+                        word["text"]
+                        for word in row
+                        if start <= word["x0"] < end
+                    ]
+                    return " ".join(selected).strip()
 
-                team_match = TEAM_RX.search(line)
+                # NBA PDF sutunlari
+                team_text = column(
+                    width * 0.31,
+                    width * 0.50
+                )
 
-                if team_match:
-                    team = team_match.group(0)
-                    current = None
+                player_text = column(
+                    width * 0.50,
+                    width * 0.69
+                )
 
-                normalized = line.replace(
-                    " ", ""
+                status_text = column(
+                    width * 0.69,
+                    width * 0.79
                 ).upper()
 
-                if "NOTYETSUBMITTED" in normalized:
-                    unsubmitted.append(
-                        team or "UNKNOWN"
-                    )
+                reason_text = column(
+                    width * 0.79,
+                    width
+                )
+
+                normalized_team = re.sub(
+                    r"[^A-Za-z0-9]",
+                    "",
+                    team_text
+                ).upper()
+
+                if normalized_team in TEAM_MAP:
+                    current_team = TEAM_MAP[
+                        normalized_team
+                    ]
+                    current = None
+
+                if (
+                    "NOT YET SUBMITTED"
+                    in reason_text.upper()
+                ):
+                    if not current_team:
+                        raise RuntimeError(
+                            "Takim adi bulunamadi"
+                        )
+
+                    missing.add(current_team)
                     current = None
                     continue
 
-                match = PLAYER_RX.search(line)
-
-                if match:
-                    if not team:
+                # Oyuncu ve durumu
+                if (
+                    "," in player_text
+                    and status_text in STATUSES
+                ):
+                    if not current_team:
                         raise RuntimeError(
-                            "Oyuncunun takimi bulunamadi: "
-                            + line
+                            "Takimi bulunamayan oyuncu: "
+                            + player_text
                         )
 
                     current = {
-                        "player_name": normalize_player(
-                            match.group("last"),
-                            match.group("first")
+                        "player_name": normalize_name(
+                            player_text
                         ),
-                        "team": team,
-                        "status": match.group(
-                            "status"
-                        ).upper(),
-                        "reason": line[
-                            match.end():
-                        ].strip()[:500]
+                        "team": current_team,
+                        "status": status_text,
+                        "reason": reason_text
                     }
 
                     records.append(current)
 
-                elif current and not team_match:
-                    # Aciklamanin devam satirlarini
-                    # son oyuncuya ekle.
-                    if not re.search(
-                        r"\b\d{2}:\d{2}\(ET\)",
-                        line
-                    ):
-                        current["reason"] = (
-                            current["reason"]
-                            + " "
-                            + line
-                        ).strip()[:500]
+                # Ayni oyuncunun aciklamasi
+                # alt satirda devam edebilir
+                elif (
+                    reason_text
+                    and current
+                    and not player_text
+                    and not status_text
+                ):
+                    current["reason"] = (
+                        current["reason"]
+                        + " "
+                        + reason_text
+                    ).strip()
 
     if not records:
         raise RuntimeError(
-            "PDF icinden oyuncu bulunamadi"
+            "PDF icinde oyuncu bulunamadi"
         )
 
     seen = set()
@@ -264,37 +286,57 @@ def parse_pdf(raw):
 
         if key in seen:
             raise RuntimeError(
-                "Tekrar eden oyuncu: " + str(key)
+                "Tekrarlanan oyuncu: "
+                + str(key)
             )
 
         seen.add(key)
 
-    return records, sorted(set(unsubmitted))
+        player["reason"] = re.sub(
+            r"\s+",
+            " ",
+            player["reason"]
+        ).strip()[:500]
+
+        if not player["reason"]:
+            raise RuntimeError(
+                "Bos sakatlik aciklamasi: "
+                + player["player_name"]
+            )
+
+    return records, sorted(missing)
 
 
 def main():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--dry-run",
+        action="store_true"
+    )
+
+    args = parser.parse_args()
+
     print(
-        "=== CIZGI MASASI NBA SYNC BASLADI ===",
+        "=== NBA OFFICIAL SYNC ===",
         flush=True
     )
 
-    # 1 - En guncel raporu bul
-    dt, url = find_latest()
+    stamp, url = latest_report()
 
     print(
-        "Secilen rapor:",
+        "Secilen PDF:",
         url,
         flush=True
     )
 
-    # 2 - PDF dosyasini indir
     response = SESSION.get(
         url,
         timeout=45
     )
 
     print(
-        "PDF indirme HTTP:",
+        "PDF HTTP:",
         response.status_code,
         flush=True
     )
@@ -303,17 +345,27 @@ def main():
 
     if not response.content.startswith(b"%PDF-"):
         raise RuntimeError(
-            "Indirilen dosya PDF degil"
+            "PDF yerine baska veri geldi"
         )
 
-    # 3 - Oyunculari ayristir
     records, missing = parse_pdf(
         response.content
     )
 
     print(
-        "Oyuncular:",
+        "Oyuncu sayisi:",
         len(records),
+        flush=True
+    )
+
+    print(
+        "Durumlar:",
+        dict(
+            Counter(
+                p["status"]
+                for p in records
+            )
+        ),
         flush=True
     )
 
@@ -323,48 +375,38 @@ def main():
         flush=True
     )
 
-    statuses = {}
-
-    for player in records:
-        status = player["status"]
-        statuses[status] = (
-            statuses.get(status, 0) + 1
-        )
-
     print(
-        "Durum dagilimi:",
-        statuses,
-        flush=True
-    )
-
-    print(
-        "Ilk 5 oyuncu:",
+        "Ornek 10 oyuncu:",
         json.dumps(
-            records[:5],
+            records[:10],
             ensure_ascii=False
         ),
         flush=True
     )
 
-    # 4 - Cloudflare'a gonderilecek veri
-    data = {
-        "report_url": url,
-        "report_key": dt.strftime(
-            "%Y-%m-%d_%H%M"
+    print(
+        "Tum oyuncular:",
+        json.dumps(
+            records,
+            ensure_ascii=False
         ),
-        "report_date": dt.strftime(
-            "%Y-%m-%d %H:%M ET"
-        ),
-        "players": records,
-        "not_submitted_teams": missing
-    }
+        flush=True
+    )
 
-    # 5 - Gizli anahtar kontrolu
+    # Test modunda veritabani degismez
+    if args.dry_run:
+        print(
+            "TEST TAMAMLANDI - "
+            "VERITABANINA YAZILMADI",
+            flush=True
+        )
+        return
+
     token = os.getenv("NBA_IMPORT_TOKEN")
 
     if not token:
         raise RuntimeError(
-            "GitHub NBA_IMPORT_TOKEN secret eksik"
+            "NBA_IMPORT_TOKEN tanimli degil"
         )
 
     worker = os.getenv(
@@ -374,18 +416,24 @@ def main():
 
     if not worker.startswith("https://"):
         raise RuntimeError(
-            "HTTPS Worker adresi gerekli"
+            "WORKER_URL HTTPS olmali"
         )
 
-    # 6 - NBA verilerini Cloudflare'a aktar
-    print(
-        "Cloudflare D1 aktarimi basliyor...",
-        flush=True
-    )
+    payload = {
+        "report_url": url,
+        "report_key": stamp.strftime(
+            "%Y-%m-%d_%H%M"
+        ),
+        "report_date": stamp.strftime(
+            "%Y-%m-%d %H:%M ET"
+        ),
+        "players": records,
+        "not_submitted_teams": missing
+    }
 
     result = SESSION.post(
         worker + "/api/import-nba",
-        json=data,
+        json=payload,
         headers={
             "Authorization": "Bearer " + token
         },
@@ -393,57 +441,43 @@ def main():
     )
 
     print(
-        "D1 aktarim HTTP:",
+        "D1 HTTP:",
         result.status_code,
         flush=True
     )
 
     print(
-        "Sunucu yaniti:",
-        result.text[:2000],
+        "D1 yaniti:",
+        result.text[:1000],
         flush=True
     )
 
-    # HTTP hatalarini GitHub'a bildir
     result.raise_for_status()
 
-    try:
-        result_data = result.json()
-    except ValueError:
+    data = result.json()
+
+    if not data.get("success"):
         raise RuntimeError(
-            "Cloudflare gecersiz JSON dondurdu"
+            "D1 aktarimi basarisiz"
         )
 
-    if not result_data.get("success"):
-        raise RuntimeError(
-            "NBA aktarimi basarisiz: "
-            + str(result_data)
-        )
-
-    if result_data.get("skipped"):
+    if data.get("skipped"):
         print(
-            "Bu rapor zaten aktarilmis. "
-            "Yeni kayit gerekmiyor.",
+            "Ayni veya eski rapor; "
+            "kayit atlandi",
             flush=True
         )
+
+    elif data.get("stored") != len(records):
+        raise RuntimeError(
+            "D1 oyuncu sayisi uyusmuyor"
+        )
+
     else:
-        stored = result_data.get("stored")
-
-        if stored != len(records):
-            raise RuntimeError(
-                "Kaydedilen oyuncu sayisi uyusmuyor"
-            )
-
         print(
-            "D1'e kaydedilen oyuncu:",
-            stored,
+            "NBA D1 AKTARIMI BASARILI",
             flush=True
         )
-
-    print(
-        "=== NBA SENKRONIZASYONU BASARILI ===",
-        flush=True
-    )
 
 
 if __name__ == "__main__":
