@@ -12,6 +12,7 @@ on:
     workflows:
       - 'Cizgi Masasi - Gunluk Oyuncu Istatistikleri'
       - 'Cizgi Masasi - Yerel Tracking Verisini Birlestir'
+      - 'Cizgi Masasi - Periyot ve Rotasyon Verileri'
     types:
       - completed
     branches:
@@ -91,6 +92,38 @@ jobs:
           if previous is not None and len(stats['rows']) < len(previous.get('rows', [])):
               raise RuntimeError('GitHub verisi yayindaki veriden eski, yayin durduruldu')
           shutil.copyfile(data_file, folder / 'data.json')
+          # Çeyrek/rotasyon verilerini yalnızca doğrulanmış ve daha yeni ise ekle.
+          # Kaynak yoksa mevcut canlı dosyayı koru.
+          import datetime
+          for name in ('periods.json', 'rotation.json'):
+              incoming = pathlib.Path('seed') / name
+              current = folder / name
+              if not incoming.is_file():
+                  print('KORUNDU (seed yok)', name)
+                  continue
+              fresh = json.loads(incoming.read_text(encoding='utf-8'))
+              old = json.loads(current.read_text(encoding='utf-8')) if current.exists() else None
+              if name == 'periods.json':
+                  if not isinstance(fresh.get('dates'), list) or not isinstance(fresh.get('cols'),list) or not isinstance(fresh.get('rows'),list):
+                      raise RuntimeError('periods.json beklenmeyen yapida')
+                  required = {'pid','d','q','min','pts','reb','ast'}
+                  if not required.issubset(fresh['cols']) or len(fresh['rows']) < 100:
+                      raise RuntimeError('periods.json temel sutunlar / satirlar eksik')
+                  if old and old.get('dates'):
+                      if not fresh['dates'] or fresh['dates'][-1] < old['dates'][-1]:
+                          print('KORUNDU (daha eski tarih)', name)
+                          continue
+                      if fresh['dates'][-1] == old['dates'][-1] and len(fresh['rows']) < len(old.get('rows',[])):
+                          print('KORUNDU (satir sayisi azaldi)', name)
+                          continue
+              else:
+                  if not isinstance(fresh.get('t'), dict) or len(fresh['t']) < 20 or not fresh.get('updated'):
+                      raise RuntimeError('rotation.json beklenmeyen yapi')
+                  if old and old.get('updated') and fresh['updated'] < old['updated']:
+                      print('KORUNDU (eski rotasyon)', name)
+                      continue
+              shutil.copyfile(incoming,current)
+              print('EKLENDI', name, len(incoming.read_bytes()))
           (folder / '_headers').write_text('''/service-worker.js
             Cache-Control: no-cache, no-store, must-revalidate
           /manifest.webmanifest

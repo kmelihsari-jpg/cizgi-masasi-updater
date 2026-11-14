@@ -1,0 +1,26 @@
+name: Cizgi Masasi - Periyot ve Rotasyon Verileri
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'seed/periods.json'
+      - 'seed/rotation.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cizgi-masasi-periods-rotation-check
+  cancel-in-progress: false
+
+jobs:
+  kontrol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dosyalari al
+        uses: actions/checkout@v4
+      - name: JSON dogrula
+        run: python scripts/check_periods_rotation.py
