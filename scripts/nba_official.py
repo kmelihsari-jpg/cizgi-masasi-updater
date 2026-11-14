@@ -1,10 +1,7 @@
 
 import argparse
 import io
-import json
-import os
 import re
-from collections import Counter
 from datetime import datetime
 from urllib.parse import urljoin, urlparse
 
@@ -13,7 +10,9 @@ import requests
 from bs4 import BeautifulSoup
 
 
-# CIZGI MASASI - NBA OFFICIAL READER V3
+# CIZGI MASASI - NBA PDF V4 TESHIS
+# Bu surum SADECE TEST yapar.
+# Cloudflare D1'e veri gondermez.
 
 PAGE = (
     "https://official.nba.com/"
@@ -26,52 +25,6 @@ PDF_RX = re.compile(
     re.I
 )
 
-TEAMS = [
-    "AtlantaHawks",
-    "BostonCeltics",
-    "BrooklynNets",
-    "CharlotteHornets",
-    "ChicagoBulls",
-    "ClevelandCavaliers",
-    "DallasMavericks",
-    "DenverNuggets",
-    "DetroitPistons",
-    "GoldenStateWarriors",
-    "HoustonRockets",
-    "IndianaPacers",
-    "LAClippers",
-    "LosAngelesLakers",
-    "MemphisGrizzlies",
-    "MiamiHeat",
-    "MilwaukeeBucks",
-    "MinnesotaTimberwolves",
-    "NewOrleansPelicans",
-    "NewYorkKnicks",
-    "OklahomaCityThunder",
-    "OrlandoMagic",
-    "Philadelphia76ers",
-    "PhoenixSuns",
-    "PortlandTrailBlazers",
-    "SacramentoKings",
-    "SanAntonioSpurs",
-    "TorontoRaptors",
-    "UtahJazz",
-    "WashingtonWizards"
-]
-
-TEAM_BY_KEY = {
-    re.sub(r"\W", "", team).upper(): team
-    for team in TEAMS
-}
-
-STATUSES = {
-    "OUT",
-    "QUESTIONABLE",
-    "DOUBTFUL",
-    "PROBABLE",
-    "AVAILABLE"
-}
-
 SESSION = requests.Session()
 
 SESSION.headers.update({
@@ -81,6 +34,11 @@ SESSION.headers.update({
 
 
 def latest_report():
+    print(
+        "NBA resmi sayfasi kontrol ediliyor...",
+        flush=True
+    )
+
     response = SESSION.get(
         PAGE,
         timeout=30
@@ -101,17 +59,17 @@ def latest_report():
 
     reports = []
 
-    for link in soup.find_all("a", href=True):
+    for link in soup.find_all(
+        "a",
+        href=True
+    ):
         url = urljoin(
             PAGE,
             link["href"]
         )
 
         parsed = urlparse(url)
-
-        match = PDF_RX.search(
-            parsed.path
-        )
+        match = PDF_RX.search(parsed.path)
 
         if not match:
             continue
@@ -122,14 +80,17 @@ def latest_report():
         ):
             continue
 
-        day, hour, minute, meridian = (
+        day, hour, minute, ampm = (
             match.groups()
         )
 
-        stamp = datetime.strptime(
-            f"{day} {hour}:{minute} {meridian}",
-            "%Y-%m-%d %I:%M %p"
-        )
+        try:
+            stamp = datetime.strptime(
+                f"{day} {hour}:{minute} {ampm}",
+                "%Y-%m-%d %I:%M %p"
+            )
+        except ValueError:
+            continue
 
         reports.append(
             (stamp, url)
@@ -137,7 +98,7 @@ def latest_report():
 
     if not reports:
         raise RuntimeError(
-            "NBA sayfasinda PDF bulunamadi"
+            "Resmi NBA PDF bulunamadi"
         )
 
     print(
@@ -152,284 +113,179 @@ def latest_report():
     )
 
 
-def extract_column(
-    page,
-    left,
-    top,
-    right,
-    bottom
-):
-    if bottom <= top + 1:
-        return ""
+def group_words(words, tolerance=3):
+    rows = []
 
-    cropped = page.crop((
-        left,
-        top + 0.5,
-        right,
-        bottom - 0.5
-    ))
+    words = sorted(
+        words,
+        key=lambda w: (
+            w["top"],
+            w["x0"]
+        )
+    )
 
-    text = cropped.extract_text(
+    for word in words:
+        found = None
+
+        for row in reversed(rows[-8:]):
+            if (
+                abs(
+                    row["top"] - word["top"]
+                ) <= tolerance
+            ):
+                found = row
+                break
+
+        if found is None:
+            found = {
+                "top": word["top"],
+                "words": []
+            }
+            rows.append(found)
+
+        found["words"].append(word)
+
+    rows.sort(
+        key=lambda row: row["top"]
+    )
+
+    return rows
+
+
+def inspect_page(page, page_number):
+    width = page.width
+    height = page.height
+
+    print(
+        "\n===== SAYFA",
+        page_number,
+        "=====",
+        flush=True
+    )
+
+    print(
+        "Boyut:",
+        width,
+        "x",
+        height,
+        flush=True
+    )
+
+    print(
+        "PDF nesneleri:",
+        "edges =", len(page.edges),
+        "lines =", len(page.lines),
+        "rects =", len(page.rects),
+        flush=True
+    )
+
+    horizontal = []
+
+    for edge in page.edges:
+        if edge.get("orientation") == "h":
+            horizontal.append(edge)
+
+    print(
+        "Yatay cizgi sayisi:",
+        len(horizontal),
+        flush=True
+    )
+
+    for edge in horizontal[:10]:
+        print(
+            "CIZGI:",
+            "x0 =", round(edge["x0"], 1),
+            "x1 =", round(edge["x1"], 1),
+            "y =", round(edge["top"], 1),
+            flush=True
+        )
+
+    words = page.extract_words(
         x_tolerance=2,
         y_tolerance=3
     )
 
-    return (text or "").strip()
-
-
-def normalize_name(raw):
-    last, first = raw.rsplit(
-        ",", 1
+    print(
+        "Kelime sayisi:",
+        len(words),
+        flush=True
     )
 
-    first = first.strip()
-    last = last.strip()
+    rows = group_words(words)
 
-    last = re.sub(
-        r"(Jr\.|Jr|Sr\.|Sr|II|III|IV)$",
-        r" \1",
-        last
+    print(
+        "Algilanan metin satiri:",
+        len(rows),
+        flush=True
     )
 
-    return re.sub(
-        r"\s+",
-        " ",
-        f"{first} {last}"
-    ).strip()
+    # Ilk iki sayfayi daha ayrintili incele.
+    max_rows = (
+        45 if page_number <= 2 else 12
+    )
 
+    for row in rows[:max_rows]:
+        ordered = sorted(
+            row["words"],
+            key=lambda w: w["x0"]
+        )
 
-def parse_pdf(raw):
-    records = []
-    not_submitted = set()
+        content = " ".join(
+            w["text"]
+            for w in ordered
+        )
 
-    current_team = None
+        x_start = min(
+            w["x0"]
+            for w in ordered
+        )
 
-    with pdfplumber.open(
-        io.BytesIO(raw)
-    ) as pdf:
+        x_end = max(
+            w["x1"]
+            for w in ordered
+        )
 
         print(
-            "PDF sayfalari:",
-            len(pdf.pages),
+            "SATIR:",
+            "Y =", round(row["top"], 1),
+            "X =", round(x_start, 1),
+            "-",
+            round(x_end, 1),
+            "|",
+            content[:220],
             flush=True
         )
 
-        for page_number, page in enumerate(
-            pdf.pages,
-            start=1
-        ):
-            width = page.width
-            height = page.height
+    if page_number == 1:
+        print(
+            "\nSUTUN KONUM TESTI",
+            flush=True
+        )
 
-            # Yatay cizgileri bul.
-            rules = sorted({
-                round(edge["top"], 1)
-                for edge in page.edges
-                if (
-                    edge.get("orientation")
-                    == "h"
+        for word in words:
+            text = word["text"]
+
+            if (
+                "," in text
+                or text.upper() in (
+                    "OUT",
+                    "QUESTIONABLE",
+                    "PROBABLE",
+                    "DOUBTFUL",
+                    "AVAILABLE"
                 )
-                and edge["x0"] <= width * 0.53
-                and edge["x1"] >= width * 0.95
-                and height * 0.13
-                    < edge["top"]
-                    < height * 0.96
-            })
-
-            if len(rules) < 2:
-                raise RuntimeError(
-                    f"Sayfa {page_number}: "
-                    "satir cizgileri bulunamadi"
-                )
-
-            boundaries = [
-                height * 0.13
-            ] + rules
-
-            for top, bottom in zip(
-                boundaries,
-                boundaries[1:]
             ):
-                # Sutunlari ayri ayri oku.
-                team_text = extract_column(
-                    page,
-                    width * 0.30,
-                    top,
-                    width * 0.50,
-                    bottom
+                print(
+                    "ALAN:",
+                    "x =", round(
+                        word["x0"], 1
+                    ),
+                    "y =", round(
+                        word["top"], 1
+                    ),
+                    "deger =", text,
+                    flush=True
                 )
-
-                player_text = extract_column(
-                    page,
-                    width * 0.50,
-                    top,
-                    width * 0.69,
-                    bottom
-                )
-
-                status_text = extract_column(
-                    page,
-                    width * 0.69,
-                    top,
-                    width * 0.79,
-                    bottom
-                ).upper()
-
-                reason_text = extract_column(
-                    page,
-                    width * 0.79,
-                    top,
-                    width * 0.995,
-                    bottom
-                )
-
-                # Takimi tespit et.
-                for line in team_text.splitlines():
-                    key = re.sub(
-                        r"[^A-Za-z0-9]",
-                        "",
-                        line
-                    ).upper()
-
-                    if key in TEAM_BY_KEY:
-                        current_team = (
-                            TEAM_BY_KEY[key]
-                        )
-
-                # Basliklari temizle.
-                player_text = re.sub(
-                    r"^Player Name\s*",
-                    "",
-                    player_text,
-                    flags=re.I
-                ).strip()
-
-                status_text = re.sub(
-                    r"^CURRENT STATUS\s*",
-                    "",
-                    status_text
-                ).strip()
-
-                reason_text = re.sub(
-                    r"^Reason\s*",
-                    "",
-                    reason_text,
-                    flags=re.I
-                ).strip()
-
-                if (
-                    "NOT YET SUBMITTED"
-                    in reason_text.upper()
-                ):
-                    if current_team:
-                        not_submitted.add(
-                            current_team
-                        )
-                    continue
-
-                player_lines = [
-                    line.strip()
-                    for line in (
-                        player_text.splitlines()
-                    )
-                    if "," in line
-                ]
-
-                status_lines = [
-                    line.strip()
-                    for line in (
-                        status_text.splitlines()
-                    )
-                    if line.strip() in STATUSES
-                ]
-
-                if (
-                    player_lines
-                    and status_lines
-                ):
-                    if not current_team:
-                        raise RuntimeError(
-                            "Takimsiz oyuncu: "
-                            + str(player_lines)
-                        )
-
-                    if (
-                        len(player_lines) != 1
-                        or len(status_lines) != 1
-                    ):
-                        raise RuntimeError(
-                            "Bir satirda birden fazla "
-                            "oyuncu bulundu"
-                        )
-
-                    records.append({
-                        "player_name":
-                            normalize_name(
-                                player_lines[0]
-                            ),
-                        "team":
-                            current_team,
-                        "status":
-                            status_lines[0],
-                        "reason":
-                            re.sub(
-                                r"\s+",
-                                " ",
-                                reason_text
-                            ).strip()
-                    })
-
-                elif (
-                    reason_text
-                    and records
-                    and not player_lines
-                    and not status_lines
-                ):
-                    # Devam eden aciklama.
-                    records[-1]["reason"] = (
-                        records[-1]["reason"]
-                        + " "
-                        + reason_text
-                    ).strip()
-
-    if len(records) < 20:
-        raise RuntimeError(
-            "Supheli oyuncu sayisi: "
-            + str(len(records))
-        )
-
-    seen = set()
-
-    for record in records:
-        key = (
-            record["team"],
-            record["player_name"]
-        )
-
-        if key in seen:
-            raise RuntimeError(
-                "Tekrarlanan oyuncu: "
-                + str(key)
-            )
-
-        if not record["reason"]:
-            raise RuntimeError(
-                "Bos sakatlik aciklamasi: "
-                + record["player_name"]
-            )
-
-        if len(record["reason"]) > 500:
-            raise RuntimeError(
-                "Cok uzun aciklama: "
-                + record["player_name"]
-            )
-
-        seen.add(key)
-
-    return (
-        records,
-        sorted(not_submitted)
-    )
 
 
 def main():
@@ -440,14 +296,13 @@ def main():
         action="store_true"
     )
 
-    args = parser.parse_args()
+    parser.parse_args()
 
     print(
-        "=== CIZGI MASASI NBA READER V3 ===",
+        "=== CIZGI MASASI NBA V4 TESHIS ===",
         flush=True
     )
 
-    # En yeni NBA PDF'ini bul.
     stamp, url = latest_report()
 
     print(
@@ -473,165 +328,37 @@ def main():
         b"%PDF-"
     ):
         raise RuntimeError(
-            "Indirilen dosya PDF degil"
+            "Indirilen icerik PDF degil"
         )
 
-    # PDF'den oyunculari ayristir.
-    records, missing = parse_pdf(
-        response.content
-    )
-
-    print(
-        "Oyuncular:",
-        len(records),
-        flush=True
-    )
-
-    print(
-        "Durumlar:",
-        dict(Counter(
-            player["status"]
-            for player in records
-        )),
-        flush=True
-    )
-
-    print(
-        "Rapor gondermeyen takimlar:",
-        len(missing),
-        flush=True
-    )
-
-    # Onceden hatali okunan oyuncular.
-    check_names = [
-        "Bryce McGowens",
-        "Yves Missi",
-        "Ben Saraf",
-        "Nolan Traore",
-        "Jarrett Allen"
-    ]
-
-    for name in check_names:
-        player = next(
-            (
-                record
-                for record in records
-                if (
-                    record["player_name"]
-                    == name
-                )
-            ),
-            None
-        )
+    with pdfplumber.open(
+        io.BytesIO(response.content)
+    ) as pdf:
 
         print(
-            "KONTROL:",
-            json.dumps(
-                player,
-                ensure_ascii=False
-            ),
+            "PDF toplam sayfa:",
+            len(pdf.pages),
             flush=True
         )
 
-    # Test modunda D1'e veri yazma.
-    if args.dry_run:
-        print(
-            "TEST TAMAMLANDI - "
-            "VERITABANINA YAZILMADI",
-            flush=True
-        )
-        return
-
-    # Canli aktarim icin gizli anahtar.
-    token = os.getenv(
-        "NBA_IMPORT_TOKEN"
-    )
-
-    if not token:
-        raise RuntimeError(
-            "NBA_IMPORT_TOKEN bulunamadi"
-        )
-
-    worker = os.getenv(
-        "WORKER_URL",
-        "https://cizgi-masasi-api.k-melihsari.workers.dev"
-    ).rstrip("/")
-
-    if not worker.startswith(
-        "https://"
-    ):
-        raise RuntimeError(
-            "WORKER_URL HTTPS olmali"
-        )
-
-    payload = {
-        "report_url": url,
-        "report_key": stamp.strftime(
-            "%Y-%m-%d_%H%M"
-        ),
-        "report_date": stamp.strftime(
-            "%Y-%m-%d %H:%M ET"
-        ),
-        "players": records,
-        "not_submitted_teams": missing
-    }
-
-    print(
-        "Cloudflare D1 aktarimi basliyor...",
-        flush=True
-    )
-
-    result = SESSION.post(
-        worker + "/api/import-nba",
-        json=payload,
-        headers={
-            "Authorization": (
-                "Bearer " + token
+        for index, page in enumerate(
+            pdf.pages,
+            start=1
+        ):
+            inspect_page(
+                page,
+                index
             )
-        },
-        timeout=45
-    )
 
     print(
-        "D1 HTTP:",
-        result.status_code,
+        "\n=== V4 TESHIS TAMAMLANDI ===",
         flush=True
     )
 
     print(
-        "D1 yaniti:",
-        result.text[:1000],
+        "TEST MODU: VERITABANINA YAZILMADI",
         flush=True
     )
-
-    result.raise_for_status()
-
-    data = result.json()
-
-    if not data.get("success"):
-        raise RuntimeError(
-            "D1 aktarimi basarisiz"
-        )
-
-    if data.get("skipped"):
-        print(
-            "Ayni veya eski rapor atlandi",
-            flush=True
-        )
-
-    elif (
-        data.get("stored")
-        != len(records)
-    ):
-        raise RuntimeError(
-            "Kayit sayisi uyusmuyor"
-        )
-
-    else:
-        print(
-            "NBA D1 AKTARIMI BASARILI",
-            flush=True
-        )
 
 
 if __name__ == "__main__":
