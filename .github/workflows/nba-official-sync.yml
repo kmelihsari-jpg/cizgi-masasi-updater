@@ -34,4 +34,4 @@ jobs:
         env:
           NBA_IMPORT_TOKEN: ${{ secrets.NBA_IMPORT_TOKEN }}
           WORKER_URL: https://cizgi-masasi-api.k-melihsari.workers.dev
-        run: python scripts/nba_official.py
+        run: python scripts/nba_official.py --dry-run
