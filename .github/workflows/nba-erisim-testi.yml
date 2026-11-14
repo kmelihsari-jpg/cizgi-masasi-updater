@@ -1,0 +1,83 @@
+name: NBA Bulut Erisim Testi
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  nba-erisim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: NBA CDN ve Stats endpointlerini kontrol et
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os
+          import urllib.request
+          import urllib.error
+          import urllib.parse
+          import json
+
+          headers = {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36",
+              "Accept": "application/json, text/plain, */*",
+              "Referer": "https://www.nba.com/",
+              "Origin": "https://www.nba.com",
+              "x-nba-stats-origin": "stats",
+              "x-nba-stats-token": "true",
+          }
+
+          tests = [
+              ("NBA CDN (kontrol)", "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json"),
+              ("NBA Stats (leaguegamelog)", "https://stats.nba.com/stats/leaguegamelog?" + urllib.parse.urlencode({
+                  "Counter": "1000",
+                  "DateFrom": "",
+                  "DateTo": "",
+                  "Direction": "DESC",
+                  "LeagueID": "00",
+                  "PlayerOrTeam": "P",
+                  "Season": "2026-27",
+                  "SeasonType": "Regular Season",
+                  "Sorter": "DATE",
+              })),
+          ]
+
+          results = []
+          for title, url in tests:
+              print(f"\n--- {title} ---", flush=True)
+              try:
+                  req = urllib.request.Request(url, headers=headers)
+                  with urllib.request.urlopen(req, timeout=20) as response:
+                      raw = response.read(1024 * 1024)
+                      payload = json.loads(raw)
+                      if title.startswith("NBA Stats"):
+                          valid = isinstance(payload.get("resultSets"), list) or isinstance(payload.get("resultSet"), dict)
+                      else:
+                          valid = isinstance(payload, dict)
+                      if not valid:
+                          raise ValueError("Beklenen NBA JSON semasi bulunamadi")
+                      print(f"BASARILI: HTTP {response.status}; JSON okunabildi", flush=True)
+                      results.append((title, "BASARILI"))
+              except urllib.error.HTTPError as exc:
+                  print(f"BASARISIZ: HTTP {exc.code}", flush=True)
+                  results.append((title, f"HTTP {exc.code}"))
+              except Exception as exc:
+                  print(f"BASARISIZ: {type(exc).__name__}: {exc}", flush=True)
+                  results.append((title, f"{type(exc).__name__}: {str(exc)[:80]}"))
+
+          print("\nSONUC:", results, flush=True)
+          summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary:
+              with open(summary, "a", encoding="utf-8") as fp:
+                  fp.write("## NBA GitHub Actions erisim testi\n\n")
+                  fp.write("| Kaynak | Sonuc |\n|---|---|\n")
+                  for title, status in results:
+                      fp.write(f"| {title} | {status} |\n")
+
+          # CDN sonucu tek basina NBA Stats erisiminin kaniti degildir.
+          if results[1][1] != "BASARILI":
+              raise SystemExit("NBA Stats GitHub Actions uzerinden erisilebilirligi dogrulanamadi")
+          PY
