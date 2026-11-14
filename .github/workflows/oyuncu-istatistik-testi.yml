@@ -1,0 +1,82 @@
+name: Cizgi Masasi - Oyuncu Istatistik Testi
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-create:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Kodlari al
+        uses: actions/checkout@v4
+
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Ornek verilerle koruma testleri
+        run: python scripts/test_updater.py
+
+      - name: Mevcut verinin gecici kopyasini hazirla
+        shell: bash
+        run: |
+          mkdir -p out
+          cp seed/data.json out/data.json
+
+      - name: ESPN'den bitmis maclari oku
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/update_nba_stats.py --site out --days 5 --limit 35 | tee stats-log.txt
+
+      - name: Uretilen JSON dosyalarini dogrula
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          base=json.loads(Path('seed/data.json').read_text(encoding='utf-8'))
+          new=json.loads(Path('out/data.json').read_text(encoding='utf-8'))
+          assert new['cols']==base['cols'], 'Kolon yapisi degisti!'
+          assert new['season']==base['season'], 'Sezon farkli!'
+          assert new['players']==base['players'], 'Oyuncu kadro listesi degisti!'
+          assert new['teams']==base['teams'], 'Takim kodlari degisti!'
+          cols={x:i for i,x in enumerate(new['cols'])}
+          assert all(len(row)==len(new['cols']) for row in new['rows'])
+          assert all(0<=row[cols['d']]<len(new['dates']) for row in new['rows'])
+          assert all(0<=row[cols['t']]<len(new['teams']) for row in new['rows'])
+          assert all(0<=row[cols['o']]<len(new['teams']) for row in new['rows'])
+          before=len(base['rows']); after=len(new['rows']); added=after-before
+          print(f'ESKI oyuncu-mac satirlari: {before}')
+          print(f'YENI oyuncu-mac satirlari: {after}')
+          print(f'EKLENEN: {added}')
+          print(f'SON MAC TARIHI: {new["dates"][-1]}')
+          assert added>0, 'Yeni satir eklenmedi; ESPN parse veya kadro eslesmesini inceleyin'
+          rot=json.loads(Path('out/rotation-live.json').read_text(encoding='utf-8'))
+          assert rot['type'].startswith('per-game'), 'Rotasyon etiketlemesi yanlis'
+          Path('out/kontrol-raporu.json').write_text(json.dumps({
+              'success':True, 'source':'ESPN completed-game box score',
+              'before':before,'after':after,'added':added,
+              'latest_game':new['dates'][-1],
+              'tracking_auto_updated':False,
+              'rotation_intervals_auto_updated':False
+          },ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+
+      - name: Test sonuclarini Artifact olarak yukle
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cizgi-masasi-oyuncu-istatistik-test-${{ github.run_id }}
+          path: |
+            out/data.json
+            out/rotation-live.json
+            out/kontrol-raporu.json
+            stats-log.txt
+          retention-days: 7
+          if-no-files-found: error
