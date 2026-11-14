@@ -1,3 +1,4 @@
+
 name: Cizgi Masasi - DVP ve TeamRankings Dosya Uretimi
 
 on:
@@ -13,27 +14,67 @@ on:
           - teamrankings
           - both
 
+  schedule:
+    # Her gun 08:20 Turkiye saati
+    - cron: '20 5 * * *'
+
 permissions:
   contents: read
+
+concurrency:
+  group: referans-veri-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   veri-uret:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
+
     steps:
       - name: Repository kodunu al
         uses: actions/checkout@v4
+
       - name: Python kurulumu
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
       - name: Kaynak verileri oku ve JSON dosyalarini dogrula
-        run: python scripts/update_reference_stats.py --source '${{ inputs.kaynak }}' --out out
-      - name: Sonuclari indirilebilir artifact olarak sakla
+        env:
+          KAYNAK: ${{ github.event_name == 'schedule' && 'dvp' || inputs.kaynak }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Istenen veri: ${KAYNAK}"
+          python scripts/update_reference_stats.py --source "$KAYNAK" --out out
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          folder = Path('out')
+          for f in sorted(folder.glob('*.json')):
+              obj = json.loads(f.read_text(encoding='utf-8'))
+
+              if f.name == 'dvp.json':
+                  teams = obj.get('t', {})
+                  assert len(teams) == 30, 'DVP takim sayisi 30 olmali'
+                  assert all(
+                      set(positions) == {'PG','SG','SF','PF','C'}
+                      for positions in teams.values()
+                  ), 'DVP pozisyon eksik'
+                  print('DVP: 30 takim, 5 pozisyon dogrulandi')
+
+              elif f.name == 'teamrankings.json':
+                  n = len(obj.get('s', {}))
+                  assert n >= 140, f'TeamRankings en az 140 kategori olmali: {n}'
+                  print(f'TeamRankings: {n} kategori dogrulandi')
+          PY
+
+      - name: Sonuclari indirilebilir Artifact olarak sakla
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: cizgi-masasi-onay-bekleyen-veriler
+          name: cizgi-masasi-veriler-${{ github.run_id }}
           path: out/*.json
           retention-days: 7
           if-no-files-found: error
