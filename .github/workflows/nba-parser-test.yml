@@ -1,0 +1,103 @@
+
+name: NBA Oyuncu Ayristirma Testi
+
+on:
+  workflow_dispatch:
+
+jobs:
+  parse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: PDF kutuphanesi
+        run: pip install requests pdfplumber
+
+      - name: Oyunculari ayristir
+        run: |
+          python - <<'PY'
+          import io
+          import re
+          import requests
+          import pdfplumber
+          from collections import Counter
+
+          url = (
+            "https://ak-static.cms.nba.com/referee/"
+            "injury/Injury-Report_2026-11-14_12_00PM.pdf"
+          )
+
+          response = requests.get(url, timeout=30)
+          response.raise_for_status()
+
+          if not response.content.startswith(b"%PDF-"):
+            raise RuntimeError("PDF indirilemedi")
+
+          pattern = re.compile(
+            r"(?P<name>[A-Za-zÀ-ÿ.'’-]+,"
+            r"[A-Za-zÀ-ÿ.'’-]+)"
+            r"\s+(?P<status>"
+            r"Questionable|Available|Doubtful|"
+            r"Probable|Out)\b",
+            re.I
+          )
+
+          players = []
+          ignored = []
+
+          with pdfplumber.open(
+            io.BytesIO(response.content)
+          ) as pdf:
+            for page in pdf.pages:
+              text = page.extract_text() or ""
+
+              for line in text.splitlines():
+                matches = list(pattern.finditer(line))
+
+                for match in matches:
+                  raw_name = match.group("name")
+                  status = match.group("status")
+
+                  players.append({
+                    "name": raw_name,
+                    "status": status.upper()
+                  })
+
+                if (
+                  "NOTYETSUBMITTED" in line
+                  or "NOT YET SUBMITTED" in line
+                ):
+                  ignored.append(line.strip())
+
+          if not players:
+            raise RuntimeError(
+              "Hicbir oyuncu ayristirilamadi"
+            )
+
+          print("TOPLAM OYUNCU:", len(players))
+
+          print("\nDURUM DAGILIMI:")
+          for status, count in Counter(
+            p["status"] for p in players
+          ).items():
+            print(status, count)
+
+          print("\nOYUNCU LISTESI:")
+          for player in players:
+            print(
+              player["name"],
+              "->",
+              player["status"]
+            )
+
+          print("\nRAPOR GONDERMEYEN SATIRLAR:")
+          for line in ignored:
+            print(line)
+
+          print("\nAYRISTIRMA TESTI TAMAMLANDI")
+          PY
