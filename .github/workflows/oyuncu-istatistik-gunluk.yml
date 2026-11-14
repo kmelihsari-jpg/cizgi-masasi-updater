@@ -1,0 +1,95 @@
+name: Cizgi Masasi - Gunluk Oyuncu Istatistikleri
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Her gun 12:35 Turkiye saati (09:35 UTC). GitHub baslatmayi geciktirebilir.
+    - cron: '35 9 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cizgi-masasi-oyuncu-istatistik-main
+  cancel-in-progress: false
+
+jobs:
+  gunluk-guncelle:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Mevcut updater testleri
+        run: python scripts/test_updater.py
+
+      - name: Son 7 gunun maclarini oku ve veriyi kontrol et
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python - <<'PY'
+          import copy
+          import datetime as dt
+          import json
+          import sys
+          from pathlib import Path
+          from zoneinfo import ZoneInfo
+
+          sys.path.insert(0, str(Path('scripts').resolve()))
+          import update_nba_stats as updater
+
+          source = Path('seed/data.json')
+          if not source.exists():
+              raise SystemExit('HATA: seed/data.json bulunamadi. Önceki testin dogru konumunu kontrol et.')
+          before = json.loads(source.read_text(encoding='utf-8'))
+          data = copy.deepcopy(before)
+          previous_count = len(before['rows'])
+          today = dt.datetime.now(ZoneInfo('America/New_York')).date()
+          first_day = updater.season_start(data['season'])
+          days = [today - dt.timedelta(days=n) for n in range(7)]
+          days = [d for d in days if d >= first_day]
+
+          if days:
+              added, games, notes = updater.update_data(data, days, updater.get_json, limit=160)
+          else:
+              added, games, notes = 0, 0, ['Sezon tarihleri disinda; degisiklik yok']
+          for note in notes:
+              print(note, flush=True)
+
+          # En az bir macin box score'u okunamazsa kismi veri otomatik yayinlanmaz.
+          errors = [note for note in notes if ': ERROR ' in note or 'Insufficient roster match' in note or 'Missing two verified team scores' in note]
+          if errors:
+              raise SystemExit('HATA: Tamamlanmis maclarin bazilarinda veri eksik; onceki data.json korunuyor.')
+
+          assert data['cols'] == before['cols'], 'Kolonlar degisti'
+          assert data['season'] == before['season'], 'Sezon degisti'
+          assert data['teams'] == before['teams'], 'Takim listesi degisti'
+          assert data['players'] == before['players'], 'Oyuncu listesi degisti'
+          assert len(data['rows']) == previous_count + added, 'Kayit sayisi tutmuyor'
+          ci = {name: idx for idx, name in enumerate(data['cols'])}
+          pid_set = {p[0] for p in data['players']}
+          key_set = set()
+          for row in data['rows']:
+              assert len(row) == len(data['cols']), 'Satir uzunlugu hatali'
+              assert row[ci['pid']] in pid_set, 'Bilinmeyen oyuncu'
+              assert 0 <= row[ci['d']] < len(data['dates']), 'Tarih indeksi hatali'
+              assert 0 <= row[ci['t']] < len(data['teams']), 'Takim indeksi hatali'
+              assert 0 <= row[ci['o']] < len(data['teams']), 'Rakip indeksi hatali'
+              key = (row[ci['pid']], data['dates'][row[ci['d']]], data['teams'][row[ci['t']]])
+              assert key not in key_set, 'Tekrarlanan oyuncu/mac/takim kaydi'
+              key_set.add(key)
+
+          def sig(row, dataset):
+              c = {n: i for i, n in enumerate(dataset['cols'])}
+              return (row[c['pid']], dataset['dates'][row[c['d']]], dataset['teams'][row[c['t']]])
