@@ -1,4 +1,4 @@
-name: Cizgi Masasi Veri Ayristirma Testi
+name: Cizgi Masasi Veri Ayristirma Testi V2
 
 on:
   workflow_dispatch:
@@ -49,24 +49,36 @@ jobs:
               pattern = r'ContentPlaceHolder1_GridView1_Label\d+_\d+">([^<]*)</span>[^<]*<span[^>]*>(\d+)</span>'
               team_map = {'NY':'NYK','NO':'NOP','GS':'GSW','SA':'SAS','PHO':'PHX'}
               teampos = set()
-              invalid = []
+              skipped = []
+              duplicates = []
               for pos, raw in rows:
                   cells = re.findall(pattern, raw)
                   if len(cells) != 10:
-                      invalid.append((pos, len(cells)))
+                      skipped.append((pos, len(cells)))
                       continue
                   team = html.unescape(cells[0][0]).strip()
                   team = team_map.get(team, team)
+                  ov_rank = int(cells[0][1])
+                  if not 1 <= ov_rank <= 150:
+                      raise ValueError(f'{team}/{pos} overall sirasi aralik disi: {ov_rank}')
                   for value, rank in cells[1:]:
                       float(value.strip().replace(',', ''))
-                      int(rank)
+                      numeric_rank = int(rank)
+                      if not 1 <= numeric_rank <= 150:
+                          raise ValueError(f'{team}/{pos} kategori sirasi aralik disi: {numeric_rank}')
+                  if (team, pos) in teampos:
+                      duplicates.append((team, pos))
                   teampos.add((team, pos))
-              print(f'HTML satiri: {len(rows)} | Gecerli takim/pozisyon: {len(teampos)} | Hatalar: {len(invalid)}', flush=True)
-              if len(rows) != 150 or len(teampos) != 150 or invalid:
-                  raise ValueError('DVP 150 satir dogrulamasi gecmedi; JSON yazilmamali')
+              print(f'HTML satiri: {len(rows)} | Gecerli takim/pozisyon: {len(teampos)} | Atlanan diger satir: {len(skipped)} | Tekrar: {len(duplicates)}', flush=True)
+              if len(teampos) != 150 or duplicates:
+                  raise ValueError('DVP 150 benzersiz takim/pozisyon kontrolu gecmedi')
               teams = {team for team, pos in teampos}
               if len(teams) != 30:
                   raise ValueError(f'DVP takim sayisi 30 degil: {len(teams)}')
+              from collections import Counter
+              counts = Counter(team for team, pos in teampos)
+              if any(n != 5 for n in counts.values()):
+                  raise ValueError('Bazi takimlarin 5 pozisyonu bulunmuyor')
               results.append('DVP: BASARILI - 30 takim x 5 pozisyon, 9 istatistik + siralar')
           except Exception as e:
               errors.append('DVP: ' + str(e))
