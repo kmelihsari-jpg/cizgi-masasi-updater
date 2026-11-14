@@ -11,6 +11,7 @@ on:
   workflow_run:
     workflows:
       - 'Cizgi Masasi - Gunluk Oyuncu Istatistikleri'
+      - 'Cizgi Masasi - Yerel Tracking Verisini Birlestir'
     types:
       - completed
     branches:
