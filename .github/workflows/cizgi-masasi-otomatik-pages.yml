@@ -1,0 +1,118 @@
+name: Cizgi Masasi - Otomatik Site Yayini
+
+on:
+  workflow_dispatch:
+    inputs:
+      yayinla:
+        description: 'Ilk testte false sec; kontrol ettikten sonra true'
+        required: true
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - 'seed/data.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cizgi-masasi-pages-production
+  cancel-in-progress: false
+
+jobs:
+  siteyi-hazirla:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: GitHub verilerini al
+        uses: actions/checkout@v4
+
+      - name: Mevcut siteyi koruyarak yayin paketini hazirla
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib, urllib.request, urllib.error, time, shutil
+          base = 'https://cizgi-masasi.pages.dev/'
+          folder = pathlib.Path('public')
+          folder.mkdir(exist_ok=True)
+          assets = '''index.html service-worker.js styles.css tema.css ek.css app.js model.js
+          gorunum-ana.js gorunum-oyuncu.js gorunum-diger.js karne.js karakter.js
+          okuyucular.js ekler.js baslat.js canli-sakatlik.js
+          avatars.json teamrankings.json odds.json avatar-map.json inj-man.json
+          history.json iddaa-lines.json rotation.json dvp.json injuries.json
+          periods.json starts-2526.json inj-live.json karne.json
+          favicon-16.png favicon-32.png favicon-48.png favicon.ico
+          avatar-sheet-1.webp avatar-sheet-2.webp manifest.webmanifest
+          icons/icon-192.png icons/icon-512.png icons/apple-touch-icon.png'''.split()
+          for name in assets:
+              destination = folder / name
+              destination.parent.mkdir(parents=True, exist_ok=True)
+              error = None
+              for attempt in range(3):
+                  try:
+                      request = urllib.request.Request(base + name, headers={
+                          'User-Agent': 'Mozilla/5.0 (compatible; CizgiMasasiUpdater/1.0)',
+                          'Accept': '*/*',
+                      })
+                      with urllib.request.urlopen(request, timeout=20) as response:
+                          data = response.read(15_000_000)
+                          media_type = response.headers.get('Content-Type', '')
+                      if not data:
+                          raise ValueError('Bos dosya: ' + name)
+                      if not name.endswith(('.html','.js','.css','.json','.webmanifest')) and media_type.startswith('text/html'):
+                          raise ValueError('Beklenen varlik yerine HTML geldi: ' + name)
+                      destination.write_bytes(data)
+                      print('ALINDI', name, len(data), flush=True)
+                      break
+                  except Exception as exc:
+                      error = exc
+                      time.sleep(attempt + 1)
+              else:
+                  raise RuntimeError(f'Site dosyasi alinamadi: {name}: {error}')
+          data_file = pathlib.Path('seed/data.json')
+          if not data_file.exists():
+              raise RuntimeError('GitHub seed/data.json bulunamadi')
+          stats = json.loads(data_file.read_text(encoding='utf-8'))
+          for field in ('cols','rows','players','teams','dates'):
+              if field not in stats:
+                  raise RuntimeError('data.json eksik alan: ' + field)
+          if len(stats['rows']) < 3900:
+              raise RuntimeError('Oyuncu mac kaydi beklenenden az, yayin durduruldu')
+          previous = json.loads((folder / 'data.json').read_text(encoding='utf-8')) if (folder / 'data.json').exists() else None
+          if previous is not None and len(stats['rows']) < len(previous.get('rows', [])):
+              raise RuntimeError('GitHub verisi yayindaki veriden eski, yayin durduruldu')
+          shutil.copyfile(data_file, folder / 'data.json')
+          (folder / '_headers').write_text('''/service-worker.js
+            Cache-Control: no-cache, no-store, must-revalidate
+          /manifest.webmanifest
+            Content-Type: application/manifest+json
+          /*.json
+            Cache-Control: no-cache, max-age=0, must-revalidate
+          ''', encoding='utf-8')
+          html = (folder / 'index.html').read_text(encoding='utf-8')
+          if 'baslat.js' not in html or 'canli-sakatlik.js' not in html:
+              raise RuntimeError('Canli sakatlik entegrasyonu veya baslatma kodu bulunamadi; yayin durduruldu')
+          if len(html) < 10000:
+              raise RuntimeError('index.html beklenenden kisa; yayin durduruldu')
+          print('DOGRU: Site dosyalari korundu, seed/data.json eklendi.')
+          print('Oyuncu-mac kaydi:', len(stats['rows']))
+          print('Yayina hazir toplam dosya:', len([x for x in folder.rglob('*') if x.is_file()]))
+          PY
+
+      - name: Hazirlanan siteyi indirilebilir test paketi olarak sakla
+        uses: actions/upload-artifact@v4
+        with:
+          name: cizgi-masasi-site-onizleme-${{ github.run_id }}
+          path: public/
+          retention-days: 3
+          if-no-files-found: error
+
+      - name: Cloudflare Pages'e yayinla
+        if: github.event_name == 'push' || inputs.yayinla == true
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy public --project-name=cizgi-masasi --branch=main
