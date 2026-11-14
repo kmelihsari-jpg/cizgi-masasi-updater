@@ -1,0 +1,29 @@
+name: Cizgi Masasi - Tracking ve Rotasyon Kaynak Testi
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  kaynak-kontrol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: GitHub dosyalarini al
+        uses: actions/checkout@v4
+      - name: Python 3.12 kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Kaynak erisimlerini test et
+        run: python scripts/tracking_kaynak_testi.py
+      - name: Test raporunu sakla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cizgi-tracking-kaynak-raporu
+          path: tracking-kaynak-raporu.json
+          if-no-files-found: warn
+          retention-days: 7
