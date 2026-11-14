@@ -108,6 +108,36 @@ jobs:
           print('Yayina hazir toplam dosya:', len([x for x in folder.rglob('*') if x.is_file()]))
           PY
 
+      - name: Canli sakatlik butonlarini siteye uygula
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_PATCH'
+          from pathlib import Path
+          import shutil
+          names = ('index.html', 'gorunum-ana.js', 'canli-sakatlik.js')
+          patch_dir = Path('site-patches')
+          public = Path('public')
+          for name in names:
+              original = public / name
+              patch = patch_dir / name
+              if not original.is_file() or not patch.is_file():
+                  raise RuntimeError('Eksik site veya yama dosyasi: ' + name)
+              if original.stat().st_size < 10000 or patch.stat().st_size < 10000:
+                  raise RuntimeError('Beklenmeyen dosya boyutu: ' + name)
+          html = (patch_dir/'index.html').read_text(encoding='utf-8')
+          panel = (patch_dir/'canli-sakatlik.js').read_text(encoding='utf-8')
+          home = (patch_dir/'gorunum-ana.js').read_text(encoding='utf-8')
+          assert 'id="nba-inj-check"' in html
+          assert 'id="inj-up"' in html
+          assert "ESPN_REFRESH_API" in panel and "refresh(true, 'espn')" in panel
+          assert 'Underdog baglantisi kapali' in home
+          for name in names:
+              shutil.copyfile(patch_dir/name, public/name)
+              print('YAMA UYGULANDI', name)
+          print('DOGRU: ESPN kontrolu ve NBA raporu butonlari hazir')
+          PY_PATCH
+
       - name: Hazirlanan siteyi indirilebilir test paketi olarak sakla
         uses: actions/upload-artifact@v4
         with:

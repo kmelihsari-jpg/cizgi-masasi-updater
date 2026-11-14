@@ -1,0 +1,315 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Çizgi Masası">
+<meta name="application-name" content="Çizgi Masası">
+<meta name="description" content="Basketbol istatistikleri, oyuncu analizleri ve maç verileri.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=3">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+</head><body><div id="inj-ban" hidden role="alert"></div>
+<div id="test-badge" hidden style="position:fixed;left:8px;bottom:8px;z-index:98;padding:4px 10px;border-radius:999px;background:#b45309;color:#fff;font-size:12px;font-weight:700"><span id="test-left">TEST MODU · yazma yok</span> <button id="test-try" type="button" style="margin-left:6px;padding:1px 8px;border:0;border-radius:999px;background:#fff;color:#b45309;font-size:12px;font-weight:700;cursor:pointer">Bildirimi dene</button></div>
+
+<title>Çizgi Masası</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css?v=20261113">
+<link rel="stylesheet" href="tema.css?v=20261114-status2">
+<link rel="stylesheet" href="ek.css?v=20261114b"><style>.rtag.sag{background:rgba(46,160,90,.16);color:var(--good)}.ktag{font-style:normal;font-weight:600}.ktag.inj{color:var(--warn)}.ktag.saglam{color:var(--good)}
+.injs{margin:0 0 14px;padding:12px 14px;border:1px solid var(--warn);border-radius:12px;background:rgba(240,170,40,.08)}.injs h3{margin:0 0 4px;font-size:15px}.injr{display:grid;grid-template-columns:minmax(0,1.4fr) auto auto minmax(0,1fr);gap:10px;align-items:center;width:100%;text-align:left;padding:8px 0;border:0;border-top:1px solid var(--line);background:none;color:inherit;font:inherit;cursor:pointer}.injr small{display:block;opacity:.7}.ij-o{font-weight:700}.ij-n{opacity:.7;font-size:12px}
+#inj-ban{position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:99;max-width:min(560px,94vw);padding:10px 36px 10px 14px;border-radius:12px;background:#b45309;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.35);font-size:14px}#inj-ban[hidden]{display:none}#inj-ban button{position:absolute;right:8px;top:6px;border:0;background:none;color:#fff;font-size:20px;cursor:pointer}</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="p-home" viewBox="0 0 256 256"><g fill="currentColor"><path d="M216 120v96h-64v-64h-48v64H40v-96a8 8 0 0 1 2.34-5.66l80-80a8 8 0 0 1 11.32 0l80 80A8 8 0 0 1 216 120" opacity=".2"/><path d="m219.31 108.68l-80-80a16 16 0 0 0-22.62 0l-80 80A15.87 15.87 0 0 0 32 120v96a8 8 0 0 0 8 8h64a8 8 0 0 0 8-8v-56h32v56a8 8 0 0 0 8 8h64a8 8 0 0 0 8-8v-96a15.87 15.87 0 0 0-4.69-11.32M208 208h-48v-56a8 8 0 0 0-8-8h-48a8 8 0 0 0-8 8v56H48v-88l80-80l80 80Z"/></g></symbol><symbol id="p-player" viewBox="0 0 256 256"><g fill="currentColor"><path d="M224 128a95.76 95.76 0 0 1-31.8 71.37A72 72 0 0 0 128 160a40 40 0 1 0-40-40a40 40 0 0 0 40 40a72 72 0 0 0-64.2 39.37A96 96 0 1 1 224 128" opacity=".2"/><path d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24M74.08 197.5a64 64 0 0 1 107.84 0a87.83 87.83 0 0 1-107.84 0M96 120a32 32 0 1 1 32 32a32 32 0 0 1-32-32m97.76 66.41a79.66 79.66 0 0 0-36.06-28.75a48 48 0 1 0-59.4 0a79.66 79.66 0 0 0-36.06 28.75a88 88 0 1 1 131.52 0"/></g></symbol><symbol id="p-hit" viewBox="0 0 256 256"><g fill="currentColor"><path d="M208 144a80 80 0 0 1-160 0c0-30.57 14.42-58.26 31-80l33 32l26.27-72C159.86 41.92 208 88.15 208 144" opacity=".2"/><path d="M183.89 153.34a57.6 57.6 0 0 1-46.56 46.55a9 9 0 0 1-1.33.11a8 8 0 0 1-1.32-15.89c16.57-2.79 30.63-16.85 33.44-33.45a8 8 0 0 1 15.78 2.68ZM216 144a88 88 0 0 1-176 0c0-27.92 11-56.47 32.66-84.85a8 8 0 0 1 11.93-.89l24.12 23.41l22-60.41a8 8 0 0 1 12.63-3.41C165.21 36 216 84.55 216 144m-16 0c0-46.09-35.79-85.92-58.21-106.33l-22.27 61.07a8 8 0 0 1-13.09 3L80.06 76.16C64.09 99.21 56 122 56 144a72 72 0 0 0 144 0"/></g></symbol><symbol id="p-sak" viewBox="0 0 256 256"><g fill="currentColor"><path d="M224 72v128a8 8 0 0 1-8 8H40a8 8 0 0 1-8-8V72a8 8 0 0 1 8-8h176a8 8 0 0 1 8 8" opacity=".2"/><path d="M216 56h-40v-8a24 24 0 0 0-24-24h-48a24 24 0 0 0-24 24v8H40a16 16 0 0 0-16 16v128a16 16 0 0 0 16 16h176a16 16 0 0 0 16-16V72a16 16 0 0 0-16-16M96 48a8 8 0 0 1 8-8h48a8 8 0 0 1 8 8v8H96Zm120 152H40V72h176zm-56-64a8 8 0 0 1-8 8h-16v16a8 8 0 0 1-16 0v-16h-16a8 8 0 0 1 0-16h16v-16a8 8 0 0 1 16 0v16h16a8 8 0 0 1 8 8"/></g></symbol><symbol id="p-team" viewBox="0 0 256 256"><g fill="currentColor"><path d="M168 144a40 40 0 1 1-40-40a40 40 0 0 1 40 40M64 56a32 32 0 1 0 32 32a32 32 0 0 0-32-32m128 0a32 32 0 1 0 32 32a32 32 0 0 0-32-32" opacity=".2"/><path d="M244.8 150.4a8 8 0 0 1-11.2-1.6A51.6 51.6 0 0 0 192 128a8 8 0 0 1 0-16a24 24 0 1 0-23.24-30a8 8 0 1 1-15.5-4A40 40 0 1 1 219 117.51a67.94 67.94 0 0 1 27.43 21.68a8 8 0 0 1-1.63 11.21M190.92 212a8 8 0 1 1-13.85 8a57 57 0 0 0-98.15 0a8 8 0 1 1-13.84-8a72.06 72.06 0 0 1 33.74-29.92a48 48 0 1 1 58.36 0A72.06 72.06 0 0 1 190.92 212M128 176a32 32 0 1 0-32-32a32 32 0 0 0 32 32m-56-56a8 8 0 0 0-8-8a24 24 0 1 1 23.24-30a8 8 0 1 0 15.5-4A40 40 0 1 0 37 117.51a67.94 67.94 0 0 0-27.4 21.68a8 8 0 1 0 12.8 9.61A51.6 51.6 0 0 1 64 128a8 8 0 0 0 8-8"/></g></symbol><symbol id="p-cheat" viewBox="0 0 256 256"><g fill="currentColor"><path d="M216 64v128h-88V64Z" opacity=".2"/><path d="M224 128a8 8 0 0 1-8 8h-88a8 8 0 0 1 0-16h88a8 8 0 0 1 8 8m-96-56h88a8 8 0 0 0 0-16h-88a8 8 0 0 0 0 16m88 112h-88a8 8 0 0 0 0 16h88a8 8 0 0 0 0-16M82.34 42.34L56 68.69L45.66 58.34a8 8 0 0 0-11.32 11.32l16 16a8 8 0 0 0 11.32 0l32-32a8 8 0 0 0-11.32-11.32m0 64L56 132.69l-10.34-10.35a8 8 0 0 0-11.32 11.32l16 16a8 8 0 0 0 11.32 0l32-32a8 8 0 0 0-11.32-11.32m0 64L56 196.69l-10.34-10.35a8 8 0 0 0-11.32 11.32l16 16a8 8 0 0 0 11.32 0l32-32a8 8 0 0 0-11.32-11.32"/></g></symbol><symbol id="p-card" viewBox="0 0 256 256"><g fill="currentColor"><path d="M80 40v176H48a8 8 0 0 1-8-8V48a8 8 0 0 1 8-8Z" opacity=".2"/><path d="M184 112a8 8 0 0 1-8 8h-64a8 8 0 0 1 0-16h64a8 8 0 0 1 8 8m-8 24h-64a8 8 0 0 0 0 16h64a8 8 0 0 0 0-16m48-88v160a16 16 0 0 1-16 16H48a16 16 0 0 1-16-16V48a16 16 0 0 1 16-16h160a16 16 0 0 1 16 16M48 208h24V48H48Zm160 0V48H88v160z"/></g></symbol><symbol id="p-ticket" viewBox="0 0 256 256"><g fill="currentColor"><path d="M200 128a32 32 0 0 0 32 32v32a8 8 0 0 1-8 8H96V56h128a8 8 0 0 1 8 8v32a32 32 0 0 0-32 32" opacity=".2"/><path d="M232 104a8 8 0 0 0 8-8V64a16 16 0 0 0-16-16H32a16 16 0 0 0-16 16v32a8 8 0 0 0 8 8a24 24 0 0 1 0 48a8 8 0 0 0-8 8v32a16 16 0 0 0 16 16h192a16 16 0 0 0 16-16v-32a8 8 0 0 0-8-8a24 24 0 0 1 0-48M32 167.2a40 40 0 0 0 0-78.4V64h56v128H32Zm192 0V192H104V64h120v24.8a40 40 0 0 0 0 78.4"/></g></symbol><symbol id="p-more" viewBox="0 0 256 256"><g fill="currentColor"><path d="M224 128a96 96 0 1 1-96-96a96 96 0 0 1 96 96" opacity=".2"/><path d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24m0 192a88 88 0 1 1 88-88a88.1 88.1 0 0 1-88 88m56-88a12 12 0 1 1-12-12a12 12 0 0 1 12 12m-44 0a12 12 0 1 1-12-12a12 12 0 0 1 12 12m-44 0a12 12 0 1 1-12-12a12 12 0 0 1 12 12"/></g></symbol><symbol id="p-pencil" viewBox="0 0 256 256"><g fill="currentColor"><path d="M221.66 90.34L192 120l-56-56l29.66-29.66a8 8 0 0 1 11.31 0L221.66 79a8 8 0 0 1 0 11.34" opacity=".2"/><path d="m227.32 73.37l-44.69-44.68a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h168a8 8 0 0 0 0-16H115.32l112-112a16 16 0 0 0 0-22.63M48 163.31l88-88L180.69 120l-88 88H48Zm144-54.62L147.32 64l24-24L216 84.69Z"/></g></symbol><symbol id="p-left" viewBox="0 0 256 256"><path fill="currentColor" d="M168.49 199.51a12 12 0 0 1-17 17l-80-80a12 12 0 0 1 0-17l80-80a12 12 0 0 1 17 17L97 128Z"/></symbol><symbol id="p-right" viewBox="0 0 256 256"><path fill="currentColor" d="m184.49 136.49l-80 80a12 12 0 0 1-17-17L159 128L87.51 56.49a12 12 0 1 1 17-17l80 80a12 12 0 0 1-.02 17"/></symbol><symbol id="p-info" viewBox="0 0 256 256"><path fill="currentColor" d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24m0 192a88 88 0 1 1 88-88a88.1 88.1 0 0 1-88 88m16-40a8 8 0 0 1-8 8a16 16 0 0 1-16-16v-40a8 8 0 0 1 0-16a16 16 0 0 1 16 16v40a8 8 0 0 1 8 8m-32-92a12 12 0 1 1 12 12a12 12 0 0 1-12-12"/></symbol><symbol id="p-flame" viewBox="0 0 256 256"><g fill="currentColor"><path d="M208 144a80 80 0 0 1-160 0c0-30.57 14.42-58.26 31-80l33 32l26.27-72C159.86 41.92 208 88.15 208 144" opacity=".2"/><path d="M183.89 153.34a57.6 57.6 0 0 1-46.56 46.55a9 9 0 0 1-1.33.11a8 8 0 0 1-1.32-15.89c16.57-2.79 30.63-16.85 33.44-33.45a8 8 0 0 1 15.78 2.68ZM216 144a88 88 0 0 1-176 0c0-27.92 11-56.47 32.66-84.85a8 8 0 0 1 11.93-.89l24.12 23.41l22-60.41a8 8 0 0 1 12.63-3.41C165.21 36 216 84.55 216 144m-16 0c0-46.09-35.79-85.92-58.21-106.33l-22.27 61.07a8 8 0 0 1-13.09 3L80.06 76.16C64.09 99.21 56 122 56 144a72 72 0 0 0 144 0"/></g></symbol><symbol id="b-home" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M5.65 5.65l12.7 12.7" /><path d="M5.65 18.35l12.7 -12.7" /><path d="M12 3a9 9 0 0 0 9 9" /><path d="M3 12a9 9 0 0 1 9 9" /></symbol><symbol id="b-player" viewBox="0 0 24 24"><path d="M15 4l6 2v5h-3v8a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1v-8h-3v-5l6 -2a3 3 0 0 0 6 0" /><path d="M10.5 11h2.5l-1.5 5" /></symbol><symbol id="b-hit" viewBox="0 0 24 24"><path d="M4 19l16 0" /><path d="M4 15l4 -6l4 2l4 -5l4 4" /></symbol><symbol id="b-sak" viewBox="0 0 24 24"><path d="M14 12l0 .01" /><path d="M10 12l0 .01" /><path d="M12 10l0 .01" /><path d="M12 14l0 .01" /><path d="M4.5 12.5l8 -8a4.94 4.94 0 0 1 7 7l-8 8a4.94 4.94 0 0 1 -7 -7" /></symbol><symbol id="b-team" viewBox="0 0 24 24"><path d="M10 13a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M8 21v-1a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v1" /><path d="M15 5a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M17 10h2a2 2 0 0 1 2 2v1" /><path d="M5 5a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M3 13v-1a2 2 0 0 1 2 -2h2" /></symbol><symbol id="b-cheat" viewBox="0 0 24 24"><path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -6" /><path d="M15 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -10" /><path d="M9 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -14" /><path d="M4 20h14" /></symbol><symbol id="b-card" viewBox="0 0 24 24"><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16l-3 -2l-2 2l-2 -2l-2 2l-2 -2l-3 2" /><path d="M14 8h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5m2 0v1.5m0 -9v1.5" /></symbol><symbol id="b-ticket" viewBox="0 0 24 24"><path d="M15 5l0 2" /><path d="M15 11l0 2" /><path d="M15 17l0 2" /><path d="M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-3a2 2 0 0 0 0 -4v-3a2 2 0 0 1 2 -2" /></symbol><symbol id="b-more" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M8 12l0 .01" /><path d="M12 12l0 .01" /><path d="M16 12l0 .01" /></symbol><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5"/><circle cx="17" cy="9" r="2.8"/><path d="M16 14.2c2.6.2 4.4 1.8 5.4 5"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol>
+<symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5L7 21l5-2.6 5 2.6-1.5-7.5"/></symbol>
+<symbol id="i-ticket" viewBox="0 0 24 24"><path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4z"/><path d="M14 7v10" stroke-dasharray="2 2"/></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></symbol>
+<symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1 4 5 5.5 5 10a5 5 0 01-10 0c0-2 1-3.4 2-4.4 0 2 1 3 2 3 0-3-1-5.6 1-8.6z"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M3 7l6 6 4-4 8 8"/><path d="M15 17h6v-6"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></symbol>
+</defs></svg>
+<div class="wrap">
+  <header class="top">
+    <div class="brand" id="brand" role="button" tabindex="0"><svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true" style="flex:none"><circle cx="32" cy="32" r="30" fill="#B94A0B"/><g fill="none" stroke="#FFFFFF" stroke-opacity=".28" stroke-width="2.2"><path d="M32 2v60"/><path d="M11 11c9 7 13 14 13 21s-4 14-13 21"/><path d="M53 11c-9 7-13 14-13 21s4 14 13 21"/></g><g fill="#FFFFFF"><rect x="15" y="35" width="8" height="15" rx="1.8"/><rect x="28" y="24" width="8" height="26" rx="1.8"/><rect x="41" y="15" width="8" height="35" rx="1.8"/></g><path d="M7 30h50" fill="none" stroke="#16202B" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="5.5 4.5"/></svg><h1>Çizgi Masası</h1></div>
+    <nav class="tabs">
+      <button class="tab" id="tab-home" aria-pressed="true"><svg class="ic bi"><use href="#b-home"/></svg>Ana sayfa</button>
+      <button class="tab" id="tab-player" aria-pressed="false"><svg class="ic bi"><use href="#b-player"/></svg>Oyuncu</button>
+      <button class="tab" id="tab-hit" aria-pressed="false"><svg class="ic bi"><use href="#b-hit"/></svg>Hit rate</button>
+      <button class="tab" id="tab-sak" aria-pressed="false"><svg class="ic bi"><use href="#b-sak"/></svg>Sakatlar</button>
+      <button class="tab" id="tab-team" aria-pressed="false"><svg class="ic bi"><use href="#b-team"/></svg>Takım</button>
+      <button class="tab" id="tab-cheat" aria-pressed="false"><svg class="ic bi"><use href="#b-cheat"/></svg>Cheat sheet</button>
+      <button class="tab" id="tab-qry" aria-pressed="false"><svg class="ic"><use href="#i-search"/></svg>Sorgu</button>
+      <button class="tab" id="tab-scan" aria-pressed="false" hidden style="display:none"><svg class="ic"><use href="#i-search"/></svg>İddaa tarama</button>
+      <button class="tab" id="tab-card" aria-pressed="false"><svg class="ic bi"><use href="#b-card"/></svg>Karne</button>
+    <button class="hslip" id="h-slip" hidden><svg class="ic"><use href="#i-ticket"/></svg><span id="h-slip-t"></span></button></nav>
+    <div class="gsearch"><input type="search" id="search" aria-label="Oyuncu ara" placeholder="Oyuncu ara" autocomplete="off"><div class="gres" id="gres" hidden></div></div>
+  </header>
+
+  <div id="view-home">
+    <section class="hero">
+      <div><div class="eyebrow" id="h-date"></div><h2 class="night" id="h-title">Bu gece</h2><p class="hsub" id="h-sub"></p></div>
+      <div class="hero-r"><button class="kstrip kmini" id="h-karne" hidden></button><div class="days" id="h-days"></div></div>
+    </section>
+    <div class="injbar"><button class="act" id="inj-up" type="button">ESPN’i kontrol et</button><button class="act" id="nba-inj-check" type="button">NBA resmî raporu kontrol et</button><button class="act" id="idd-now" type="button" hidden>Baremleri şimdi çek</button><button class="act" id="inj-ed" aria-expanded="false">Out işaretle</button><button class="act" id="test-tg" type="button" hidden>Test modu</button><span class="note" id="inj-st"></span><div id="ud-status" class="note" hidden></div><div id="idd-status" class="note" hidden></div></div>
+    <div class="injpanel" id="inj-panel" hidden></div>
+    <p class="note glegend">Üstteki takım ev sahibi, <b>@</b> ile gösterilen deplasman takımı. Saatler Türkiye saati.</p>
+    <div class="hgames" id="h-games"><div class="sk sk-game"></div><div class="sk sk-game"></div><div class="sk sk-game"></div><div class="sk sk-game"></div><div class="sk sk-game"></div></div>
+    <section class="picks">
+      <div class="sec-head"><div><h3>Gecenin bahisleri</h3><p class="note" id="p-note"></p></div><button class="act" id="p-toscan" hidden style="display:none">Baremleri gir</button></div>
+      <div id="h-chg"></div><div id="h-inj" hidden></div><div id="h-hero"></div>
+      <div id="h-picks"><div class="sk sk-card"></div><div class="sk sk-card"></div><div class="sk sk-card"></div><div class="sk sk-card"></div></div>
+      <div class="paperbox"><div class="sec-head oth-head" id="h-oth-head" hidden><div><h3>Kâğıt üstünde</h3><p class="note">Modelin sevdiği ama iddaa oranında değer bulmadığımız öneriler. Oynamıyoruz, sadece yazıyoruz.</p></div></div>
+      <div id="h-others"></div></div>
+    </section>
+    <section class="panel mini-sec pf-wrap" id="h-gap-wrap" hidden><div class="mini-head"><h3>Piyasa farkı</h3><p class="note">DraftKings/FanDuel baremi ile modelimizin en çok ayrıştığı 10 bahis. Model yüzdesi, piyasanın oranından çıkan yüzdeyle (kâr payı ayıklanmış) karşılaştırılır.</p></div><div class="mlist pf-list" id="h-gap"></div></section>
+    <section class="panel mini-sec" id="h-outs-wrap" hidden><div class="mini-head"><h3>Yeni OUT → öne çıkanlar</h3><p class="note">Bu gece maçı olan takımlarda yeni OUT olan (20+ dk oynayan) oyuncular. Onsuz oynanan maçlarda takım arkadaşlarının dakika ve istatistik farkı. Model çarpanı, tahminlere uygulanan ayardır (o takımdaki tüm OUT'lar birlikte).</p></div><div class="mlist" id="h-outs"></div></section>
+    <div class="duo">
+      <section class="panel mini-sec" id="h-risers-wrap" hidden><div class="mini-head"><h3>Yükselenler</h3><p class="note">Son 2 maçta ilk beşe çıkan ya da dakikası belirgin artan oyuncular. Baremler bu değişikliklere genelde geç uyum sağlar.</p></div><div class="mlist" id="h-risers"></div></section>
+      <section class="panel mini-sec" id="h-unders-wrap" hidden><div class="mini-head"><h3>Günün alt önerileri</h3><p class="note">Rakibi o alanda cimri, formu çizginin altında. iddaa'da alt seçeneği var mı kontrol et.</p></div><div class="mlist" id="h-unders"></div></section>
+    </div>
+    <p class="note foot" id="stamp">Veriler yükleniyor…</p>
+  </div>
+
+  <div id="view-player" hidden>
+    <div class="strip"><div class="days" id="days"></div><div class="games" id="games"></div></div>
+    <div class="layout">
+    <aside class="side">
+      <div class="panel side"><span class="lab" id="plist-title">Oyuncular</span><div class="plist" id="plist"></div></div>
+    </aside>
+    <main class="main">
+      <div class="pv">
+      <div class="pv-b pv-b1"><div class="pv-c"><section class="pcx-hero" id="phead">
+        <div class="pcx-hl">
+          <div class="pcx-id"><span class="pcx-badge" id="ph-badge">–</span><div><h2 id="pname">–</h2><div class="pcx-sub" id="psub"></div></div></div>
+          <div class="pcx-acts"><button class="pcx-rb" id="pcx-add" title="Kupona ekle" aria-label="Kupona ekle"><svg class="ic"><use href="#i-plus"/></svg></button><button class="pcx-rb" id="pcx-team" title="Takım sayfası" aria-label="Takım sayfası"><svg class="ic"><use href="#i-users"/></svg></button></div>
+          <div class="pcx-kpis" id="pcx-kpis"></div>
+        </div>
+        <div class="pcx-grade" id="pcx-grade"></div>
+        <div hidden><div id="ph-bet"></div><div class="headkpis" id="headkpis"></div></div>
+      </section><div class="kk-box" id="kk-box" hidden></div><nav class="ptabs" id="ptabs" hidden><span class="tcount" id="pt-alert" hidden></span></nav><button class="act" id="to-team" hidden>Takım sayfası</button><section class="panel pcx-card pcx-chartcard" aria-label="Grafik ve çizgi">
+        <div class="mks" id="markets"></div>
+        <div class="segs" id="segs"></div>
+        <div class="chartwrap"><div class="chart" id="chart"></div></div>
+        <div class="wins pcx-wins" id="wins"></div>
+          <div class="betrow">
+            <div class="seg" id="side"><button data-s="over" aria-pressed="true">Üst</button><button data-s="under" aria-pressed="false">Alt</button></div>
+            <div class="field"><label class="lab" for="line">Çizgi</label><input type="text" inputmode="decimal" id="line"></div>
+            <div class="field"><label class="lab" for="odds">Oran</label><input type="text" inputmode="decimal" id="odds" placeholder="1.85"></div>
+            <div class="verdict" id="verdict"></div>
+            <button class="addk" id="addcur" style="align-self:end;min-height:36px">+ Kupona ekle</button>
+          </div>
+          <div class="gameinfo" id="gameinfo"></div>
+          <div class="qouts" id="qouts"></div>
+          <details class="fbox"><summary>Filtreler <span id="fsum" class="note"></span></summary><div class="filters">
+            <div class="field"><label class="lab" for="f-role">Rol</label><select id="f-role"><option value="all">İlk 5 + yedek</option><option value="st">Sadece ilk 5</option><option value="bn">Sadece yedek</option></select></div>
+            <div class="field"><label class="lab" for="f-loc">Yer</label><select id="f-loc"><option value="all">Ev + deplasman</option><option value="h">Ev</option><option value="a">Deplasman</option></select></div>
+            <div class="field wide"><label class="lab" for="f-min">En az dakika</label><select id="f-min"><option value="0">Hepsi</option><option value="20">20+ dk</option><option value="25">25+ dk</option><option value="30">30+ dk</option><option value="35">35+ dk</option></select></div>
+          </div>
+          <div class="field" style="margin-bottom:6px"><span class="lab">Bu gece OUT olanlar (dokun: OUT / oynuyor)</span><div class="chips" id="f-tout"></div><p class="note" style="margin:2px 0 0">İşaretlediğin oyuncu önerilerden çıkar, takım arkadaşlarının beklentisi artar. Ana sayfadaki "Out işaretle" ile aynı liste.</p></div>
+          <div class="field" style="margin-bottom:6px"><span class="lab">Geçmiş maçlar: takım arkadaşı yokken (birkaçını seçebilirsin)</span><div class="chips" id="f-outs"></div></div>
+          <div class="chips" id="f-active" style="margin-bottom:6px"></div></details>
+      </section><section class="panel pcx-card inj" id="injbox"></section></div><div class="pv-c"><section class="pcx-mhero" id="pcx-mhero"></section><section class="panel pcx-card" id="pcx-fav"></section><section class="pcx-rest" id="pcx-rest"></section><section class="panel pcx-card" id="pcx-odds"></section></div></div>
+      <div class="pv-b pv-b2"><div class="pv-c"><section class="panel pcx-card"><div class="ladder" id="ladder"></div><div class="ladder bhist" id="bhist" hidden></div></section></div><div class="pv-c"><section class="panel pcx-card"><h3 class="pcx-h">Model ve oran</h3>
+          <div class="oddsrow"><span class="lab" id="odds-title">İddaa baremi</span><div class="oddschips" id="oddschips"></div><div class="chips"><button class="chip-btn" id="oddsave">Bu bareme listeme ekle</button><span class="note" id="oddmsg"></span></div></div>
+          <div class="kpis" id="kpis"></div></section><section class="panel pcx-card"><h3 class="pcx-h">Son trendler</h3><p class="pcx-ins" id="pcx-ins"></p><div class="mintrend" id="mintrend"></div></section><section class="panel pcx-card deep"><div id="tierbox"></div></section></div><div class="pv-c"><section class="panel pcx-card"><h3 class="pcx-h">Ortalamalar</h3><div class="tablewrap" id="summary"></div></section><section class="panel pcx-card deep"><div id="shotbox"></div></section></div><div class="pv-c"><section class="panel pcx-card">
+          <div class="mhead">
+            <div class="field"><label class="lab" for="opp">Rakip</label><select id="opp"></select></div>
+            <div class="field"><label class="lab" for="pos">Pozisyon</label><select id="pos"><option>PG</option><option>SG</option><option>SF</option><option>PF</option><option>C</option></select></div>
+          </div>
+          <div id="matchup"></div>
+          <div class="rows2" id="h2hbox"></div>
+        </section><section class="panel pcx-card">
+          <div id="how"></div>
+          <div class="field" style="margin-top:8px;max-width:150px"><label class="lab" for="minutes">Beklenen dakika</label><input type="text" inputmode="decimal" id="minutes"></div>
+        </section></div></div>
+      <div class="pv-b pv-b3"><div class="pv-c"><section class="panel pcx-card deep"><div id="zonebox"></div></section></div></div>
+            <div class="pv-b pv-b5"><div class="pv-c"><section class="panel pcx-card"><h3 class="pcx-h" id="tbl-title">Maçlar</h3><div class="tablewrap" id="table"></div></section></div></div>
+      </div>
+      <p class="note">Şanslar geçmiş veriye dayalı kaba tahmindir, garanti değildir. Son dakika sakatlıklarını ve oranı oynamadan önce iddaa'da kontrol et.</p>
+    </main>
+    </div>
+  </div>
+
+  <div id="view-hit" hidden>
+    <div class="segs" id="x-mode" style="margin-bottom:12px"><button class="seg-b" data-mode="streak" aria-pressed="true">%100 seriler</button><button class="seg-b" data-mode="table" aria-pressed="false">Hit rate tablosu</button></div>
+    <div id="x-streak"><div class="sec-head"><div><h3>%100 seriler</h3><p class="note">Oyuncunun son en az 5 maçında hiç kaçırmadığı en yüksek barem. Parantezdeki sayı, bu baremi üst üste kaç maçtır geçtiği. Sadece o gün maçı olan oyuncular. Çok düşük baremler gizlenir.</p></div><div class="rows" style="align-items:flex-end;gap:12px"><label class="check"><input type="checkbox" id="x-ls"> Geçen sezonu da say</label><div class="field" style="min-width:150px"><label class="lab" for="x-sday">Gün</label><select id="x-sday"></select></div></div></div><div class="sgrid" id="sgrid"></div></div>
+    <div id="x-table" hidden>
+    <div class="sec-head"><div><h3>Hit rate</h3><p class="note">O günün oyuncuları, çizgiyi son 5, 10 ve 20 maçta kaç kez geçtiklerine göre sıralanır. L20'ye geçen sezonun maçları da girer. Çizgi ~ ile yazılıysa iddaa baremi yoktur, son 10 maçın ortalamasından gelir. Alt baremler açıkken 1, 2 ve 3 alt çizgiler de listelenir, örneğin "4+ asist". Oran girdiğin baremlerde Gereken, oranın ima ettiği şanstır; Değer, L10 hit rate'e göre 1 birimlik beklenen kazançtır. Oranı oyuncunun barem merdiveninden girebilirsin.</p></div></div>
+    <div class="scanbar">
+      <div class="field"><label class="lab" for="x-day">Gün</label><select id="x-day"></select></div>
+      <div class="field"><label class="lab" for="x-mk">Bahis türü</label><select id="x-mk"></select></div>
+      <div class="field"><label class="lab" for="x-sort">Sırala</label><select id="x-sort"><option value="h10">L10</option><option value="h5">L5</option><option value="h20">L20</option><option value="ev">Değer (L10)</option></select></div>
+      <div class="field"><label class="lab" for="x-min">En az</label><select id="x-min"><option value="0">Hepsi</option><option value=".6">%60</option><option value=".7" selected>%70</option><option value=".8">%80</option><option value="1">%100</option></select></div>
+      <div class="field"><label class="lab" for="x-team">Takım</label><select id="x-team"></select></div>
+      <label class="check"><input type="checkbox" id="x-alt" checked> Alt baremler</label>
+    </div>
+    <p class="note" id="x-note" style="margin-bottom:10px"></p>
+    <div class="tablewrap" id="hitt"></div>
+    </div>
+  </div>
+
+  <div class="kk-modal" id="kk-modal" hidden role="dialog" aria-modal="true" aria-labelledby="kk-mt"><div class="kk-mbox">
+    <button type="button" class="kk-mx" id="kk-mx" aria-label="Kapat">×</button>
+    <h3 id="kk-mt">Bu ne demek?</h3><p class="note">Kalıcı tip her oyuncuda tektir, son 20 maçtan çıkar. Bu gece ve dakika tipleri sadece şartları tutunca görünür.</p>
+    <section class="kk-dicts">
+      <div><h4>Kalıcı tip</h4><div class="kk-dict" id="kar-dk"></div></div>
+      <div><h4>Bu gece tetiklenenler</h4><div class="kk-dict" id="kar-dg"></div></div>
+      <div><h4>Dakika trendi</h4><div class="kk-dict" id="kar-dt"></div></div>
+    </section>
+  </div></div>
+
+  <div id="view-cheat" class="panel" hidden>
+    <div class="scanbar">
+      <div class="field"><label class="lab" for="c-day">Gün</label><select id="c-day"></select></div>
+      <div class="field"><label class="lab" for="c-pos">Pozisyon</label><select id="c-pos"><option value="">Hepsi</option><option>PG</option><option>SG</option><option>SF</option><option>PF</option><option>C</option></select></div>
+      <div class="field"><label class="lab" for="c-mk">Kategori</label><select id="c-mk"></select></div>
+      <label class="check"><input type="checkbox" id="c-only"> Sadece fırsatlar</label>
+      <label class="check"><input type="checkbox" id="c-up"> Dakikası artanlar</label>
+    </div>
+    <p class="note" style="margin-bottom:10px">Rakibin o pozisyona en çok verdiği kategoriden sıralanır. Fırsat: rakip bu kategoride ilk 10'da ve oyuncunun L5 ile L10 ortalaması çizginin üstünde. Çizgi ~ ile yazılıysa iddaa baremi yoktur, sezon ortalamasından gelir. Bu kategoride çok düşük üreten ve baremi olmayan oyuncular gizlenir.</p>
+    <div class="tablewrap" id="cheat"></div>
+  </div>
+
+  <div id="view-sak" hidden>
+    <section class="sk-top"><div><h2 class="sk-title">Sakatlar</h2><div class="sk-sum" id="sak-sum"></div></div><div class="sk-act"><span class="note" id="sak-src"></span><button class="act" id="sak-up">Sakatlıkları güncelle</button></div></section>
+    <p class="note sk-help">Takıma veya oyuncuya dokunarak detaylara git. OUT kesin yok; Q/D ve maç saati kararları belirsiz, P muhtemel, AVAILABLE oynamaya uygun. “Yokken artanlar” son maçlarda oynayan bir OUT oyuncusunun olası rotasyon etkisini gösterir; yeni sakatlık haberi anlamına gelmez.</p>
+    <div class="sk-list" id="sak-list"></div>
+  </div>
+  <div id="view-team" hidden>
+    
+    <div class="t-head" id="t-head"></div>
+    <div class="field tsel"><label class="lab" for="t-sel">Takım</label><select id="t-sel"></select></div>
+    <section class="panel tp" id="t-match"></section>
+    <section class="panel tp"><h3 class="ksub">Takım genel verisi</h3><p class="note" style="margin:0 0 8px">TeamRankings, bu sezon. "modelde" etiketli rakamlar rakip takım olarak öneri hesabına küçük bir düzeltme olarak giriyor (en fazla ±%5).</p><div id="t-tr"></div></section>
+    <section class="panel tp"><h3 class="ksub">Rotasyon</h3><p class="note" style="margin:0 0 4px">Çubuk son 5 maçtaki dakika, beyaz çizgi sezon ortalaması. Ok, fark 4+ dakika olduğunda çıkar. İlk 5, en sık ilk 5'te başlayanlardır. Oyuncuya dokununca dakika dakika sahada olma oranı açılır.</p><div id="t-rot"></div></section>
+    <div class="tcols tp" style="margin-top:12px">
+      <section class="panel"><h3 class="ksub">Kim yokken kim artıyor</h3><p class="note" style="margin:0 0 4px">Kilit oyuncuyu seç, o oynamadığında takım arkadaşlarının dakika ve istatistik farkını (o varken oynadığı maçlara göre) gör.</p><div id="t-wo"></div></section>
+      <section class="panel"><h3 class="ksub">Savunma profili</h3><p class="note" style="margin:0 0 8px">Her pozisyona verdiği istatistikte 30 takım içindeki sıra. 1 en çok veren (yeşil, o pozisyondan oyuncuya iyi rakip), 30 en az veren.</p><div id="t-def"></div></section>
+    </div>
+  </div>
+  <div id="view-card" hidden>
+    <div class="sec-head"><div><h3>Karne</h3><p class="note">İki defter tutuyoruz. Hangisine bakmak istediğini seç, takvimde bir güne dokun.</p></div></div>
+    <div class="kswitch" id="k-switch" role="group" aria-label="Defter seç"><button data-kv="kasa" aria-pressed="true"><svg class="ic bi"><use href="#b-card"/></svg>Kasa defteri</button><button data-kv="kagit" aria-pressed="false"><svg class="ic ph"><use href="#p-pencil"/></svg>Kâğıt üstünde</button></div>
+    <div class="kbook" id="r-kasa"></div>
+    <div class="ktiles" id="r-tiles"></div>
+    <section class="panel kcal-p"><div class="kcal-l"><div class="kcal-h"><button class="kcal-nav" id="k-prev" aria-label="Önceki ay"><svg class="ic ph"><use href="#p-left"/></svg></button><h3 class="ksub" id="k-month"></h3><button class="kcal-nav" id="k-next" aria-label="Sonraki ay"><svg class="ic ph"><use href="#p-right"/></svg></button></div>
+      <div class="kcal" id="r-cal"></div></div><div class="kday" id="r-list"></div></section>
+    <section class="panel kgraph" id="r-graph"></section>
+    <div class="kch" id="r-charts"></div>
+    <details class="khow"><summary><svg class="ic ph"><use href="#p-info"/></svg>Nasıl hesaplanıyor?</summary><p class="note">Kasa defteri: iddaa baremi olan ve oranı değer taşıyan bahisler (10 Kasım gecesinden beri). Her biri 1 birim, iddaa'da gerçekten oynanmış gibi: tutarsa +(oran−1), tutmazsa −1, oyuncu oynamazsa 0 (iade). Kâğıt üstünde: modelin seçtiği ama baremi olmayan ya da oranı değer taşımayan öneriler; oynamadık, sadece "oynasaydık ne olurdu" diye yazıyoruz. 5-9 Kasım'ın eski kaydı oransız olduğu için sadece isabet sayısına katılır. Öneriler maç başlayana kadar güncellenir, sonra kilitlenir; sonuçlar ertesi sabah işlenir.</p></details>
+    <section class="panel" style="margin-bottom:16px"><h3 class="ksub">Gece özeti</h3><p class="note" style="margin:0 0 10px">Seçtiğin gecenin skorları, yıldızları, sürprizleri ve önerilerimizin sonucu tek görselde. Sadece sen bastığında oluşur, istersen gruba atarsın.</p>
+      <div class="rows" style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end"><div class="field" style="min-width:220px"><label class="lab" for="n-day">Gece</label><select id="n-day"></select></div><button class="act pri" id="n-make">Özeti oluştur</button></div>
+      <div class="n-prev" id="n-prev"></div><div class="sl-acts" id="n-acts" hidden><button class="act wa" id="n-wa">WhatsApp'ta paylaş</button><button class="act" id="n-img">Görseli indir</button><button class="act" id="n-copy">Metni kopyala</button></div><p class="note" id="n-msg"></p><textarea id="n-ta" hidden rows="8" style="width:100%"></textarea></section>
+        </div>
+
+  <div id="view-qry" hidden>
+
+<div class="qhead"><h3>Sorgu</h3><p class="note">Oyuncuyu ve filtreleri seç; maç sayısı, ortalama ve çizgiyi geçme oranı anında hesaplanır. Bu ve geçen sezonun maç kayıtlarından gelir.</p></div>
+<div class="qpanel"><div class="qgrid">
+  <div class="field wide"><label class="lab" for="q-pl">Oyuncu</label><input id="q-pl" list="q-pll" placeholder="Andre Drummond" autocomplete="off"><datalist id="q-pll"></datalist></div>
+  <div class="field"><label class="lab" for="q-ss">Sezon</label><select id="q-ss"><option value="both">İkisi</option><option value="cur">Bu sezon</option><option value="last">Geçen sezon</option></select></div>
+  <div class="field"><label class="lab" for="q-mk">Bahis türü</label><select id="q-mk"></select></div>
+  <div class="field"><label class="lab" for="q-st">Rol</label><select id="q-st"><option value="all">Hepsi</option><option value="s">Başlarken</option><option value="b">Yedekken</option></select></div>
+  <div class="field"><label class="lab" for="q-lc">Yer</label><select id="q-lc"><option value="all">Hepsi</option><option value="h">Evde</option><option value="a">Deplasmanda</option></select></div>
+  <div class="field"><label class="lab" for="q-op">Rakip</label><select id="q-op"></select></div>
+  <div class="field"><label class="lab" for="q-b2">Dinlenme</label><select id="q-b2"><option value="all">Hepsi</option><option value="b2b">Back-to-back</option><option value="rest">Dinlenmiş</option></select></div>
+  <div class="field wide"><label class="lab" for="q-tm">Takım arkadaşı ekle</label><select id="q-tm"><option value="">Seç</option></select></div>
+  <div class="field"><label class="lab" for="q-rg">Aralık</label><select id="q-rg"><option value="0">Hepsi</option><option value="f5">İlk 5 maç</option><option value="l5">Son 5 maç</option><option value="l10">Son 10 maç</option><option value="l20">Son 20 maç</option></select></div>
+  <div class="field"><label class="lab" for="q-ln">Çizgi</label><input id="q-ln" inputmode="decimal" placeholder="10.5"></div>
+</div>
+<div class="chips" id="q-chips"></div></div>
+<div class="qres"><h4 id="q-ttl"></h4><p id="q-note"></p></div>
+<div class="qcmp" id="q-cmp"></div>
+<div class="qk" id="q-kpi"></div>
+<div class="qchart" id="q-ch"><div class="qct" id="q-ct"></div><div class="qbars" id="q-bars"></div></div>
+<div class="tablewrap" id="q-tab"></div>
+</div>
+  <div id="view-scan" class="panel" hidden>
+    <div class="paste">
+      <label class="lab" for="p-text">Baremleri yapıştır veya yaz</label>
+      <textarea id="p-text" placeholder="Zion Williamson 21+ 1.63&#10;Dejounte Murray 18+ 1,66"></textarea>
+      <div class="acts">
+        <label class="lab" for="p-mk">Tür</label><select id="p-mk"></select>
+        <button class="act pri" id="p-add">Listeye ekle</button><button class="act" id="p-clear">Listemi temizle</button>
+        <span class="note" id="p-res"></span>
+      </div>
+      <p class="note">Liste bu tarayıcıda kalır ve maç başlayınca silinir. Metinde "Oyuncu Ribaund" gibi başlıklar varsa tür kendiliğinden seçilir.</p>
+    </div>
+    <div class="scanbar">
+      <div class="field"><label class="lab" for="s-mk">Bahis türü</label><select id="s-mk"></select></div>
+      <div class="field"><label class="lab" for="s-game">Maç</label><select id="s-game"></select></div>
+      <div class="field"><label class="lab" for="s-min">En az maç</label><select id="s-min"><option value="1">1</option><option value="5" selected>5</option><option value="8">8</option></select></div>
+      <label class="check"><input type="checkbox" id="s-go" checked> Sadece "Oynanır"</label>
+      <label class="check"><input type="checkbox" id="s-inj" checked> Sakatları gizle</label>
+    </div>
+    <p class="note" style="margin-bottom:10px" id="scan-note"></p>
+    <div class="tablewrap" id="scan"></div>
+  </div>
+</div>
+<div id="tip" hidden></div>
+
+<nav class="bnav" id="bnav" aria-label="Alt menü">
+  <button data-bv="home"><svg class="ic bi"><use href="#b-home"/></svg><span>Ana sayfa</span></button>
+  <button data-bv="player"><svg class="ic bi"><use href="#b-player"/></svg><span>Oyuncu</span></button>
+  <button data-bv="hit"><svg class="ic bi"><use href="#b-hit"/></svg><span>Hit rate</span></button>
+  <button data-bv="slip"><svg class="ic bi"><use href="#b-ticket"/></svg><span>Kupon</span><b class="bcount" id="bn-count" hidden></b></button>
+  <button data-bv="more"><svg class="ic bi"><use href="#b-more"/></svg><span>Daha fazla</span></button>
+</nav>
+<div class="bsheet" id="bsheet" hidden><div class="bs-in">
+  <button data-bv="sak"><svg class="ic bi"><use href="#b-sak"/></svg>Sakatlar</button>
+  <button data-bv="team"><svg class="ic bi"><use href="#b-team"/></svg>Takım</button>
+  <button data-bv="cheat"><svg class="ic bi"><use href="#b-cheat"/></svg>Cheat sheet</button>
+  <button data-bv="qry"><svg class="ic"><use href="#i-search"/></svg>Sorgu</button>
+  <button data-bv="scan" hidden style="display:none"><svg class="ic"><use href="#i-search"/></svg>İddaa tarama</button>
+  <button data-bv="card"><svg class="ic bi"><use href="#b-card"/></svg>Karne ve gece özeti</button>
+</div></div>
+<button class="slip-fab" id="slip-fab" hidden></button>
+<div class="slip-toast" id="slip-toast" hidden role="status"></div>
+<aside class="slip" id="slip" hidden aria-label="Kupon"><div class="slip-head"><h3>Kupon</h3><button class="sl-x" id="slip-close" aria-label="Kapat">×</button></div>
+<div class="slip-body" id="slip-body"></div>
+<div class="slip-foot" id="slip-foot"><div class="field"><label class="lab" for="sl-stake">Miktar (TL)</label><input id="sl-stake" inputmode="decimal" placeholder="100"></div><div class="sl-total" id="sl-total"></div><p class="note" id="sl-model"></p>
+<div class="sl-acts"><button class="act wa" id="sl-wa">WhatsApp'ta paylaş</button><button class="act" id="sl-img">Görseli indir</button><button class="act" id="sl-copy">Mesajı kopyala</button><button class="act" id="sl-clear">Temizle</button></div><p class="note" id="sl-msg"></p><textarea id="sl-ta" hidden rows="8" style="width:100%"></textarea></div></aside>
+<script src="model.js?v=20261114d"></script>
+<script src="app.js?v=20261114-espn1"></script>
+<script src="gorunum-ana.js?v=20261115-manual2"></script>
+<script src="gorunum-oyuncu.js?v=20261114b"></script>
+<script src="gorunum-diger.js?v=20261114-status2"></script>
+<script src="karne.js?v=20261114d"></script>
+<script src="karakter.js?v=20261113"></script>
+<script src="okuyucular.js?v=20261113b"></script>
+<script src="ekler.js?v=20261113"></script>
+<script src="baslat.js?v=20261114a"></script>
+<script src="canli-sakatlik.js?v=20261115-manual2"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(err =>
+      console.warn('PWA servis çalışanı kaydedilemedi:', err));
+  });
+}
+</script>
+</body></html>
