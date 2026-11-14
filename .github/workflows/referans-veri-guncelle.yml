@@ -1,0 +1,39 @@
+name: Cizgi Masasi - DVP ve TeamRankings Dosya Uretimi
+
+on:
+  workflow_dispatch:
+    inputs:
+      kaynak:
+        description: 'Hangi veri dosyasini uretelim?'
+        type: choice
+        required: true
+        default: dvp
+        options:
+          - dvp
+          - teamrankings
+          - both
+
+permissions:
+  contents: read
+
+jobs:
+  veri-uret:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Repository kodunu al
+        uses: actions/checkout@v4
+      - name: Python kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Kaynak verileri oku ve JSON dosyalarini dogrula
+        run: python scripts/update_reference_stats.py --source '${{ inputs.kaynak }}' --out out
+      - name: Sonuclari indirilebilir artifact olarak sakla
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cizgi-masasi-onay-bekleyen-veriler
+          path: out/*.json
+          retention-days: 7
+          if-no-files-found: error
