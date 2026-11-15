@@ -43,6 +43,9 @@ def norm(s):
     s = s.replace('’',"'")
     return re.sub(r'[^a-z0-9]+',' ',s).strip()
 
+def strip_suffix(k):
+    return re.sub(r'\s+(jr|sr|ii|iii|iv)$','',k)
+
 def load_json(path):
     with open(path,'r',encoding='utf-8-sig') as f:
         return json.load(f)
@@ -68,6 +71,9 @@ def roster_index(data):
         except (TypeError,ValueError):continue
         k=norm(name)
         by_name.setdefault(k,[]).append((pid,str(team)))
+        # Ek (Jr./Sr./II...) olmadan yazilan isimler icin yedek anahtar; yalnizca tam eslesme yoksa kullanilir.
+        k2=strip_suffix(k)
+        if k2!=k:by_name.setdefault('~'+k2,[]).append((pid,str(team)))
     return by_name
 
 def parse_event(event,by_name):
@@ -90,6 +96,8 @@ def parse_event(event,by_name):
             key=norm(name)
             key=ALIASES.get(key,key)
             possibles=[(pid,team) for pid,team in by_name.get(key,[]) if team in (home,away)]
+            if not possibles:
+                possibles=[(pid,team) for pid,team in by_name.get('~'+strip_suffix(key),[]) if team in (home,away)]
             if len(possibles)!=1:
                 missing.add(name)
                 continue
