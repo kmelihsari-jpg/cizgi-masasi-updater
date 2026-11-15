@@ -74,6 +74,8 @@ def roster_index(data):
         # Ek (Jr./Sr./II...) olmadan yazilan isimler icin yedek anahtar; yalnizca tam eslesme yoksa kullanilir.
         k2=strip_suffix(k)
         if k2!=k:by_name.setdefault('~'+k2,[]).append((pid,str(team)))
+        # Bosluk/nokta farki (OG / O.G., P.J. / PJ) icin sikistirilmis anahtar.
+        by_name.setdefault('#'+k2.replace(' ',''),[]).append((pid,str(team)))
     return by_name
 
 def parse_event(event,by_name):
@@ -98,6 +100,9 @@ def parse_event(event,by_name):
             possibles=[(pid,team) for pid,team in by_name.get(key,[]) if team in (home,away)]
             if not possibles:
                 possibles=[(pid,team) for pid,team in by_name.get('~'+strip_suffix(key),[]) if team in (home,away)]
+            if not possibles:
+                squash=strip_suffix(norm(name)).replace(' ','')
+                possibles=[(pid,team) for pid,team in by_name.get('#'+squash,[]) if team in (home,away)]
             if len(possibles)!=1:
                 missing.add(name)
                 continue
