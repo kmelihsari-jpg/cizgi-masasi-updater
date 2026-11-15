@@ -4,7 +4,14 @@ name: NBA Resmi Sakatlik Senkronizasyonu
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/15 * * * *'
+    # Zamanlar UTC (Turkiye = UTC+3). GitHub zamanlanmis isleri :00/:15/:30/:45 gibi yogun dakikalarda
+    # geciktirir; bu yuzden dakikalar bilerek yogun olmayan degerlere kaydirildi (07, 22, 37, 52 ...).
+    # GECE 20:00-06:00 TR (17:00-03:00 UTC): 15 dakikada bir
+    - cron: '7,22,37,52 17-23,0-2 * * *'
+    # GUNDUZ 06:00-20:00 TR (03:00-17:00 UTC): 40 dakikada bir
+    #   cift saatler (04,06,...,16 UTC): :07 ve :47 ; tek saatler (03,05,...,15 UTC): :27
+    - cron: '7,47 4-16/2 * * *'
+    - cron: '27 3-15/2 * * *'
 
 permissions:
   contents: read
