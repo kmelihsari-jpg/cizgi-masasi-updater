@@ -31,7 +31,10 @@ jobs:
           python-version: '3.12'
 
       - name: Eski testleri calistir
-        run: python scripts/test_updater.py
+        run: |
+          python scripts/test_updater.py
+          python tests/test_phantom_rows.py
+          python tests/test_box_quality.py
 
       - name: Yeni maclari cek ve dogrula
         shell: bash
@@ -61,6 +64,8 @@ jobs:
               keys.add(key)
           print("DOGRU:",len(a["rows"]),"->",len(b["rows"]),"oyuncu-mac kaydi")
           '
+          python tests/test_phantom_rows.py
+          python tests/test_box_quality.py
 
       - name: Kalici GitHub kaydini yap
         shell: bash

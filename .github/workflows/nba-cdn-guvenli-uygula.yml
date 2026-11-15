@@ -29,7 +29,10 @@ jobs:
         with:
           python-version: '3.12'
       - name: Validate merge logic
-        run: python scripts/test_nba_cdn_sync.py
+        run: |
+          python scripts/test_nba_cdn_sync.py
+          python tests/test_phantom_rows.py
+          python tests/test_box_quality.py
       - name: Back up original seed as a workflow artifact
         run: |
           mkdir -p out
@@ -39,6 +42,8 @@ jobs:
       - name: Validate resulting JSON and patch
         run: |
           python -m json.tool seed/data.json > /dev/null
+          python tests/test_phantom_rows.py
+          python tests/test_box_quality.py
           git diff --check
           git diff --stat -- seed/data.json
       - name: Upload backup and report

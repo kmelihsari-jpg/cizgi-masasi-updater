@@ -99,9 +99,28 @@ jobs:
                   raise RuntimeError('data.json eksik alan: ' + field)
           if len(stats['rows']) < 3900:
               raise RuntimeError('Oyuncu mac kaydi beklenenden az, yayin durduruldu')
+          # Hayalet satir = 0 dk ve ilk 5 isaretli (oynamayan oyuncu). Sayfa "satiri var = oynadi"
+          # sayar; bu yuzden bu satirlar "X yokken", missedStreak, mpg ve Kasa'yi bozar.
+          def _phantoms(d):
+              c = {n: i for i, n in enumerate(d['cols'])}
+              return [r for r in d['rows'] if r[c['min']] == 0 and r[c['start']]]
+          bad = _phantoms(stats)
+          if bad:
+              raise RuntimeError(f'{len(bad)} hayalet oyuncu satiri (0 dk + ilk 5) var; yayin durduruldu')
+          # Eksik box score: takim dakikalari 240+25xUT'ye kapanmiyorsa satirsiz oyuncular "oynamadi"
+          # diye yorumlanir (yanlis X yokken). Eksik macli veriyle yayin yapma.
+          import sys
+          sys.path.insert(0, 'scripts')
+          from box_quality import partial_games
+          partial = partial_games(stats)
+          if partial:
+              raise RuntimeError('Eksik box score suphesi (dakika kapanmiyor): ' + ', '.join(f'{d} {t}' for d, t in sorted(partial)[:10]) + '; yayin durduruldu')
           previous = json.loads((folder / 'data.json').read_text(encoding='utf-8')) if (folder / 'data.json').exists() else None
-          if previous is not None and len(stats['rows']) < len(previous.get('rows', [])):
-              raise RuntimeError('GitHub verisi yayindaki veriden eski, yayin durduruldu')
+          if previous is not None:
+              # Yayindaki veride hayalet satir varsa, onlarin silinmesi veri kaybi sayilmaz.
+              previous_real = len(previous.get('rows', [])) - len(_phantoms(previous))
+              if len(stats['rows']) < previous_real:
+                  raise RuntimeError('GitHub verisi yayindaki veriden eski, yayin durduruldu')
           shutil.copyfile(data_file, folder / 'data.json')
           # Karne V1: yalnızca yeni dönemin doğrulanmış kayıtlarını yayımla.
           karne_seed = pathlib.Path('seed/karne.json')

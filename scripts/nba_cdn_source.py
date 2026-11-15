@@ -61,6 +61,32 @@ def recent_final_games(schedule, days=7, today=None):
     return sorted(found.values(), key=lambda v: (v['game_date'], v['game_id']))
 
 
+_FALSE_FLAGS = {'', '0', 'false', 'no', 'n', 'none', 'null', 'inactive'}
+
+
+def flag(value):
+    """NBA CDN bayraklari (played, starter) bazen "0"/"1" METNI gelir.
+
+    Python'da bool("0") True'dur; bu yuzden duz truthiness kullanilmaz.
+    Oynamayan (INACTIVE) oyuncular "played":"0" ile gelir ve satir olarak
+    veriye girmemelidir: oynamayan oyuncunun satiri olmamasi "yoktu" demektir.
+    """
+    if isinstance(value, str):
+        return value.strip().lower() not in _FALSE_FLAGS
+    return bool(value)
+
+
+def played_in_game(p):
+    """Resmi box score'a gore oyuncu fiilen oynadi mi?"""
+    if not flag(p.get('played')):
+        return False
+    if str(p.get('status') or '').strip().upper() == 'INACTIVE':
+        return False
+    if str(p.get('notPlayingReason') or '').strip():
+        return False
+    return True
+
+
 def normalize_boxscore(raw, expected_id=None):
     game = raw.get('game') or {}
     gid = str(game.get('gameId', ''))
@@ -77,7 +103,7 @@ def normalize_boxscore(raw, expected_id=None):
     for team, opp in ((teams[0], teams[1]), (teams[1], teams[0])):
         played_count = 0
         for p in team.get('players', []):
-            if not p.get('played'):
+            if not played_in_game(p):
                 continue
             stats = p.get('statistics') or {}
             keys = ('points', 'assists', 'reboundsTotal', 'threePointersMade', 'threePointersAttempted',
@@ -92,7 +118,7 @@ def normalize_boxscore(raw, expected_id=None):
                 'game_id': gid, 'nba_player_id': str(p['personId']),
                 'name': p.get('name') or (str(p.get('firstName') or '')+' '+str(p.get('familyName') or '')).strip(),
                 'team': team['teamTricode'], 'opponent': opp['teamTricode'],
-                'home': team is teams[0], 'starter': bool(p.get('starter')),
+                'home': team is teams[0], 'starter': flag(p.get('starter')),
                 'minutes': stats['minutes'], 'pts': stats['points'],
                 'ast': stats['assists'], 'reb': stats['reboundsTotal'],
                 'oreb': stats['reboundsOffensive'], 'dreb': stats['reboundsDefensive'],
