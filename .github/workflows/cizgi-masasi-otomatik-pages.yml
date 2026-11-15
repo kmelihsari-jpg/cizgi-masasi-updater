@@ -12,6 +12,7 @@ on:
     workflows:
       - 'Cizgi Masasi - Gunluk Oyuncu Istatistikleri'
       - 'Cizgi Masasi - Yerel Tracking Verisini Birlestir'
+      - 'Cizgi Masasi - Iddaa NBA Barem Senkronizasyonu'
       - 'Cizgi Masasi - Periyot ve Rotasyon Verileri'
     types:
       - completed
@@ -92,6 +93,32 @@ jobs:
           if previous is not None and len(stats['rows']) < len(previous.get('rows', [])):
               raise RuntimeError('GitHub verisi yayindaki veriden eski, yayin durduruldu')
           shutil.copyfile(data_file, folder / 'data.json')
+          # Github senkronizasyonundan gelen oyuncu baremleri. Eski web kopyasini ez.
+          iddaa_seed = pathlib.Path('seed/iddaa-lines.json')
+          if iddaa_seed.is_file():
+              iddaa = json.loads(iddaa_seed.read_text(encoding='utf-8'))
+              rows = iddaa.get('rows')
+              if not isinstance(rows, list) or int(iddaa.get('count', -1)) != len(rows):
+                  raise RuntimeError('Iddaa seed JSON gecersiz; yayin durduruldu')
+              now_unix = int(time.time())
+              # Sadece henuz baslamamis mac satirlari; baslamis maclari asla yayinlama.
+              live_rows = []
+              for r in rows:
+                  parts = str(r).split('|')
+                  if len(parts) != 5:
+                      raise RuntimeError('Gecersiz iddaa satiri; yayin durduruldu')
+                  if int(parts[4]) > now_unix:
+                      live_rows.append(r)
+              iddaa['rows'] = live_rows
+              iddaa['count'] = len(live_rows)
+              # 6 saatten eski cekim kullanilmaz. Hata durumunda eski oranlari kaldir.
+              if now_unix * 1000 - int(iddaa.get('ts', 0)) > 6 * 3600 * 1000:
+                  iddaa['rows'] = []
+                  iddaa['count'] = 0
+                  iddaa['stale'] = True
+              (folder / 'iddaa-lines.json').write_text(
+                  json.dumps(iddaa, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+              print('IDDAA siteye eklendi:', iddaa['count'], 'satir; stale=', bool(iddaa.get('stale', False)))
           # Çeyrek/rotasyon verilerini yalnızca doğrulanmış ve daha yeni ise ekle.
           # Kaynak yoksa mevcut canlı dosyayı koru.
           import datetime

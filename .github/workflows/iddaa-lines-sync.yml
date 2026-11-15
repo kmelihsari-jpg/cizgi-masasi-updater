@@ -1,0 +1,72 @@
+name: Cizgi Masasi - Iddaa NBA Barem Senkronizasyonu
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Istanbul UTC+3: 18:30, 19:30, 20:30
+    - cron: '30 15,16,17 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cizgi-masasi-iddaa-github
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Iddaa NBA baremlerini dogrula ve oku
+        run: python scripts/iddaa_fetch.py --data seed/data.json --output seed/iddaa-lines.json
+      - name: JSON yapisini kontrol et
+        shell: bash
+        run: |
+          python3 - <<'PY_CHECK'
+          import json, pathlib, time
+          p=pathlib.Path('seed/iddaa-lines.json')
+          if not p.exists():
+              print('Yeni veri gelmedi, eski seed dosyasi yok. Yayina degisiklik yok.')
+          else:
+              d=json.loads(p.read_text(encoding='utf-8'))
+              assert isinstance(d.get('rows'),list)
+              assert int(d.get('count',-1))==len(d['rows'])
+              for row in d['rows']:
+                  vals=row.split('|')
+                  assert len(vals)==5 and vals[1] in ('PTS','REB','AST','STL','BLK','3PM','SRA','RA')
+              print('KONTROL OK:',len(d['rows']),'satir')
+          PY_CHECK
+      - name: Dosya degisti mi
+        id: diff
+        shell: bash
+        run: |
+          git add -N seed/iddaa-lines.json 2>/dev/null || true
+          if git diff --quiet -- seed/iddaa-lines.json; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Yalnizca degisen baremleri commit et
+        if: steps.diff.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add seed/iddaa-lines.json
+          git commit -m 'Update iddaa NBA player lines'
+          # Baska job ayni anda main'e yazmissa once rebase et.
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 3
+          done
+          exit 1
