@@ -1,4 +1,4 @@
-name: Cizgi Masasi - NBA CDN Erisim Testi
+name: Cizgi Masasi - NBA CDN Erisim Testi (Guncel Basliklar)
 
 on:
   workflow_dispatch:
@@ -24,10 +24,10 @@ jobs:
 
           BASE = 'https://cdn.nba.com/static/json/'
           HEADERS = {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:144.0) Gecko/20100101 Firefox/144.0',
               'Accept': 'application/json, text/plain, */*',
               'Referer': 'https://www.nba.com/',
-              'Origin': 'https://www.nba.com',
+              'Accept-Language': 'en-US,en;q=0.5',
           }
 
           def fetch(path):
@@ -47,7 +47,7 @@ jobs:
                           time.sleep(1 + attempt * 2)
               raise RuntimeError(f'NBA CDN verisi alinamadi: {path}: {error}')
 
-          print('NBA CDN fikstur testi basladi', flush=True)
+          print('NBA CDN fikstur testi basladi (Firefox UA + Referer)', flush=True)
           schedule = fetch('staticData/scheduleLeagueV2_1.json')
           dates = schedule.get('leagueSchedule', {}).get('gameDates', [])
           if not dates:
