@@ -332,6 +332,13 @@ jobs:
           set -euo pipefail
           python3 scripts/dvp_position_patch.py --site public
 
+      - name: Takim sekmesi yokken - devam eden yokluklar V1
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tests/test_takim_patch.py
+          python3 scripts/takim_yokken_patch.py --site public
+
       - name: iPhone PWA Kupon ust guvenli alan V1
         shell: bash
         run: |
