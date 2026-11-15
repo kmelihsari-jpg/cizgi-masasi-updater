@@ -1,0 +1,78 @@
+name: Cizgi Masasi - Acik NBA Veri Dogrulama
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  kontrol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Python ve DuckDB kur
+        run: python -m pip install --disable-pip-version-check duckdb
+      - name: 2026-27 oyuncu ve rotasyon verilerini oku (salt okunur)
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, urllib.request, datetime
+          import duckdb
+          from pathlib import Path
+          base='https://basketball-data.billmill.org/nba/'
+          result={'checked_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'source': base, 'datasets': {}}
+          def get_json(url):
+              req=urllib.request.Request(url,headers={'User-Agent':'CizgiMasasiSourceAudit/1.0','Accept':'application/json'})
+              with urllib.request.urlopen(req, timeout=15) as r: return json.load(r)
+          try:
+              meta=get_json(base+'metadata.json')
+              print('Metadata OK; ilk 250 karakter:',str(meta)[:250],flush=True)
+              result['metadata_access']=True
+          except Exception as exc:
+              result['metadata_access']=False
+              result['metadata_error']=repr(exc)
+              print('Metadata HATA:',repr(exc),flush=True)
+          con=duckdb.connect()
+          try:
+              con.execute('INSTALL httpfs; LOAD httpfs')
+          except Exception as exc:
+              print('DuckDB httpfs HATA:',repr(exc),flush=True)
+              result['httpfs_error']=repr(exc)
+          files={
+              'player_game_logs': base+'stats/player_game_logs/season=2027/data.parquet',
+              'game_rotations': base+'stats/game_rotations/season=2027/data.parquet',
+              'game_events': base+'stats/game_events/season=2027/data.parquet',
+          }
+          for name,url in files.items():
+              entry={'url':url}
+              try:
+                  cols=con.execute('DESCRIBE SELECT * FROM read_parquet(?)',[url]).fetchall()
+                  entry['accessible']=True
+                  entry['columns']=[c[0] for c in cols]
+                  entry['rows']=con.execute('SELECT COUNT(*) FROM read_parquet(?)',[url]).fetchone()[0]
+                  if name=='player_game_logs' and 'game_date' in entry['columns']:
+                      entry['latest_game_date']=str(con.execute('SELECT MAX(game_date) FROM read_parquet(?)',[url]).fetchone()[0])
+                  print('OK',name,'rows',entry['rows'],'columns',len(cols),flush=True)
+              except Exception as exc:
+                  entry['accessible']=False
+                  entry['error']=repr(exc)[:500]
+                  print('HATA',name,entry['error'],flush=True)
+              result['datasets'][name]=entry
+          match=['potential_assist','rebound_chance','drives','catch_shoot','pull_up','paint_touch']
+          result['tracking_columns']={name:[c for c in d.get('columns',[]) if any(t in c.lower() for t in match)] for name,d in result['datasets'].items()}
+          Path('kaynak-raporu.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          summary=Path(__import__('os').environ.get('GITHUB_STEP_SUMMARY','ozet.md'))
+          summary.write_text('## Acik NBA Veri Kontrolu\n\n| Kaynak | Erisim | Satir | Son mac |\n|---|---|---:|---|\n'+''.join(f"| {n} | {'OK' if d['accessible'] else 'HATA'} | {d.get('rows','-')} | {d.get('latest_game_date','-')} |\n" for n,d in result['datasets'].items())+'\nTracking sutunlari: '+json.dumps(result['tracking_columns'],ensure_ascii=False)+'\n',encoding='utf-8')
+          print('RAPOR:',json.dumps(result['tracking_columns'],ensure_ascii=False))
+          if not any(d['accessible'] for d in result['datasets'].values()):
+              raise SystemExit('Hiçbir veri seti erisilebilir degil (site degistirilmedi)')
+          PY
+      - name: Raporu sakla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cizgi-acik-nba-veri-kontrolu
+          path: kaynak-raporu.json
+          if-no-files-found: ignore
+          retention-days: 7
