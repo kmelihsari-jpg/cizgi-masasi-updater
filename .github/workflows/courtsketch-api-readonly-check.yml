@@ -1,0 +1,16 @@
+name: Cizgi Masasi - CourtSketch API Salt Okunur Test
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check two public CourtSketch API routes
+        run: python3 scripts/courtsketch_api_probe.py
