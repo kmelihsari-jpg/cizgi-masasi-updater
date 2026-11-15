@@ -1,46 +1,63 @@
 name: Cizgi Masasi - Yerel Tracking Verisini Birlestir
+
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
       - 'seed/tracking-local.json'
+
 permissions:
   contents: write
+
 concurrency:
   group: cizgi-masasi-veri-yazma
   cancel-in-progress: false
+
 jobs:
   merge:
     runs-on: ubuntu-latest
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
+          fetch-depth: 0
+          persist-credentials: true
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Kaynak ve dosya varligini kontrol et
-        run: |
-          test -f seed/data.json
-          test -f seed/tracking-local.json
-          test -f scripts/merge_tracking.py
-      - name: Once test et, sonra birlestir
-        run: |
-          python scripts/merge_tracking.py --dry-run
-          python scripts/merge_tracking.py
-          python -m json.tool seed/data.json > /dev/null
-      - name: Dogrulanmis takip verilerini kaydet
+      - name: Validate merge code
+        run: python scripts/test_tracking_merge_reliability.py
+      - name: Merge against latest main, retry if another updater pushes
         shell: bash
         run: |
           set -euo pipefail
-          git add seed/data.json
-          if git diff --cached --quiet; then
-            echo 'Yeni tracking verisi yok; dosya degismedi.'
-          else
+          for attempt in 1 2 3 4; do
+            echo "Merge attempt ${attempt}/4"
+            git fetch origin main
+            # Safe: this is a disposable Actions checkout, not a user's machine.
+            git reset --hard origin/main
+            test -f seed/data.json
+            test -f seed/tracking-local.json
+            python scripts/merge_tracking.py --dry-run
+            python scripts/merge_tracking.py
+            python -m json.tool seed/data.json >/dev/null
+            git diff --check
+            if git diff --quiet -- seed/data.json; then
+              echo 'NO CHANGE: tracking metrics are already merged.'
+              exit 0
+            fi
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add -- seed/data.json
             git commit -m 'data: merge validated NBA tracking'
-            git push origin HEAD:main
-            echo 'BASARILI: tracking verileri seed/data.json icine birlestirildi.'
-          fi
+            if git push origin HEAD:main; then
+              echo 'SUCCESS: tracking merged and pushed.'
+              exit 0
+            fi
+            echo 'main moved during merge; retry on fresh main.'
+            sleep $((attempt * 3))
+          done
+          echo 'ERROR: could not push tracking merge after 4 retries.' >&2
+          exit 1
