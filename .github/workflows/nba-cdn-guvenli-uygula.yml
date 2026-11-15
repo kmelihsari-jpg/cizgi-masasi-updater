@@ -2,12 +2,15 @@ name: Cizgi Masasi - NBA CDN Guvenli Uygula
 
 on:
   workflow_dispatch:
+  schedule:
+    # 12:35 Turkiye saati = 09:35 UTC; her gun
+    - cron: '35 9 * * *'
 
 permissions:
   contents: write
 
 concurrency:
-  group: nba-cdn-manual-apply
+  group: cizgi-masasi-oyuncu-istatistik-main
   cancel-in-progress: false
 
 jobs:

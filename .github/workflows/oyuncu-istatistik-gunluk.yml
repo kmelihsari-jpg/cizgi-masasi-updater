@@ -3,9 +3,8 @@ name: Cizgi Masasi - Gunluk Oyuncu Istatistikleri
 
 on:
   workflow_dispatch:
-  schedule:
-    # 12:35 Turkiye saati = 09:35 UTC
-    - cron: '35 9 * * *'
+  # Eski ESPN yontemi sadece elle baslatilabilir.
+  # Gunluk zamanlama NBA CDN is akisina tasindi.
 
 permissions:
   contents: write

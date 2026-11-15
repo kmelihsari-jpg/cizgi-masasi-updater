@@ -11,6 +11,7 @@ on:
   workflow_run:
     workflows:
       - 'Cizgi Masasi - Gunluk Oyuncu Istatistikleri'
+      - 'Cizgi Masasi - NBA CDN Guvenli Uygula'
       - 'Cizgi Masasi - Yerel Tracking Verisini Birlestir'
       - 'Cizgi Masasi - Iddaa NBA Barem Senkronizasyonu'
       - 'Cizgi Masasi - Karne Otomasyonu'
