@@ -10,6 +10,30 @@ import shutil
 STYLES = 'cm-update-status.css'
 SCRIPT = 'cm-update-status.js'
 
+# Fix the source asset that actually renders the legacy notice. A DOM-only
+# MutationObserver can miss late renderers, shadow roots and cached updates.
+LEGACY_BAREM = re.compile(r"Baremler\s+20[:.]15\s*(?:['’]|\\['’])te\s+okunuyor\.?", re.I)
+BAREM_REPLACEMENT = ('Barem kontrol saatleri: 18.30, 19.30 ve 20.30 (TSİ). '
+                     'Güncel İddaa baremi bulunmuyorsa öneriler doğrulanmış sayılmaz.')
+
+def rewrite_legacy_barem_assets(site):
+    """Replace only the exact obsolete sentence, never unrelated time strings.
+
+    This runs on copied publish assets, not live site or source repo JS files.
+    """
+    touched=[]
+    for file in sorted(site.rglob('*')):
+        if not file.is_file() or file.suffix not in ('.html', '.js'):
+            continue
+        if file.name == SCRIPT:
+            continue
+        before=file.read_text(encoding='utf-8')
+        after, count=LEGACY_BAREM.subn(BAREM_REPLACEMENT, before)
+        if count:
+            file.write_text(after, encoding='utf-8')
+            touched.append((str(file.relative_to(site)),count))
+    return touched
+
 def read_json(path):
     try:
         return json.loads(path.read_text(encoding='utf-8-sig')) if path.is_file() else None
@@ -74,7 +98,8 @@ def deploy(site,seed,src):
     if not (src/STYLES).is_file() or not (src/SCRIPT).is_file():
         raise RuntimeError('Site yama dosyasi eksik')
     if 'cm-update-status.js' not in html:
-        html=html.replace('</body>', '<script src="cm-update-status.js?v=20261115a" defer></script>\n</body>', 1)
+        html=html.replace('</body>', '<script src="cm-update-status.js?v=20261115b" defer></script>\n</body>', 1)
+    html=html.replace('cm-update-status.js?v=20261115a','cm-update-status.js?v=20261115b')
     if 'cm-update-status.css' not in html:
         html=html.replace('</head>', '<link rel="stylesheet" href="cm-update-status.css?v=20261115a">\n</head>', 1)
     data=build(seed)
@@ -82,6 +107,11 @@ def deploy(site,seed,src):
     (site/'cm-updates.json').write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     for name in (STYLES,SCRIPT):shutil.copyfile(src/name,site/name)
     html_path.write_text(html,encoding='utf-8')
+    fixes=rewrite_legacy_barem_assets(site)
+    if fixes:
+        print('ESKI 20:15 METNI KAYNAKTAN DUZELTILDI:', fixes)
+    else:
+        print('UYARI: kaynak HTML/JS icinde eski metin bulunamadi; tarayici ekrani ayrica kontrol edilmeli')
     print('UPDATE STATUS: JSON + gorunur site paneli hazir, 6 kaynagin zamanlari varsa yazildi')
     return data
 

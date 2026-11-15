@@ -1,7 +1,7 @@
 import tempfile,sys,json
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-from site_update_status import deploy,build
+from site_update_status import deploy,build,rewrite_legacy_barem_assets,LEGACY_BAREM
 with tempfile.TemporaryDirectory() as tmp:
     root=Path(tmp);site=root/'public';seed=root/'seed';site.mkdir();seed.mkdir()
     (site/'index.html').write_text('<html><head></head><body><section id="cm-v1-vitrin"></section></body></html>',encoding='utf-8')
@@ -16,4 +16,12 @@ with tempfile.TemporaryDirectory() as tmp:
     assert (site/'index.html').read_text().count('cm-update-status.js')==1
     assert (site/'index.html').read_text().count('cm-update-status.css')==1
     assert (site/'cm-updates.json').exists()
-print('PASS: site status JSON, null status, timestamp parsing, idempotent UI injection')
+    (site/'gorunum-ana.js').write_text('const notice = "Baremler 20:15\'te okunuyor.";\n', encoding='utf-8')
+    changes = rewrite_legacy_barem_assets(site)
+    assert changes == [('gorunum-ana.js', 1)], changes
+    assert '20:15' not in (site/'gorunum-ana.js').read_text(encoding='utf-8')
+    assert rewrite_legacy_barem_assets(site) == []
+    (site/'unrelated.js').write_text('const tipoff = "20:15";\n', encoding='utf-8')
+    assert rewrite_legacy_barem_assets(site) == []
+    assert '20:15' in (site/'unrelated.js').read_text(encoding='utf-8')
+print('PASS: status JSON, idempotency, source notice rewrite, unrelated times preserved')
