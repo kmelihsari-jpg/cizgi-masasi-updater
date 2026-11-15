@@ -39,7 +39,7 @@ def records(path):
     return out
 
 
-def patch_text(source,rows):
+def _patch_returns(source,rows):
     if MARK in source:
         # Rebuild the embedded allow-list at every publish/snapshot; never retain a stale confirmation.
         pattern=r'const CM_CONFIRMED_RETURNS = [^;]*;'
@@ -75,6 +75,22 @@ function cmReturnAllowed(p,day){
 }
 '''.replace('__RECORDS__',json.dumps(rows,ensure_ascii=True,separators=(',',':')))
     return prefix+'\n'+source
+
+DC_MARK='/* CM-DATACHK-CMREMOTE */'
+DC_OLD="if(typeof LIVE!=='undefined'&&(!LIVE||!LIVE.ts||Date.now()-LIVE.ts>6*3600e3))w.push('sakatl\u0131k listesi 6 saatten eski');"
+DC_NEW=("if(typeof LIVE!=='undefined'&&!(typeof window!=='undefined'&&window.CMREMOTE&&(window.CMREMOTE.espn||(window.CMREMOTE.list&&Object.keys(window.CMREMOTE.list).length)))"
+        "&&(!LIVE||!LIVE.ts||Date.now()-LIVE.ts>6*3600e3))w.push('sakatl\u0131k listesi 6 saatten eski');")
+
+def patch_datachk(source):
+    """dataChk sakatlik tazeligini eski LIVE yerine Worker verisine (CMREMOTE) gore olcer.
+    CMREMOTE yuklendiyse sahte '6 saatten eski' uyarisi uretmez; yoksa eski kural aynen calisir."""
+    if DC_MARK in source:return source
+    if 'function dataChk(' not in source:return source
+    if DC_OLD not in source:raise RuntimeError('dataChk LIVE satiri farkli, degisiklik yapilmadi')
+    return source.replace(DC_OLD,DC_NEW,1).replace('function dataChk(',DC_MARK+'\nfunction dataChk(',1)
+
+def patch_text(source,rows):
+    return patch_datachk(_patch_returns(source,rows))
 
 
 def patch_file(model,confirmation):
