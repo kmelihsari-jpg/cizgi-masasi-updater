@@ -1,0 +1,29 @@
+name: Cizgi Masasi - NBA CDN Guvenli Onizleme
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cdn-onizleme:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Cevrimdisi birlestirme testleri
+        run: python scripts/test_nba_cdn_sync.py
+      - name: NBA CDN'den oku ve mevcut dosyayi degistirmeden kontrol et
+        run: python scripts/update_nba_cdn.py --site seed --days 7 --report out/nba-cdn-sync-report.json
+      - name: Sonuc raporunu sakla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nba-cdn-guvenli-onizleme-${{ github.run_id }}
+          path: out/nba-cdn-sync-report.json
+          if-no-files-found: ignore
+          retention-days: 7
