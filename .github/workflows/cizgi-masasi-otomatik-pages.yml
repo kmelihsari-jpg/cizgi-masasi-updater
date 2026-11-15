@@ -277,6 +277,27 @@ jobs:
           print('MOBIL FOCUS V2 HAZIR: JS ve CSS yayinda; veri ve bahis kodlari korundu')
           PY_CM_MOBILE_V2
 
+      - name: Mobil oyuncu ve ana sayfa V3 yamasini ekle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_CM_MOBILE_V3'
+          from pathlib import Path
+          import shutil
+          source = Path('site-patches/mobile-player-home-v3.css')
+          destination = Path('public/mobile-player-home-v3.css')
+          html_file = Path('public/index.html')
+          assert source.is_file() and html_file.is_file(), 'V3 kaynak/site dosyasi bulunamadi'
+          shutil.copyfile(source, destination)
+          html = html_file.read_text(encoding='utf-8')
+          tag = '<link rel="stylesheet" href="mobile-player-home-v3.css?v=20261115c">'
+          if 'mobile-player-home-v3.css' not in html:
+              assert '</head>' in html, 'HTML head kapanisi bulunamadi'
+              html = html.replace('</head>', tag + '\n</head>', 1)
+              html_file.write_text(html, encoding='utf-8')
+          print('MOBIL V3 HAZIR: sol baslik + oyuncu grafik okunabilirligi')
+          PY_CM_MOBILE_V3
+
       - name: Hazirlanan siteyi indirilebilir test paketi olarak sakla
         uses: actions/upload-artifact@v4
         with:

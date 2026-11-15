@@ -1,0 +1,70 @@
+/* Cizgi Masasi mobile V3: compact left-aligned home heading + player chart readability.
+   Presentation only. No bet, data, injury, or session logic changes. */
+@media (max-width: 700px) {
+  /* Force heading block to its natural left edge, independent of inherited hero rules. */
+  #view-home .hero {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    gap: 5px !important;
+    padding: 3px 0 0 !important;
+    text-align: left !important;
+  }
+  #view-home .hero > div:first-child {
+    align-self: flex-start !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+  }
+  #view-home .hero #h-title,
+  #view-home .hero .night {
+    display: block !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    font-size: clamp(28px, 8.5vw, 37px) !important;
+    line-height: 1.05 !important;
+    text-align: left !important;
+    letter-spacing: -.015em !important;
+  }
+  #view-home .hero #h-sub {
+    margin: 3px 0 0 !important;
+    font-size: 12px !important;
+    text-align: left !important;
+  }
+  #view-home .hero .hero-r {
+    width: 100% !important;
+    margin: 2px 0 0 !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+  }
+  #view-home .hero #h-days { width: 100% !important; }
+  #view-home .injbar { margin-top: 1px !important; }
+
+  /* Player: preserve horizontal swipe for long records, but prevent label clipping. */
+  #view-player .pcx-chartcard { min-width: 0 !important; }
+  #view-player .pcx-chartcard .chartwrap {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 4px 0 0 !important;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+    overflow-x: auto !important;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  #view-player .pcx-chartcard .pcb-plot {
+    margin-left: 35px !important;
+    margin-right: 10px !important;
+  }
+  #view-player .pcx-chartcard .pcb-line span,
+  #view-player .pcx-chartcard .pcb-gl span { left: -32px !important; width: 30px !important; }
+  #view-player .pcx-wins { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+  #view-player .pcx-wins .pcw { flex: 0 0 auto !important; }
+  #view-player .pcx-chartcard .mks { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+  #view-player .pcx-chartcard .mks > * { flex-shrink: 0; }
+  #view-player .pcx-chartcard .seg { max-width: 100%; }
+}
