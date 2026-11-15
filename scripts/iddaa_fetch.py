@@ -22,7 +22,7 @@ TEAM_NAMES = {
  'houston':'HOU','indiana':'IND','la clippers':'LAC','los angeles clippers':'LAC',
  'la lakers':'LAL','los angeles lakers':'LAL','memphis':'MEM','miami':'MIA',
  'milwaukee':'MIL','minnesota':'MIN','new orleans':'NOP','new york':'NYK',
- 'oklahoma city':'OKC','orlando':'ORL','philadelphia':'PHI','phoenix':'PHX',
+ 'oklahoma city':'OKC','oklahoma':'OKC','oklahoma thunder':'OKC','orlando':'ORL','philadelphia':'PHI','phoenix':'PHX',
  'portland':'POR','sacramento':'SAC','san antonio':'SAS','toronto':'TOR',
  'utah':'UTA','washington':'WAS',
 }
@@ -204,6 +204,7 @@ def main():
         report=output.with_name('iddaa-unmatched.txt')
         report.write_text('\n'.join(unmatched)+'\n',encoding='utf-8')
         print('REVIEW',str(report))
+        for u in unmatched:print('ESLESMEYEN',u)
     return 0
 
 if __name__=='__main__':
