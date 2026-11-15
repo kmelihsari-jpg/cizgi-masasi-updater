@@ -1,0 +1,93 @@
+name: Cizgi Masasi - NBA CDN Erisim Testi
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  nba-cdn-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: NBA CDN fikstur ve boxscore kontrolu - sadece okuma
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import sys
+          import time
+          import urllib.request
+          from datetime import datetime, timedelta
+          from zoneinfo import ZoneInfo
+
+          BASE = 'https://cdn.nba.com/static/json/'
+          HEADERS = {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36',
+              'Accept': 'application/json, text/plain, */*',
+              'Referer': 'https://www.nba.com/',
+              'Origin': 'https://www.nba.com',
+          }
+
+          def fetch(path):
+              error = None
+              for attempt in range(3):
+                  try:
+                      req = urllib.request.Request(BASE + path, headers=HEADERS)
+                      with urllib.request.urlopen(req, timeout=18) as resp:
+                          data = json.load(resp)
+                      if not isinstance(data, dict):
+                          raise ValueError('JSON object bekleniyordu')
+                      return data
+                  except Exception as exc:
+                      error = exc
+                      print(f'DENEME {attempt+1}: {type(exc).__name__}: {exc}', flush=True)
+                      if attempt < 2:
+                          time.sleep(1 + attempt * 2)
+              raise RuntimeError(f'NBA CDN verisi alinamadi: {path}: {error}')
+
+          print('NBA CDN fikstur testi basladi', flush=True)
+          schedule = fetch('staticData/scheduleLeagueV2_1.json')
+          dates = schedule.get('leagueSchedule', {}).get('gameDates', [])
+          if not dates:
+              raise SystemExit('HATA: Fikstur JSON icinde gameDates bulunamadi.')
+          print('BASARILI: Fikstur okundu. Tarih sayisi:', len(dates), flush=True)
+
+          # NBA ABD tarihi bazinda son 14 gunde tamamlanan ilk normal sezon maci.
+          today = datetime.now(ZoneInfo('America/New_York')).date()
+          eligible = []
+          for item in dates:
+              for game in item.get('games', []):
+                  game_id = str(game.get('gameId', ''))
+                  date_value = (game.get('gameDateEst') or game.get('gameDateTimeEst') or '')[:10]
+                  if not game_id.startswith('002') or len(game_id) != 10:
+                      continue
+                  try:
+                      d = datetime.strptime(date_value, '%Y-%m-%d').date()
+                  except ValueError:
+                      continue
+                  if not today - timedelta(days=14) <= d <= today:
+                      continue
+                  # Schedule status may be missing, do not depend on a single shape.
+                  status = int(game.get('gameStatus', 0) or 0)
+                  if status == 3:
+                      eligible.append((d, game_id))
+          if not eligible:
+              raise SystemExit('HATA: Son 14 gunde tamamlanmis normal sezon maci fiksturde bulunamadi; veri otomatik aktarilmadi.')
+          eligible.sort(reverse=True)
+          game_id = eligible[0][1]
+          print('Boxscore test gameId:', game_id, flush=True)
+          box = fetch(f'liveData/boxscore/boxscore_{game_id}.json')
+          game = box.get('game') or {}
+          if str(game.get('gameId')) != game_id:
+              raise SystemExit('HATA: Game ID uyusmuyor.')
+          if int(game.get('gameStatus', 0) or 0) != 3:
+              raise SystemExit('HATA: Boxscore maci tamamlanmis degil.')
+          teams = [game.get('homeTeam') or {}, game.get('awayTeam') or {}]
+          counts = [sum(bool(p.get('played')) for p in t.get('players', [])) for t in teams]
+          if min(counts) < 5 or any('points' not in p.get('statistics', {}) for t in teams for p in t.get('players', []) if p.get('played')):
+              raise SystemExit('HATA: Oyuncu istatistikleri eksik veya anlasilamadi.')
+          print(f'BASARILI: NBA CDN boxscore dogrulandi; her iki takimda oynayan oyuncu sayisi: {counts}', flush=True)
+          print('TEST TAMAMLANDI. Hicbir dosya, veri veya canli site degistirilmedi.', flush=True)
+          PY
