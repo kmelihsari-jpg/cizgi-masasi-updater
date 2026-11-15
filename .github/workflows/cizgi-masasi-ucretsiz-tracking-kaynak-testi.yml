@@ -1,0 +1,82 @@
+name: Cizgi Masasi - Ucretsiz Tracking Kaynak Kontrolu
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  kontrol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Ucretsiz sayfalari ve acik CSV baglantilarini incele
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import csv, io, json, re, urllib.parse, urllib.request
+          from html.parser import HTMLParser
+          from pathlib import Path
+
+          class Links(HTMLParser):
+              def __init__(self):
+                  super().__init__(); self.links=[]
+              def handle_starttag(self, tag, attrs):
+                  if tag != 'a': return
+                  a=dict(attrs)
+                  if a.get('href'): self.links.append(a['href'])
+
+          sources={
+            'Statyx Data Lab':'https://statyx.io/nba-props/data-lab',
+            'BoxScore Lab downloads':'https://boxscorelab.com/downloads/',
+          }
+          tracking_terms=['potential_assists','potential_ast','rebound_chances','reb_chances',
+                          'drives','catch_shoot','pull_up','paint_touches']
+          results=[]
+          for name,url in sources.items():
+              result={'source':name, 'url':url, 'accessible':False,
+                      'csv_links':[], 'tracking_columns':[], 'notes':[]}
+              try:
+                  req=urllib.request.Request(url, headers={'User-Agent':'Mozilla/5.0 (compatible; CizgiMasasiSourceAudit/1.0)','Accept':'text/html'})
+                  with urllib.request.urlopen(req, timeout=10) as response:
+                      body=response.read(1_000_000).decode('utf-8','replace')
+                  result['accessible']=True
+                  parser=Links();parser.feed(body)
+                  urls=[urllib.parse.urljoin(url, href) for href in parser.links if '.csv' in href.lower()]
+                  urls=list(dict.fromkeys(u for u in urls if urllib.parse.urlparse(u).scheme=='https'))[:12]
+                  result['csv_links']=urls
+                  if not urls:
+                      result['notes'].append('HTML icinde dogrudan CSV linki bulunamadi; bu, CSV yok demek degildir (JS ile olusabilir).')
+                  for csvurl in urls[:8]:
+                      try:
+                          with urllib.request.urlopen(urllib.request.Request(csvurl, headers={'User-Agent':'Mozilla/5.0'}),timeout=8) as r:
+                              first=r.readline(20000).decode('utf-8-sig','replace').strip()
+                          columns=next(csv.reader([first])) if first else []
+                          found=[c for c in columns if any(t in c.lower().replace(' ','_') for t in tracking_terms)]
+                          result['tracking_columns'] += [{'file':csvurl,'columns':found}]
+                      except Exception as e:
+                          result['notes'].append('CSV basligi okunamadi: '+str(e)[:100])
+              except Exception as e:
+                  result['notes'].append(type(e).__name__+': '+str(e)[:150])
+              results.append(result)
+              print(json.dumps(result,ensure_ascii=False),flush=True)
+
+          print('\n=== SONUC ===')
+          for r in results:
+              matched=[x for x in r['tracking_columns'] if x['columns']]
+              print(r['source'], '| HTTP erisim:',r['accessible'], '| CSV:',len(r['csv_links']), '| tracking sutunu olan CSV:',len(matched))
+          print('NOT: HTML metninde takip verisi adi gecmesi otomatik indirilebilir veri oldugunu kanitlamaz.')
+          print('NOT: Bu is akisi mevcut site dosyalarina, git deposuna veya Cloudflare yayimina yazmaz.')
+
+          summary=Path('tracking-kaynak-raporu.json')
+          summary.write_text(json.dumps(results,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+      - name: Raporu indirilebilir sakla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cizgi-tracking-kaynak-kontrolu
+          path: tracking-kaynak-raporu.json
+          if-no-files-found: ignore
+          retention-days: 7
