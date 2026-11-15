@@ -1,0 +1,8 @@
+#cm-v1-vitrin{margin:14px 0 22px;padding:19px;border:1px solid rgba(231,71,71,.25);border-radius:16px;background:linear-gradient(125deg,rgba(178,35,35,.13),rgba(12,15,22,.12));color:var(--ink,#e8eaed)}
+.cmv-top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:15px;flex-wrap:wrap}
+.cmv-top strong{font-size:14px;letter-spacing:.12em}.cmv-top strong span{color:#e54b4b}.cmv-top small{opacity:.75}
+.cmv-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.cmv-grid>div{border-radius:10px;background:rgba(127,127,127,.09);padding:12px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.cmv-grid span{font-size:12px;opacity:.75}.cmv-grid b{font-size:23px;letter-spacing:-.025em}.cmv-grid small{opacity:.7;font-size:11px;overflow-wrap:anywhere}
+.cmv-note{margin:12px 0 0;opacity:.68;font-size:12px}
+@media(max-width:720px){.cmv-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.cmv-grid b{font-size:20px}}

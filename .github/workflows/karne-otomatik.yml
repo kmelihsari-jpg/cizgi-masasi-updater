@@ -1,0 +1,80 @@
+name: Cizgi Masasi - Karne Otomasyonu
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'snapshot = baslamamis maclarin onerileri / settle = sonuclari isle'
+        required: true
+        default: snapshot
+        type: choice
+        options: [snapshot, settle]
+  schedule:
+    # Turkiye saati 18:45, 19:45, 20:45 (istatistikler + iddaa sonrasi)
+    - cron: '45 15,16,17 * * *'
+    # Turkiye saati 12:15, dunden kalan maclarin sonuclari
+    - cron: '15 9 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cizgi-masasi-karne
+  cancel-in-progress: false
+
+jobs:
+  karne:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Calisma turunu belirle
+        id: mode
+        shell: bash
+        env:
+          INPUT_MODE: ${{ inputs.mode }}
+          EVENT_NAME: ${{ github.event_name }}
+          CRON: ${{ github.event.schedule }}
+        run: |
+          if [ "$EVENT_NAME" = 'workflow_dispatch' ]; then
+            MODE="$INPUT_MODE"
+          elif [ "$CRON" = '15 9 * * *' ]; then
+            MODE='settle'
+          else
+            MODE='snapshot'
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "MOD=$MODE"
+      - name: Chromium + Playwright kurulumu
+        if: steps.mode.outputs.mode == 'snapshot'
+        run: |
+          python -m pip install 'playwright==1.55.0'
+          python -m playwright install --with-deps chromium
+      - name: Snapshot / sonuc isle
+        env:
+          MODE: ${{ steps.mode.outputs.mode }}
+        run: python scripts/karne_automation.py "$MODE" --data seed/data.json --odds seed/iddaa-lines.json --output seed/karne.json
+      - name: Dosya varsa degisikligi commit et
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f seed/karne.json || exit 0
+          git add seed/karne.json
+          if git diff --cached --quiet; then
+            echo 'Karne degismedi'; exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Update immutable V1 karne'
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 4
+          done
+          exit 1
