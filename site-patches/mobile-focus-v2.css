@@ -1,0 +1,82 @@
+/* Çizgi Masası mobile focus V2 — CSS-only density + a native details toggle.
+   Existing model, injury feed, games, chart values and bet logic remain unchanged. */
+@media (max-width: 700px) {
+  html { -webkit-text-size-adjust: 100%; }
+  body { overflow-x: clip; padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important; }
+  .wrap {
+    width: 100% !important; max-width: none !important;
+    padding: 3px max(8px, env(safe-area-inset-right, 0px)) 60px max(8px, env(safe-area-inset-left, 0px)) !important;
+    gap: 5px !important;
+  }
+  header.top {
+    margin: 0 !important; padding: 4px 0 7px !important;
+    min-height: 0 !important; gap: 7px !important;
+    background: transparent !important; position: static !important;
+  }
+  header.top .brand { gap: 6px !important; flex: 0 0 auto !important; }
+  header.top h1 { font-size: clamp(17px, 5vw, 21px) !important; line-height: 1.05 !important; }
+  header.top .brand svg { width: 28px !important; height: 28px !important; }
+  header.top .gsearch { flex: 1 1 100px !important; min-width: 0 !important; }
+  header.top .gsearch input { width: 100% !important; height: 36px !important; padding: 5px 9px !important; }
+
+  #view-home .hero {
+    padding: 6px 0 1px !important; margin: 0 !important; gap: 5px !important;
+    align-items: stretch !important; flex-direction: column !important;
+  }
+  #view-home .hero > div:first-child { min-width: 0; }
+  #view-home .night { font-size: clamp(38px, 12.2vw, 54px) !important; line-height: 1.0 !important; margin: 0 !important; }
+  #view-home .hsub { font-size: 12px !important; margin: 3px 0 0 !important; line-height: 1.3 !important; }
+  #view-home .hero-r { align-items: stretch !important; width: 100% !important; gap: 4px !important; }
+  #view-home #h-days { width: 100% !important; max-width: 100% !important; margin: 0 !important; overflow-x: auto !important; }
+  #view-home .days { gap: 2px !important; padding: 2px !important; scroll-snap-type: x proximity; }
+  #view-home .days .day { flex: 0 0 auto; padding: 7px 10px !important; font-size: 12px !important; scroll-snap-align: start; }
+
+  /* Keep the timestamp/status visible while collapsing administrative controls. */
+  #view-home .injbar {
+    display: flex !important; align-items: flex-start !important; flex-wrap: wrap !important;
+    gap: 5px !important; margin: 2px 0 1px !important; padding: 3px 0 5px !important;
+  }
+  #view-home .injbar #inj-st { flex: 1 1 100% !important; order: -2; font-size: 11.5px !important;
+    line-height: 1.35 !important; padding: 4px 2px !important; margin: 0 !important; }
+  #view-home .injbar #ud-status, #view-home .injbar #idd-status {
+    flex-basis: 100% !important; line-height: 1.35 !important; font-size: 11px !important;
+  }
+  #view-home .cm-mobile-tools { order: -1; width: 100%; margin: 0; border: 1px solid var(--line);
+    border-radius: 9px; padding: 0; background: var(--surface); }
+  #view-home .cm-mobile-tools summary { cursor: pointer; list-style: none; min-height: 34px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; padding: 6px 11px; color: var(--ink); font-size: 12px; font-weight: 600; }
+  #view-home .cm-mobile-tools summary::-webkit-details-marker { display: none; }
+  #view-home .cm-mobile-tools summary::after { content: '⌄'; color: var(--accent); font-size: 18px; line-height: 1; }
+  #view-home .cm-mobile-tools[open] summary::after { transform: rotate(180deg); }
+  #view-home .cm-mobile-tool-buttons { border-top: 1px solid var(--line); padding: 9px;
+    display: flex; gap: 6px; flex-wrap: wrap; }
+  #view-home .cm-mobile-tool-buttons .act { min-height: 36px; font-size: 12px !important; padding: 6px 9px !important; }
+  #view-home .cm-mobile-tools [hidden] { display: none !important; }
+
+  #view-home .hgames { margin: 4px 0 14px !important; width: 100% !important; }
+  #view-home .hgames .gcard { padding: 10px 8px !important; }
+  #view-home .gcard .gc-team { font-size: 19px !important; gap: 5px !important; }
+  #view-home .gcard .gc-top { font-size: 11px !important; }
+  #view-home .gcard .gc-line { font-size: 11px !important; min-height: 0 !important; }
+  #view-home .picks { margin-top: 8px !important; }
+  #view-home .sec-head h3 { font-size: 24px !important; }
+  #view-home .sec-head { margin-bottom: 7px !important; }
+  #view-home .pick { padding: 11px 9px !important; }
+
+  #view-player .pcx-hero, #view-player .pcx-card, #view-player .pcx-chartcard {
+    padding-left: 8px !important; padding-right: 8px !important;
+  }
+  #view-player .pcx-chartcard .chartwrap { margin-inline: -3px !important; padding-inline: 2px !important; }
+  #view-player .pcb-plot { margin-left: 24px !important; margin-right: 0 !important; }
+  .tablewrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .bnav { padding-top: 3px !important; padding-bottom: calc(3px + env(safe-area-inset-bottom, 0px)) !important; }
+  .bnav button { padding: 4px 2px !important; gap: 2px !important; }
+  .bnav .ic { width: 21px !important; height: 21px !important; }
+  .bs-in { bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important; }
+}
+@media (max-width: 360px) {
+  header.top h1 { font-size: 16px !important; }
+  #view-home .days .day { padding-inline: 8px !important; }
+  #view-home .gcard .gc-team { font-size: 17px !important; }
+}

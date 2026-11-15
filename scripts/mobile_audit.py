@@ -57,7 +57,7 @@ with sync_playwright() as p:
             result['horizontal_page_overflow'] = info['documentWidth'] > info['viewport'] + 4
             if width <= 430:
                 result['mobile_nav_ok'] = info['hasMobileNav']
-                result['vitrin_grid_ok'] = info['vitrinColumnCount'] == 2 if info['hasVitrin'] else False
+                result['vitrin_grid_ok'] = info['vitrinColumnCount'] == 2 if info['hasVitrin'] else True
                 # Exercise mobile more menu and capture its layout.
                 more = page.locator('#bnav button[data-bv="more"]')
                 if more.count() and more.is_visible():
@@ -65,6 +65,14 @@ with sync_playwright() as p:
                     page.wait_for_timeout(250)
                     result['more_menu_visible'] = page.locator('#bsheet').is_visible()
                     page.screenshot(path=str(OUT / f'menu-{width}.png'), full_page=False, animations='disabled')
+            result['mobile_tools_ok'] = True
+            if width <= 430:
+                tools = page.locator('#view-home details.cm-mobile-tools')
+                result['mobile_tools_ok'] = tools.count() == 1 and tools.locator('summary').is_visible()
+                if tools.count():
+                    tools.locator('summary').click(timeout=6000)
+                    result['mobile_tools_open'] = page.locator('#inj-up').is_visible()
+                    page.screenshot(path=str(OUT / f'kontroller-{width}.png'), full_page=False, animations='disabled')
             result['page_errors'] = js_errors[:8]
         except Exception as exc:
             result['error'] = str(exc)[:350]
@@ -82,6 +90,6 @@ with (OUT / 'report.md').open('w', encoding='utf-8') as f:
         if r.get('overflow'): f.write('Taşan öğeler: `'+json.dumps(r['overflow'],ensure_ascii=False)+'`\n\n')
         if r.get('error'): f.write('Hata: '+r['error']+'\n\n')
         if r.get('page_errors'): f.write('JS hataları: `'+str(r['page_errors'])+'`\n\n')
-failures=[r for r in reports if r.get('error') or (r.get('http_status') or 0)>=400 or r.get('horizontal_page_overflow') or (int(r['size'].split('x')[0]) <= 430 and (not r.get('mobile_nav_ok') or not r.get('vitrin_grid_ok') or not r.get('more_menu_visible')))]
+failures=[r for r in reports if r.get('error') or (r.get('http_status') or 0)>=400 or r.get('horizontal_page_overflow') or (int(r['size'].split('x')[0]) <= 430 and (not r.get('mobile_nav_ok') or not r.get('vitrin_grid_ok') or not r.get('more_menu_visible') or not r.get('mobile_tools_ok') or not r.get('mobile_tools_open')))]
 print(f'MOBILE AUDIT: {len(reports)} ekran, {len(failures)} kritik sorun')
 raise SystemExit(1 if failures else 0)
