@@ -1,0 +1,12 @@
+#cm-update-status{margin:12px auto 20px;max-width:1080px;padding:0 12px;font:inherit;color:inherit}
+#cm-update-status details{border:1px solid rgba(140,154,181,.28);border-radius:12px;background:rgba(110,130,165,.07);overflow:hidden}
+#cm-update-status summary{padding:12px 15px;cursor:pointer;font-weight:700;font-size:13px;list-style-position:inside}
+#cm-update-status summary:focus-visible{outline:2px solid #568eef;outline-offset:-2px}
+#cm-update-status .cm-updates-body{padding:0 15px 14px;font-size:12px}
+#cm-update-status .cm-updates-hint{opacity:.7;line-height:1.5}
+#cm-update-status .cm-updates-item{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid rgba(140,154,181,.18);padding:9px 0}
+#cm-update-status .cm-updates-label{opacity:.84}
+#cm-update-status .cm-updates-time{font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+#cm-update-status h3{font-size:12px;margin:14px 0 6px}
+#cm-update-status ul{margin:5px 0;padding-left:19px;line-height:1.65;opacity:.85}
+@media(max-width:520px){#cm-update-status .cm-updates-item{align-items:flex-start;flex-direction:column;gap:2px}#cm-update-status .cm-updates-time{text-align:left}}

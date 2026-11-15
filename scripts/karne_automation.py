@@ -40,7 +40,9 @@ def snapshot(args):
     now=time.time();stamp=dt.datetime.now(dt.timezone.utc).isoformat()
     age=(now*1000-int(odds.get('ts',0)))/3600000
     data_age=(dt.datetime.now(dt.timezone.utc)-dt.datetime.fromisoformat(data['updated'].replace('Z','+00:00'))).total_seconds()/3600
-    if age<0 or age>6 or data_age<0 or data_age>16:
+    # Barem akisi 18:30/19:30/20:30, snapshot 15 dakika sonra.
+    # 6 saatlik eski baremle yeni bahis onerisi dondurma.
+    if age<0 or age>0.6 or data_age<0 or data_age>16:
         print(f'SKIP: veri bayat (iddaa={age:.1f}h, istatistik={data_age:.1f}h)');return False
     if not odds.get('rows'):print('SKIP: iddaa baremi yok');return False
     # Onceki geceyi silemez; ayni gece icin picks ilk kayitla kilitlenir.
@@ -69,7 +71,9 @@ def snapshot(args):
         page.route('**/*',intercept)
         try:
             page.goto(args.site,wait_until='domcontentloaded',timeout=45000)
-            page.wait_for_function("typeof D!=='undefined' && D && D.players && typeof pickSplit==='function' && typeof IDDRAW!=='undefined' && IDDRAW && IDDRAW.rows && IDDRAW.rows.length > 0", timeout=45000)
+            # Veri modelinin ardindan sakatlik snapshot'inin da yuklenmesini bekle.
+            # LIVE.ts milisaniye epoch degilse veya 3 saatten eskiyse fail closed.
+            page.wait_for_function("typeof D!=='undefined' && D && D.players && typeof pickSplit==='function' && typeof IDDRAW!=='undefined' && IDDRAW && IDDRAW.rows && IDDRAW.rows.length > 0 && typeof LIVE!=='undefined' && LIVE && Number.isFinite(Number(LIVE.ts)) && Number(LIVE.ts)>1e12 && Date.now()-Number(LIVE.ts)>=0 && Date.now()-Number(LIVE.ts)<=3*3600*1000", timeout=45000)
             result=page.evaluate('''() => {
               const now=Date.now(), out=[];
               // Gecenin bitimine kadar: 3 gunluk takvim degil, yalnizca yakin 16 saat.
@@ -97,7 +101,7 @@ def snapshot(args):
               return {out,updated:D.updated,oddsAt:IDDRAW.ts};
             }''')
         except BrowserTimeout as exc:
-            raise RuntimeError('Sayfa / model zaman asimi; dokuman yazilmadi') from exc
+            raise RuntimeError('Sayfa/model/sakatlik LIVE hazir veya guncel degil; yeni Karne yazilmadi') from exc
         finally:browser.close()
     for entry in result['out']:
         day=entry['day'];

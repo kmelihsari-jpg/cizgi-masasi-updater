@@ -334,6 +334,10 @@ jobs:
           print('PWA KUPON DUZELTMESI: guvenli ust alan, sabit kapatma dugmesi; baska veriye dokunulmadi')
           PY_CM_PWA_SLIP
 
+      - name: Son guncellemeler ve veri zamanlarini siteye ekle
+        shell: bash
+        run: python3 scripts/site_update_status.py --site public --seed seed
+
       - name: Hazirlanan siteyi indirilebilir test paketi olarak sakla
         uses: actions/upload-artifact@v4
         with:
