@@ -129,6 +129,7 @@ def players_from_summary(summary, roster_by_name_team):
                 name=athlete.get('displayName') or athlete.get('fullName') or ''
                 vals=parse_athlete(row.get('stats',row.get('statistics')),labels)
                 if not name or vals is None: continue
+                if vals['min']==0 and row.get('starter'): continue  # 0 dk + ilk 5 = oynamadi; satir yazma
                 examined+=1
                 # No arbitrary ESPN athlete IDs: only trusted exact full-name + team mapping.
                 pid=roster_by_name_team.get((norm(name),abb))

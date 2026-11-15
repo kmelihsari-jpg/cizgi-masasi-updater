@@ -97,6 +97,7 @@ def merge(seed, games):
     checked = Counter()
     window = Counter()
     existing_discrepancies = 0
+    skipped_inactive = 0
     for game in games:
         gid = str(game['game_id'])
         if gid in seen_games:
@@ -114,6 +115,11 @@ def merge(seed, games):
             pid = str(item['nba_player_id'])
             if not pid.isdigit() or not str(item.get('name') or '').strip():
                 raise ValueError('Invalid player identity for ' + gid)
+            if parse_minutes(item['minutes']) == 0 and item['starter']:
+                # Imkansiz kayit: 0 dakikayla ilk 5 baslayan oyuncu = oynamadi. Satir yazma,
+                # oyuncu sayimina da katma (yoksa "cok az oyuncu" kontrolu maskelenir).
+                skipped_inactive += 1
+                continue
             team, opponent = item['team'], item['opponent']
             if team not in team_scores or opponent not in team_scores or team == opponent:
                 raise ValueError('Team mismatch for ' + gid)
@@ -176,7 +182,7 @@ def merge(seed, games):
         data['updated'] = dt.datetime.now(dt.timezone.utc).isoformat()
     report = {'status':'verified', 'games_checked':len(seen_games), 'cdn_rows':sum(window.values()),
               'already_present':sum(window.values()) - len(pending), 'new_rows':len(pending),
-              'new_players':list(added_players.values()), 'rows_before':initial_count,
+              'skipped_inactive':skipped_inactive, 'new_players':list(added_players.values()), 'rows_before':initial_count,
               'rows_after':len(data['rows']), 'latest_date':sorted_dates[-1] if sorted_dates else None,
               'dates_checked':dict(sorted(window.items())), 'tracking_preserved':True,
               'existing_rows_preserved':True, 'season':data['season']}
