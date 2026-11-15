@@ -342,6 +342,47 @@ jobs:
           print('PWA KUPON DUZELTMESI: guvenli ust alan, sabit kapatma dugmesi; baska veriye dokunulmadi')
           PY_CM_PWA_SLIP
 
+      - name: Barem Gecmisi V2 (arsivden son 8 barem) yamasini ekle
+        # Bu yama basarisiz olursa site yine eski haliyle yayinlansin.
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_BAREM_GECMISI'
+          import json, shutil
+          from pathlib import Path
+          public = Path('public')
+          html_path = public / 'index.html'
+          patch = Path('site-patches/barem-gecmisi.js')
+          iddaa_files = sorted(Path('arsiv/iddaa').glob('lines-*.ndjson'))
+          karne_files = sorted(Path('arsiv/karne').glob('karne-eski-*.json'))
+          if not patch.is_file() or not iddaa_files or not karne_files or not html_path.is_file():
+              raise RuntimeError('Barem Gecmisi: yama/arsiv/index eksik; dokunulmadi')
+          html = html_path.read_text(encoding='utf-8')
+          marker = '<script src="baslat.js'
+          if 'barem-gecmisi.js' not in html and marker not in html:
+              raise RuntimeError('Barem Gecmisi: baslat.js etiketi bulunamadi; dokunulmadi')
+          lines = []
+          for f in iddaa_files:
+              for n, line in enumerate(f.read_text(encoding='utf-8').splitlines(), 1):
+                  if not line.strip():
+                      continue
+                  row = json.loads(line)
+                  if not isinstance(row, list) or len(row) != 7:
+                      raise RuntimeError(f'Barem arsivi gecersiz satir: {f.name}:{n}')
+                  lines.append(line)
+          old = json.loads(karne_files[-1].read_text(encoding='utf-8'))
+          if not isinstance(old.get('docs'), list) or not old['docs']:
+              raise RuntimeError('Eski karne arsivi gecersiz')
+          (public / 'barem-arsiv.ndjson').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          shutil.copyfile(karne_files[-1], public / 'karne-eski.json')
+          shutil.copyfile(patch, public / 'barem-gecmisi.js')
+          if 'barem-gecmisi.js' not in html:
+              html = html.replace(marker, '<script src="barem-gecmisi.js?v=1"></script>\n' + marker, 1)
+              html_path.write_text(html, encoding='utf-8')
+          print('BAREM GECMISI V2 HAZIR:', len(lines), 'arsiv kaydi,', len(old['docs']), 'eski karne gunu')
+          PY_BAREM_GECMISI
+
       - name: Son guncellemeler ve veri zamanlarini siteye ekle
         shell: bash
         run: python3 scripts/site_update_status.py --site public --seed seed
