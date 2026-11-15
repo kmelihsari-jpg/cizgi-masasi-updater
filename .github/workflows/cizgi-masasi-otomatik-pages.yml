@@ -223,6 +223,10 @@ jobs:
           print('DOGRU: ESPN kontrolu ve NBA raporu butonlari hazir')
           PY_PATCH
 
+      - name: Confirmed return model yamasini uygula
+        shell: bash
+        run: python3 scripts/karne_returning.py --model public/model.js --confirmed seed/confirmed-active.json
+
       - name: Hazirlanan siteyi indirilebilir test paketi olarak sakla
         uses: actions/upload-artifact@v4
         with:

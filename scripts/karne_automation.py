@@ -46,6 +46,10 @@ def snapshot(args):
     # Onceki geceyi silemez; ayni gece icin picks ilk kayitla kilitlenir.
     old_by_day={d.get('date'):d for d in docs}
     out=[]
+    today_tr=dt.datetime.now(TZ).date().isoformat()
+    # Site and headless model must use the exact same confirmed-return safeguards.
+    from karne_returning import patch_text, records
+    confirmed=records(args.confirmed)
     with sync_playwright() as p:
         browser=p.chromium.launch(headless=True,args=['--no-sandbox'],**({'executable_path':os.environ['CM_CHROMIUM']} if os.environ.get('CM_CHROMIUM') else {}))
         page=browser.new_page(locale='tr-TR',timezone_id='Europe/Istanbul',service_workers='block')
@@ -53,6 +57,10 @@ def snapshot(args):
         # Site JS modelini aynen kullan, fakat verileri guncel GitHub seed dosyalarindan ver.
         def intercept(route):
             u=route.request.url.split('?')[0]
+            if u.endswith('/model.js'):
+                response=route.fetch()
+                content=patch_text(response.text(),confirmed)
+                return route.fulfill(response=response,body=content)
             if u.endswith('/data.json'):
                 return route.fulfill(status=200,body=json.dumps(data),content_type='application/json')
             if u.endswith('/iddaa-lines.json'):
@@ -64,15 +72,29 @@ def snapshot(args):
             page.wait_for_function("typeof D!=='undefined' && D && D.players && typeof pickSplit==='function' && typeof IDDRAW!=='undefined' && IDDRAW && IDDRAW.rows && IDDRAW.rows.length > 0", timeout=45000)
             result=page.evaluate('''() => {
               const now=Date.now(), out=[];
-              for (const day of dayList()) {
-                if(day < '2026-11-15') continue;
-                const games=slate.filter(g => dayKey(g.ts)===day && g.ts>now+60000);
+              // Gecenin bitimine kadar: 3 gunluk takvim degil, yalnizca yakin 16 saat.
+              const MAX_AHEAD=16*3600*1000;
+              function eligible(c,day){
+                if(!c || !c.id || !c.team || !c.opp || !c.mk)return false;
+                const p=P && P[c.id];
+                if(!p || p.team!==c.team || !byP || !byP[p.id])return false;
+                if(byP[p.id].length<5 || mpg(p.id)<22 || !cmReturnAllowed(p,day))return false;
+                if(noBet(injOf(p.name)))return false;
+                const game=slate.find(g=>dayKey(g.ts)===day &&
+                  ((g.home===c.team && g.away===c.opp)||(g.away===c.team && g.home===c.opp)));
+                return !!game && game.ts>now+60000 && game.ts<=now+MAX_AHEAD;
+              }
+              for(const day of dayList()) {
+                if(day < '2026-11-15')continue;
+                const games=slate.filter(g=>dayKey(g.ts)===day && g.ts>now+60000 && g.ts<=now+MAX_AHEAD);
                 if(!games.length)continue;
                 const doc=tonightDoc(day,null,now);
                 if(!doc)continue;
+                doc.picks=(doc.picks||[]).filter(c=>eligible(c,day));
+                doc.shadow=(doc.shadow||[]).filter(c=>eligible(c,day)).slice(0,15);
                 out.push({day,games:games.map(g=>({ts:g.ts,home:g.home,away:g.away})),doc});
               }
-              return {out, updated:D.updated, oddsAt:IDDRAW.ts};
+              return {out,updated:D.updated,oddsAt:IDDRAW.ts};
             }''')
         except BrowserTimeout as exc:
             raise RuntimeError('Sayfa / model zaman asimi; dokuman yazilmadi') from exc
@@ -88,6 +110,7 @@ def snapshot(args):
             p['date']=day
             if valid_pick(p,starts,now):picks.append({k:v for k,v in p.items() if k!='date'})
         # Barem yok / dogrulanamayan secim Kasa'ya giremez.
+        # JS tarafindaki oyuncu/sakatlik ve mac filtresinden gecen Tribun adaylari.
         shadow=doc.get('shadow',[])[:15]
         if not picks and not shadow:continue
         previous=old_by_day.get(day)
@@ -157,7 +180,7 @@ def settle(args):
     return changed
 
 def main():
-    a=argparse.ArgumentParser();a.add_argument('mode',choices=['snapshot','settle']);a.add_argument('--data',default='seed/data.json');a.add_argument('--odds',default='seed/iddaa-lines.json');a.add_argument('--output',default='seed/karne.json');a.add_argument('--site',default='https://cizgi-masasi.pages.dev/');args=a.parse_args()
+    a=argparse.ArgumentParser();a.add_argument('mode',choices=['snapshot','settle']);a.add_argument('--data',default='seed/data.json');a.add_argument('--odds',default='seed/iddaa-lines.json');a.add_argument('--output',default='seed/karne.json');a.add_argument('--site',default='https://cizgi-masasi.pages.dev/');a.add_argument('--confirmed',default='seed/confirmed-active.json');args=a.parse_args()
     return snapshot(args) if args.mode=='snapshot' else settle(args)
 if __name__=='__main__':
     try:main()
