@@ -1,0 +1,67 @@
+/* Cizgi Masasi: safe-area fix for the coupon panel on iPhone home-screen PWA.
+   Scoped to #slip only. The ordinary Safari layout keeps its original top edge. */
+@media (max-width: 700px) {
+  #slip.slip {
+    /* Retain the original full-screen mobile panel and its flex layout. */
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  #slip .slip-head {
+    position: relative;
+    flex: 0 0 auto;
+    z-index: 2;
+    min-height: 54px;
+    box-sizing: border-box;
+    background: #0e1216;
+    padding: 7px 10px 7px 14px;
+    border-bottom: 1px solid var(--line, #32373d);
+  }
+  #slip .slip-head h3 {
+    margin: 0;
+    font-size: 21px;
+    line-height: 1.2;
+  }
+  #slip #slip-close {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    border-radius: 10px;
+    font-size: 30px;
+    line-height: 1;
+    color: var(--ink, #f1f2f3);
+    background: rgba(255,255,255,.07);
+    touch-action: manipulation;
+  }
+  #slip .slip-body { min-height: 0; overscroll-behavior: contain; }
+  #slip .slip-foot {
+    flex-shrink: 0;
+    max-height: 45%;
+    overflow-y: auto;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  }
+}
+/* iOS home-screen web app uses black-translucent status bar. Fixed panels
+   do NOT inherit the document root's safe-area padding. Only offset the
+   coupon panel, not the entire site (or ordinary Safari's coupon panel). */
+@media (max-width: 700px) and (display-mode: standalone) {
+  #slip.slip {
+    top: max(env(safe-area-inset-top, 0px), 48px) !important;
+    bottom: 0 !important;
+  }
+}
+/* Safari's legacy Add to Home Screen signal; set by pwa-slip-safe-v1.js. */
+@media (max-width: 700px) {
+  html.cm-ios-standalone #slip.slip {
+    top: max(env(safe-area-inset-top, 0px), 48px) !important;
+    bottom: 0 !important;
+  }
+}
