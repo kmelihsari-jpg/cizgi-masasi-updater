@@ -3,16 +3,9 @@ name: NBA Resmi Sakatlik Senkronizasyonu
 
 on:
   workflow_dispatch:
-  schedule:
-    # Zamanlar UTC (Turkiye = UTC+3). Ucretsiz Actions kotasi (2000 dk/ay) icin sinirli: ~39 kosu/gun.
-    # NBA raporu :00/:15/:30/:45'te yayinlandigi icin her kosu yayindan 5 dk sonra (:05/:20/:35/:50).
-    # 06:00-17:00 TR: calismaz (03:00-14:00 UTC)
-    # 17:00-20:00 TR: saatte 1  (14-16 UTC, :05)
-    - cron: '5 14-16 * * *'
-    # 20:00-22:00 TR: 30 dakikada bir (17-18 UTC, :05 ve :35)
-    - cron: '5,35 17-18 * * *'
-    # 22:00-06:00 TR: 15 dakikada bir (19-23 ve 00-02 UTC)
-    - cron: '5,20,35,50 19-23,0-2 * * *'
+  # Zamanlama artik Cloudflare Worker'da (cizgi-sakatlik-tetik): GitHub'in kendi cron'u gecikmeli/atlamali oldugu icin
+  # kapatildi. Worker bu workflow'u workflow_dispatch ile tetikler. Cron saatleri Worker'daki Trigger events'te (UTC):
+  # '5 14-16 * * *', '5,35 17-18 * * *', '5,20,35,50 19-23,0-2 * * *'
 
 permissions:
   contents: read
