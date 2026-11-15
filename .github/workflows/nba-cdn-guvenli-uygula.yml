@@ -1,0 +1,69 @@
+name: Cizgi Masasi - NBA CDN Guvenli Uygula
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nba-cdn-manual-apply
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+          fetch-depth: 0
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate merge logic
+        run: python scripts/test_nba_cdn_sync.py
+      - name: Back up original seed as a workflow artifact
+        run: |
+          mkdir -p out
+          cp seed/data.json out/seed-data-before-cdn.json
+      - name: Apply verified additions only
+        run: python scripts/update_nba_cdn.py --site seed --days 7 --apply --report out/nba-cdn-apply-report.json
+      - name: Validate resulting JSON and patch
+        run: |
+          python -m json.tool seed/data.json > /dev/null
+          git diff --check
+          git diff --stat -- seed/data.json
+      - name: Upload backup and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nba-cdn-apply-${{ github.run_id }}
+          path: |
+            out/seed-data-before-cdn.json
+            out/nba-cdn-apply-report.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Commit verified seed updates
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Abort safely if a different updater committed while this run was working.
+          git fetch origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            echo 'main advanced during this run; no push. Re-run to merge against latest data.' >&2
+            exit 1
+          fi
+          if git diff --quiet -- seed/data.json; then
+            echo 'No new player-game rows to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- seed/data.json
+          git commit -m 'data: merge verified NBA CDN player boxscores'
+          git push origin HEAD:main
