@@ -1,0 +1,62 @@
+/* Cizgi Masasi: iPhone / Android compact full-width layout.
+   CSS-only; analytics, betting, and data are unchanged. */
+@media (max-width: 700px) {
+  .wrap {
+    width: 100%;
+    max-width: none;
+    padding-left: max(8px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(8px, env(safe-area-inset-right, 0px)) !important;
+    padding-top: 6px !important;
+    gap: 8px !important;
+  }
+  header.top {
+    gap: 7px !important;
+    padding: 5px 0 9px !important;
+    margin-bottom: 0 !important;
+  }
+  header.top h1 {font-size: clamp(18px, 5.5vw, 23px) !important;}
+  header.top .brand {gap: 6px !important; flex: 0 0 auto;}
+  header.top .brand svg {width: 30px !important; height: 30px !important;}
+  header.top .gsearch {min-width: 0; flex: 1 1 90px !important;}
+  header.top .gsearch input {width: 100%; height: 37px !important; padding: 6px 9px !important;}
+
+  #view-home .hero {
+    padding: 7px 0 5px !important;
+    gap: 8px !important;
+    margin: 0 !important;
+  }
+  #view-home .night {font-size: clamp(42px, 13vw, 56px) !important; line-height: .98 !important;}
+  #view-home .hsub {margin: 5px 0 0 !important; font-size: 13px !important;}
+  #view-home .hero-r {width: 100%; align-items: stretch !important; gap: 5px !important;}
+  #view-home #h-days {margin: 0 !important; width: 100%; max-width: 100%;}
+  #view-home .days .day {padding: 6px 9px !important; font-size: 12px !important;}
+  #view-home .injbar {padding: 5px 0 8px !important; gap: 6px !important;}
+  #view-home .injbar .act {padding: 8px 10px !important; font-size: 12px !important;}
+  #view-home #inj-st {font-size: 11.5px !important;}
+  #view-home .hgames {margin-top: 7px !important; margin-bottom: 13px !important;}
+  #view-home .gcard {padding: 10px 9px !important;}
+  #view-home .sec-head {margin-bottom: 8px !important;}
+  #view-home .sec-head h3 {font-size: 25px !important;}
+
+  /* Spend room on useful numbers, not card framing. */
+  #view-player .pv, #view-player .pv-b, #view-player .pv-c,
+  #view-player .main, #view-player .layout {min-width: 0; max-width: 100%;}
+  #view-player .pcx-hero {padding: 12px 10px !important;}
+  #view-player .pcx-card, #view-player .pcx-chartcard {padding: 10px 8px !important;}
+  #view-player .pcx-chartcard .chartwrap {margin-left: -5px !important; margin-right: -5px !important; padding-left: 3px !important; padding-right: 3px !important;}
+  #view-player .pcb-plot {margin-left: 24px !important; margin-right: 1px !important;}
+  #view-player .pcb-bars {gap: 3px !important;}
+  #view-player .pcb {min-width: 0 !important;}
+  #view-player .pcb-x {font-size: 10px !important;}
+
+  #view-card .panel, #view-hit .panel, #view-team .panel,
+  #view-cheat .panel, #view-sak .panel {padding: 11px 9px !important;}
+  .tablewrap {max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;}
+  .bnav {padding-left: max(3px,env(safe-area-inset-left,0px)) !important;
+         padding-right: max(3px,env(safe-area-inset-right,0px)) !important;}
+}
+@media (max-width: 360px) {
+  header.top h1 {font-size: 17px !important;}
+  header.top .brand svg {width: 26px !important; height: 26px !important;}
+  .bnav button {font-size: 10px !important;}
+}

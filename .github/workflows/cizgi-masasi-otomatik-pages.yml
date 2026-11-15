@@ -227,6 +227,29 @@ jobs:
         shell: bash
         run: python3 scripts/karne_returning.py --model public/model.js --confirmed seed/confirmed-active.json
 
+      - name: Mobil genis gorunumu siteye ekle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_MOBILE_WIDE'
+          from pathlib import Path
+          import shutil
+          src=Path('site-patches/mobile-wide-v1.css')
+          dst=Path('public/mobile-wide-v1.css')
+          html_file=Path('public/index.html')
+          if not src.is_file() or not html_file.is_file():
+              raise RuntimeError('Mobil CSS veya site index.html yok')
+          html=html_file.read_text(encoding='utf-8')
+          tag='<link rel="stylesheet" href="mobile-wide-v1.css?v=20261115a">'
+          if tag not in html:
+              if '</head>' not in html:
+                  raise RuntimeError('index.html head etiketi bulunamadi')
+              html=html.replace('</head>',tag+'\n</head>',1)
+          shutil.copyfile(src,dst)
+          html_file.write_text(html,encoding='utf-8')
+          print('MOBIL WIDE CSS EKLENDI; analiz veri dosyalari degismedi')
+          PY_MOBILE_WIDE
+
       - name: Hazirlanan siteyi indirilebilir test paketi olarak sakla
         uses: actions/upload-artifact@v4
         with:
