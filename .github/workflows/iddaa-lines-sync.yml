@@ -43,15 +43,18 @@ jobs:
                   assert len(vals)==5 and vals[1] in ('PTS','REB','AST','STL','BLK','3PM','SRA','RA')
               print('KONTROL OK:',len(d['rows']),'satir')
           PY_CHECK
+      - name: Baremleri arsive ekle (sadece-ekleme)
+        # Arsiv basarisiz olsa bile guncel barem yayini aksamasin.
+        continue-on-error: true
+        run: python scripts/iddaa_archive.py --lines seed/iddaa-lines.json --archive arsiv/iddaa --source github-sync
       - name: Dosya degisti mi
         id: diff
         shell: bash
         run: |
-          git add -N seed/iddaa-lines.json 2>/dev/null || true
-          if git diff --quiet -- seed/iddaa-lines.json; then
-            echo 'changed=false' >> "$GITHUB_OUTPUT"
-          else
+          if [ -n "$(git status --porcelain -- seed/iddaa-lines.json arsiv/iddaa)" ]; then
             echo 'changed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
           fi
       - name: Yalnizca degisen baremleri commit et
         if: steps.diff.outputs.changed == 'true'
@@ -61,6 +64,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add seed/iddaa-lines.json
+          if [ -d arsiv/iddaa ]; then git add arsiv/iddaa; fi
           git commit -m 'Update iddaa NBA player lines'
           # Baska job ayni anda main'e yazmissa once rebase et.
           for attempt in 1 2 3; do
