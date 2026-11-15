@@ -31,6 +31,27 @@ def valid_pick(p, starts, now):
         return game>now+60
     except (ValueError,TypeError,KeyError): return False
 
+WORKER_API = 'https://cizgi-masasi-api.k-melihsari.workers.dev/api/espn-injuries'
+
+def worker_sakatlik_taze(max_hours=3):
+    """Sakatlik Worker'inda en az bir basarili ESPN toplamasi max_hours icinde olmali.
+    Ulasilamazsa/bayatsa False doner (yeni Karne yazilmaz)."""
+    import urllib.request
+    try:
+        req = urllib.request.Request(WORKER_API, headers={'Accept': 'application/json', 'User-Agent': 'CizgiMasasiKarne/1.0'})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            d = json.loads(r.read().decode('utf-8'))
+        last = d.get('last_check')
+        if not d.get('success') or not last or int(d.get('count', 0)) < 20:
+            return False, 'Worker ESPN verisi yok/az'
+        t = dt.datetime.fromisoformat(str(last).replace(' ', 'T')).replace(tzinfo=dt.timezone.utc)
+        h = (dt.datetime.now(dt.timezone.utc) - t).total_seconds() / 3600
+        if h < -0.05 or h > max_hours:
+            return False, f'Worker ESPN toplamasi {h:.1f} saat once'
+        return True, f'Worker ESPN toplamasi {h:.1f} saat once'
+    except Exception as exc:
+        return False, 'Worker okunamadi: ' + str(exc)[:120]
+
 def snapshot(args):
     from playwright.sync_api import sync_playwright, TimeoutError as BrowserTimeout
     raw=load(args.output, {'docs':[]}); docs=as_docs(raw)
@@ -40,11 +61,15 @@ def snapshot(args):
     now=time.time();stamp=dt.datetime.now(dt.timezone.utc).isoformat()
     age=(now*1000-int(odds.get('ts',0)))/3600000
     data_age=(dt.datetime.now(dt.timezone.utc)-dt.datetime.fromisoformat(data['updated'].replace('Z','+00:00'))).total_seconds()/3600
-    # Barem akisi 18:30/19:30/20:30, snapshot 15 dakika sonra.
+    # Barem akisi 18:30/19:30/20:30, snapshot ~15 dk sonra; GitHub cron gecikmesi icin 75 dk tolerans.
     # 6 saatlik eski baremle yeni bahis onerisi dondurma.
-    if age<0 or age>0.6 or data_age<0 or data_age>16:
+    if age<0 or age>1.25 or data_age<0 or data_age>16:
         print(f'SKIP: veri bayat (iddaa={age:.1f}h, istatistik={data_age:.1f}h)');return False
     if not odds.get('rows'):print('SKIP: iddaa baremi yok');return False
+    wok, wmsg = worker_sakatlik_taze()
+    if not wok:
+        print('SKIP: sakatlik dogrulanamadi -', wmsg);return False
+    print('Sakatlik kaynagi:', wmsg)
     # Onceki geceyi silemez; ayni gece icin picks ilk kayitla kilitlenir.
     old_by_day={d.get('date'):d for d in docs}
     out=[]
@@ -72,8 +97,8 @@ def snapshot(args):
         try:
             page.goto(args.site,wait_until='domcontentloaded',timeout=45000)
             # Veri modelinin ardindan sakatlik snapshot'inin da yuklenmesini bekle.
-            # LIVE.ts milisaniye epoch degilse veya 3 saatten eskiyse fail closed.
-            page.wait_for_function("typeof D!=='undefined' && D && D.players && typeof pickSplit==='function' && typeof IDDRAW!=='undefined' && IDDRAW && IDDRAW.rows && IDDRAW.rows.length > 0 && typeof LIVE!=='undefined' && LIVE && Number.isFinite(Number(LIVE.ts)) && Number(LIVE.ts)>1e12 && Date.now()-Number(LIVE.ts)>=0 && Date.now()-Number(LIVE.ts)<=3*3600*1000", timeout=45000)
+            # Sakatlik: sayfanin kullandigi Worker verisi (window.CMREMOTE) yuklenmeden ve Worker 3 saatten eskiyse fail closed.
+            page.wait_for_function("typeof D!=='undefined' && D && D.players && typeof pickSplit==='function' && typeof IDDRAW!=='undefined' && IDDRAW && IDDRAW.rows && IDDRAW.rows.length > 0 && typeof window.CMREMOTE!=='undefined' && window.CMREMOTE && (window.CMREMOTE.espn || (window.CMREMOTE.list && Object.keys(window.CMREMOTE.list).length>0))", timeout=45000)
             result=page.evaluate('''() => {
               const now=Date.now(), out=[];
               // Gecenin bitimine kadar: 3 gunluk takvim degil, yalnizca yakin 16 saat.
@@ -101,7 +126,7 @@ def snapshot(args):
               return {out,updated:D.updated,oddsAt:IDDRAW.ts};
             }''')
         except BrowserTimeout as exc:
-            raise RuntimeError('Sayfa/model/sakatlik LIVE hazir veya guncel degil; yeni Karne yazilmadi') from exc
+            raise RuntimeError('Sayfa/model/sakatlik (CMREMOTE) hazir degil; yeni Karne yazilmadi') from exc
         finally:browser.close()
     for entry in result['out']:
         day=entry['day'];
