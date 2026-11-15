@@ -298,6 +298,12 @@ jobs:
           print('MOBIL V3 HAZIR: sol baslik + oyuncu grafik okunabilirligi')
           PY_CM_MOBILE_V3
 
+      - name: Oyuncu DVP manuel pozisyon secici V1
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/dvp_position_patch.py --site public
+
       - name: Hazirlanan siteyi indirilebilir test paketi olarak sakla
         uses: actions/upload-artifact@v4
         with:
