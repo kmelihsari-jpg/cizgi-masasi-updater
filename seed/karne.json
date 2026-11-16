@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-15",
   "startBalance": 100,
-  "generatedAt": "2026-11-15T16:18:29.048602+00:00",
+  "generatedAt": "2026-11-16T10:44:03.729838+00:00",
   "docs": [
     {
       "date": "2026-11-15",
@@ -441,7 +441,30 @@
       "dataUpdated": "2026-11-14T22:39:07.875606+00:00",
       "oddsUpdated": "2026-11-15T00:57:04Z",
       "source": "github-actions-headless",
-      "locked": true
+      "locked": true,
+      "early": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "searly": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
     },
     {
       "date": "2026-11-16",
