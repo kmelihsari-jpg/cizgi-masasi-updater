@@ -1,10 +1,9 @@
 name: Cizgi Masasi - Iddaa NBA Barem Senkronizasyonu
 
 on:
+  # Zamanlama artik Cloudflare Worker'da (cizgi-sakatlik-tetik): workflow_dispatch ile Istanbul 17:05, 18:05, 19:05, 20:05.
+  # GitHub'in kendi cron'u gecikmeli/atlamali oldugu icin kapatildi.
   workflow_dispatch:
-  schedule:
-    # Istanbul UTC+3: 18:30, 19:30, 20:30
-    - cron: '30 15,16,17 * * *'
 
 permissions:
   contents: write
