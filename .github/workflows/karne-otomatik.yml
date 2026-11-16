@@ -10,8 +10,7 @@ on:
         type: choice
         options: [snapshot, settle]
   schedule:
-    # Turkiye saati 18:45, 19:45, 20:45 (istatistikler + iddaa sonrasi)
-    - cron: '45 15,16,17 * * *'
+    # Aksam snapshot'lari (18:15, 19:15, 20:15) artik Cloudflare Worker'da (cizgi-sakatlik-tetik): iddaa'dan 10 dk sonra workflow_dispatch (mode=snapshot).
     # Turkiye saati 12:15, dunden kalan maclarin sonuclari
     - cron: '15 9 * * *'
 
