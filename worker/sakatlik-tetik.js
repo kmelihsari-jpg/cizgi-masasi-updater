@@ -138,6 +138,13 @@ export async function sakatlikKarari(env) {
 }
 
 async function sakatlikIsle(env, sadeceKarar) {
+  // Parmak izi VARSAYILAN KAPALI: Workers ucretsiz planinda (10 ms CPU) olcum P50 ~7.9 ms / P99 ~13 ms cikti, sigmiyor.
+  // Kapaliyken sakatlik workflow'u her sakatlik slotunda kosulsuz tetiklenir (takvim tasarrufu yine gecerli: 39 -> 19/gun).
+  // Acmak icin ortam degiskeni PARMAK_IZI=1 (yalniz CPU ucretli planda ya da hafifletilince onerilir).
+  if (env.PARMAK_IZI !== '1') {
+    if (sadeceKarar) return 'TETIKLENIRDI: parmak izi kapali (PARMAK_IZI=1 degil)';
+    return 'TETIKLENDI (' + (await tetikle(env, 'nba-official-sync.yml')) + '): parmak izi kapali';
+  }
   const k = await sakatlikKarari(env);
   console.log('sakatlik karari:', JSON.stringify({ tetikle: k.tetikle, neden: k.neden }));
   if (sadeceKarar || !k.tetikle) return k.tetikle ? 'TETIKLENIRDI: ' + k.neden : 'ATLANDI: ' + k.neden;

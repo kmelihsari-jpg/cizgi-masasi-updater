@@ -1,7 +1,7 @@
 // worker/sakatlik-tetik.js karar mantigi testi. Ag yok, GitHub Actions yok: fetch ve KV taklit edilir.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { sakatlikKarari, parmakIzi, sakatlikSlotu, iddaaZamani, karneZamani, SAKATLIK_SLOTLARI } from '../worker/sakatlik-tetik.js';
+import worker, { sakatlikKarari, parmakIzi, sakatlikSlotu, iddaaZamani, karneZamani, SAKATLIK_SLOTLARI } from '../worker/sakatlik-tetik.js';
 
 const fx = (n) => readFileSync(new URL('./fixtures/' + n, import.meta.url));
 const PDF = {
@@ -91,6 +91,22 @@ assert.ok(!sakatlikSlotu(ist(20, 35)) && !sakatlikSlotu(ist(21, 35)) && !sakatli
 // Iddaa/karne saatleri degismedi: yalniz :05 tikleri (karne Worker'da 10 dk bekleyip tetikler)
 assert.deepEqual(tikler.filter(([h, m]) => iddaaZamani(ist(h, m))).map(([h, m]) => h + ':' + m), ['17:5', '18:5', '19:5', '20:5']);
 assert.deepEqual(tikler.filter(([h, m]) => karneZamani(ist(h, m))).map(([h, m]) => h + ':' + m), ['18:5', '19:5', '20:5']);
+
+// 12) Varsayilan (PARMAK_IZI yok): slotlarda kosulsuz tetikler, slot disinda tetiklemez, KV/PDF'e dokunmaz
+{
+  const cagrilar = [];
+  globalThis.fetch = async (url, init) => { cagrilar.push(String(url).split('/workflows/')[1]?.split('/')[0] || String(url)); return new Response(null, { status: 204 }); };
+  const bekleyen = [];
+  const ctx = { waitUntil: (p) => bekleyen.push(p) };
+  const env = { GITHUB_TOKEN: 'x' }; // KV bile yok: kullanilmamali
+  const kos = async (hh, mm) => { cagrilar.length = 0; bekleyen.length = 0; await worker.scheduled({ scheduledTime: ist(hh, mm) }, env, ctx); await Promise.all(bekleyen); return [...cagrilar]; };
+  assert.deepEqual(await kos(23, 35), ['nba-official-sync.yml']);
+  assert.deepEqual(await kos(22, 20), []);   // slot disi
+  assert.deepEqual(await kos(12, 5), []);    // gunduz kapali
+  assert.deepEqual(await kos(17, 5), ['nba-official-sync.yml', 'iddaa-lines-sync.yml']); // sakatlik + iddaa
+  assert.deepEqual(await kos(21, 35), []);   // 17-22 saatte 1: :35 yok
+  assert.match(await (async () => { globalThis.fetch = async () => { throw new Error('ag yok'); }; return worker.fetch(new Request('https://x/?k=a&is=kontrol'), { TEST_KEY: 'a' }).then((r) => r.text()); })(), /parmak izi kapali/);
+}
 
 // 11) CPU: 3 ardisik parmak izi (Workers ucretsiz plani 10 ms/cagri)
 const t0 = process.cpuUsage();
