@@ -1,7 +1,7 @@
 // worker/sakatlik-tetik.js karar mantigi testi. Ag yok, GitHub Actions yok: fetch ve KV taklit edilir.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { sakatlikKarari, parmakIzi } from '../worker/sakatlik-tetik.js';
+import { sakatlikKarari, parmakIzi, sakatlikSlotu, iddaaZamani, karneZamani, SAKATLIK_SLOTLARI } from '../worker/sakatlik-tetik.js';
 
 const fx = (n) => readFileSync(new URL('./fixtures/' + n, import.meta.url));
 const PDF = {
@@ -79,7 +79,20 @@ bozukKv.SAKATLIK_KV.get = async () => { throw new Error('kv down'); };
 k = await sakatlikKarari(bozukKv);
 assert.equal(k.tetikle, true); assert.match(k.neden, /hata/);
 
-// 10) CPU: 3 ardisik parmak izi (Workers ucretsiz plani 10 ms/cagri)
+// 10) Zamanlama: tek cron (:05/:20/:35/:50 UTC), Istanbul = UTC+3
+const ist = (hh, mm) => Date.UTC(2026, 10, 17, hh - 3 + 24, mm) ; // Istanbul saatini UTC ms'ye cevir
+const tikler = [];
+for (let h = 0; h < 24; h++) for (const m of [5, 20, 35, 50]) tikler.push([h, m]);
+const calisan = tikler.filter(([h, m]) => sakatlikSlotu(ist(h, m))).map(([h, m]) => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+assert.equal(calisan.length, 25);
+assert.deepEqual(calisan, ['00:20','01:05','01:35','02:05','02:35','03:05','03:35','04:05','04:20','04:35','04:50','05:05','05:20','05:35','05:50','17:05','18:05','19:05','20:05','20:35','21:05','21:35','22:05','22:50','23:35']);
+// 22-01 arasi araliklar 45 dk, 01-04 arasi 30 dk
+assert.ok(!sakatlikSlotu(ist(22, 20)) && !sakatlikSlotu(ist(22, 35)) && !sakatlikSlotu(ist(23, 5)) && !sakatlikSlotu(ist(1, 20)) && !sakatlikSlotu(ist(2, 50)));
+// Iddaa/karne eski saatlerinde kaldi: yalniz :05 tikleri
+assert.deepEqual(tikler.filter(([h, m]) => iddaaZamani(ist(h, m))).map(([h, m]) => h + ':' + m), ['17:5', '18:5', '19:5', '20:5']);
+assert.deepEqual(tikler.filter(([h, m]) => karneZamani(ist(h, m))).map(([h, m]) => h + ':' + m), ['18:5', '19:5', '20:5']);
+
+// 11) CPU: 3 ardisik parmak izi (Workers ucretsiz plani 10 ms/cagri)
 const t0 = process.cpuUsage();
 for (const p of [PDF['0600'], PDF['0630'], PDF.degisik]) await parmakIzi(p);
 const ms = (process.cpuUsage(t0).user + process.cpuUsage(t0).system) / 3000;

@@ -12,9 +12,13 @@ tetiklemeleri aynidir. Tek fark: sakatlik workflow'u artik yalniz NBA raporunun 
    - "ATLANDI: ..." ya da "TETIKLENIRDI: ilk calisma" gibi bir metin donmeli.
    - "Error 1102 / Worker exceeded resource limits" donerse CPU limiti asildi: GECME, eski Worker'da kal.
    - Birkac kez dene; Dashboard > Metrics'te CPU time 10 ms altinda olmali.
-4. Gecis: v2'ye eski Worker'in cron'larini ekle, SONRA eski Worker'dan o cron'lari sil (ikisi ayni anda calismasin).
-   Ucretsiz planda hesap basina 5 cron trigger siniri var.
+4. Gecis: v2'ye TEK cron ekle: `5,20,35,50 * * * *` (UTC). Saat plani kodda (`SAKATLIK_SLOTLARI`), cron'da degil.
+   SONRA eski Worker'dan tum cron'lari sil (ikisi ayni anda calismasin). Ucretsiz planda hesap basina 5 cron siniri var; bu 3 yerine 1 slot kullanir.
 5. Geri donus: eski Worker'a cron'lari geri ekle, v2'den sil.
+
+## Sakatlik saat plani (Istanbul)
+17-20: saatte 1 (:05) | 20-22: 30 dk | 22-01: 45 dk (22:05, 22:50, 23:35, 00:20) | 01-04: 30 dk | 04-06: 15 dk
+Gunde 25 tetikleme (eskiden 39). Iddaa (17-20 :05) ve karne (18-20 :15) saatleri degismedi.
 
 ## Bakim
 - `STALE_DK`: icerik ayni kalsa bile D1'deki rapor saati bu kadar dakika geride kalirsa tetikler (0 = kapali).

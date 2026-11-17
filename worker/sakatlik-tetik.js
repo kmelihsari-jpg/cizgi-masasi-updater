@@ -148,19 +148,30 @@ async function sakatlikIsle(env, sadeceKarar) {
   return 'TETIKLENDI (' + durum + '): ' + k.neden;
 }
 
-// Mevcut cron'lar :05'te (Istanbul 17:05, 18:05, 19:05, 20:05 ...) uyaniyor.
+// Tek cron: '5,20,35,50 * * * *' (UTC). Hangi tikte GitHub'in tetilecegi asagidaki tablolarla Worker'da belirlenir
+// (bos tikler bedava: Worker istegi GitHub dakikasi harcamaz). Saatler Istanbul (UTC+3), :05/:20/:35/:50 izgarasinda.
 function saatIstanbul(t) {
   const d = new Date(t + 3 * 3600 * 1000);
   return { saat: d.getUTCHours(), dk: d.getUTCMinutes() };
 }
-// Iddaa: Istanbul 17, 18, 19, 20 - saatin ilk calismasi (dakika < 30)
-function iddaaZamani(t) { const { saat, dk } = saatIstanbul(t); return saat >= 17 && saat <= 20 && dk < 30; }
+const hhmm = (s, d) => String(s).padStart(2, '0') + ':' + String(d).padStart(2, '0');
+function aralik(saatler, dakikalar) { return saatler.flatMap((s) => dakikalar.map((d) => hhmm(s, d))); }
+export const SAKATLIK_SLOTLARI = new Set([
+  ...aralik([17, 18, 19], [5]),            // 17-20: saatte 1
+  ...aralik([20, 21], [5, 35]),            // 20-22: 30 dk
+  '22:05', '22:50', '23:35', '00:20',      // 22-01: 45 dk
+  ...aralik([1, 2, 3], [5, 35]),           // 01-04: 30 dk
+  ...aralik([4, 5], [5, 20, 35, 50]),      // 04-06: 15 dk (son tip-off'lar ~05:30)
+]);
+export function sakatlikSlotu(t) { const { saat, dk } = saatIstanbul(t); return SAKATLIK_SLOTLARI.has(hhmm(saat, dk)); }
+// Iddaa: Istanbul 17, 18, 19, 20 - saatin ilk tiki (:05)
+export function iddaaZamani(t) { const { saat, dk } = saatIstanbul(t); return saat >= 17 && saat <= 20 && dk < 10; }
 // Karne snapshot: Istanbul 18, 19, 20 - iddaa'dan 10 dk sonra (18:15, 19:15, 20:15)
-function karneZamani(t) { const { saat, dk } = saatIstanbul(t); return saat >= 18 && saat <= 20 && dk < 30; }
+export function karneZamani(t) { const { saat, dk } = saatIstanbul(t); return saat >= 18 && saat <= 20 && dk < 10; }
 
 export default {
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(sakatlikIsle(env, false));
+    if (sakatlikSlotu(event.scheduledTime)) ctx.waitUntil(sakatlikIsle(env, false));
     if (iddaaZamani(event.scheduledTime)) ctx.waitUntil(tetikle(env, 'iddaa-lines-sync.yml'));
     if (karneZamani(event.scheduledTime)) {
       ctx.waitUntil((async () => {
