@@ -151,6 +151,15 @@ def parse_pdf(content):
     return players, sorted(missing)
 
 
+def icerik_izi(players, missing):
+    # Yalnizca log icin: raporun icerigi (oyuncu/durum/aciklama/rapor vermeyen takimlar) onceki
+    # rapordan farkli mi, sonradan olcmek icin. Saat damgasi dahil degildir. Davranisi etkilemez.
+    import hashlib
+    ham = json.dumps([sorted((p['team'], p['player_name'], p['status'], p['reason']) for p in players), sorted(missing)],
+                     ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(ham.encode('utf-8')).hexdigest()[:16]
+
+
 def check_examples(players):
     lookup = {p['player_name']: p for p in players}
     cases = [
@@ -185,6 +194,7 @@ def main():
     print('Oyuncular:', len(players), flush=True)
     print('Durumlar:', dict(Counter(p['status'] for p in players)), flush=True)
     print('Rapor vermeyen takimlar:', len(missing), flush=True)
+    print('ICERIK_IZI:', icerik_izi(players, missing), flush=True)
     if args.dry_run:
         print('TEST TAMAMLANDI - VERITABANINA YAZILMADI', flush=True)
         return
