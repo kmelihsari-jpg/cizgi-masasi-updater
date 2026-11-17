@@ -157,11 +157,8 @@ function saatIstanbul(t) {
 const hhmm = (s, d) => String(s).padStart(2, '0') + ':' + String(d).padStart(2, '0');
 function aralik(saatler, dakikalar) { return saatler.flatMap((s) => dakikalar.map((d) => hhmm(s, d))); }
 export const SAKATLIK_SLOTLARI = new Set([
-  ...aralik([17, 18, 19], [5]),            // 17-20: saatte 1
-  ...aralik([20, 21], [5, 35]),            // 20-22: 30 dk
-  '22:05', '22:50', '23:35', '00:20',      // 22-01: 45 dk
-  ...aralik([1, 2, 3], [5, 35]),           // 01-04: 30 dk
-  ...aralik([4, 5], [5, 20, 35, 50]),      // 04-06: 15 dk (son tip-off'lar ~05:30)
+  ...aralik([17, 18, 19, 20, 21], [5]),            // 17-22: saatte 1
+  ...aralik([22, 23, 0, 1, 2, 3, 4], [5, 35]),     // 22-05: 30 dk
 ]);
 export function sakatlikSlotu(t) { const { saat, dk } = saatIstanbul(t); return SAKATLIK_SLOTLARI.has(hhmm(saat, dk)); }
 // Iddaa: Istanbul 17, 18, 19, 20 - saatin ilk tiki (:05)

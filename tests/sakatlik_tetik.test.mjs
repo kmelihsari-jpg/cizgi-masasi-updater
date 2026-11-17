@@ -84,11 +84,11 @@ const ist = (hh, mm) => Date.UTC(2026, 10, 17, hh - 3 + 24, mm) ; // Istanbul sa
 const tikler = [];
 for (let h = 0; h < 24; h++) for (const m of [5, 20, 35, 50]) tikler.push([h, m]);
 const calisan = tikler.filter(([h, m]) => sakatlikSlotu(ist(h, m))).map(([h, m]) => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-assert.equal(calisan.length, 25);
-assert.deepEqual(calisan, ['00:20','01:05','01:35','02:05','02:35','03:05','03:35','04:05','04:20','04:35','04:50','05:05','05:20','05:35','05:50','17:05','18:05','19:05','20:05','20:35','21:05','21:35','22:05','22:50','23:35']);
-// 22-01 arasi araliklar 45 dk, 01-04 arasi 30 dk
-assert.ok(!sakatlikSlotu(ist(22, 20)) && !sakatlikSlotu(ist(22, 35)) && !sakatlikSlotu(ist(23, 5)) && !sakatlikSlotu(ist(1, 20)) && !sakatlikSlotu(ist(2, 50)));
-// Iddaa/karne eski saatlerinde kaldi: yalniz :05 tikleri
+assert.equal(calisan.length, 19);
+assert.deepEqual(calisan, ['00:05','00:35','01:05','01:35','02:05','02:35','03:05','03:35','04:05','04:35','17:05','18:05','19:05','20:05','21:05','22:05','22:35','23:05','23:35']);
+// 17-22 saatte 1 (:35 yok), 22-05 yarim saatte bir (:20/:50 yok), 05-17 hic
+assert.ok(!sakatlikSlotu(ist(20, 35)) && !sakatlikSlotu(ist(21, 35)) && !sakatlikSlotu(ist(22, 20)) && !sakatlikSlotu(ist(23, 50)) && !sakatlikSlotu(ist(1, 20)) && !sakatlikSlotu(ist(4, 50)) && !sakatlikSlotu(ist(5, 5)) && !sakatlikSlotu(ist(12, 5)));
+// Iddaa/karne saatleri degismedi: yalniz :05 tikleri (karne Worker'da 10 dk bekleyip tetikler)
 assert.deepEqual(tikler.filter(([h, m]) => iddaaZamani(ist(h, m))).map(([h, m]) => h + ':' + m), ['17:5', '18:5', '19:5', '20:5']);
 assert.deepEqual(tikler.filter(([h, m]) => karneZamani(ist(h, m))).map(([h, m]) => h + ':' + m), ['18:5', '19:5', '20:5']);
 

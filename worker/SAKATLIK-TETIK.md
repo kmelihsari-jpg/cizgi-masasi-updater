@@ -17,8 +17,8 @@ tetiklemeleri aynidir. Tek fark: sakatlik workflow'u artik yalniz NBA raporunun 
 5. Geri donus: eski Worker'a cron'lari geri ekle, v2'den sil.
 
 ## Sakatlik saat plani (Istanbul)
-17-20: saatte 1 (:05) | 20-22: 30 dk | 22-01: 45 dk (22:05, 22:50, 23:35, 00:20) | 01-04: 30 dk | 04-06: 15 dk
-Gunde 25 tetikleme (eskiden 39). Iddaa (17-20 :05) ve karne (18-20 :15) saatleri degismedi.
+17-22: saatte 1 (:05) | 22-05: 30 dk (:05, :35) | 05-17: kapali
+Gunde 19 tetikleme (eskiden 39). Iddaa (17-20 :05) ve karne (18-20, :05 tikinden 10 dk sonra) saatleri degismedi.
 
 ## Bakim
 - `STALE_DK`: icerik ayni kalsa bile D1'deki rapor saati bu kadar dakika geride kalirsa tetikler (0 = kapali).
