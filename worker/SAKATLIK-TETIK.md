@@ -20,6 +20,11 @@ tetiklemeleri aynidir. Tek fark: sakatlik workflow'u artik yalniz NBA raporunun 
 17-22: saatte 1 (:05) | 22-05: 30 dk (:05, :35) | 05-17: kapali
 Gunde 19 tetikleme (eskiden 39). Iddaa (17-20 :05) ve karne (18-20, :05 tikinden 10 dk sonra) saatleri degismedi.
 
+## Parmak izi (VARSAYILAN KAPALI)
+Workers ucretsiz planinda olcum: P50 ~7.9 ms, P99 ~13 ms (sinir 10 ms). Bu yuzden kod varsayilan olarak parmak izi KULLANMAZ;
+sakatlik workflow'u her sakatlik slotunda kosulsuz tetiklenir. Takvim tasarrufu (39 -> 19 tetik/gun) bundan bagimsiz gecerlidir.
+Acmak icin ortam degiskeni `PARMAK_IZI=1` (KV baglamasi `SAKATLIK_KV` gerekir). Ucretsiz planda ACMA.
+
 ## Bakim
 - `STALE_DK`: icerik ayni kalsa bile D1'deki rapor saati bu kadar dakika geride kalirsa tetikler (0 = kapali).
 - Test: `node tests/sakatlik_tetik.test.mjs` (ag ve Actions kullanmaz).
