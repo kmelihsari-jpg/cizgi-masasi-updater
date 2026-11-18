@@ -212,7 +212,7 @@ function cmHeroOrtu(){if(typeof slate==='undefined'||!slate.some(g=>dayKey(g.ts)
 function cmOrtuKalk(){try{const h=document.querySelector('#h-hero .hv:not(.hv-ortu)');if(!h)return;const k='cm-ortu-'+(S.hDay||'');if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1');h.classList.add('kalk')}catch(e){}}
 /* CM-YAKIN-KUTU */
 // Vitrin 5'ten az bahisle kalirsa: iddaa cizgisi var, model guclu, oran degere kil payi kalmis olanlar. Kasa/Karne'ye etkisi yok.
-const CM_NEAR={min:5,gap:.30,model:.65,max:6};
+const CM_NEAR={min:5,gap:.30,model:.55,max:6};
 function cmNear(IT,others){try{if(!S.hDay||IT.length>=CM_NEAR.min)return [];const have=new Set(IT.map(cmPid)),now=Date.now(),out=[];
   for(const c of others){if(!c||!c.p||!c.il||c.why!=='value'||!c.need||!(c.il.odd>0))continue;if(have.has(c.p.id)||(c.g&&c.g.ts<=now))continue;
     if(typeof noBet==='function'&&noBet(c.inj))continue;if((c.model||0)<CM_NEAR.model)continue;const r=c.il.odd/c.need;if(r<1-CM_NEAR.gap||r>=1)continue;c.nearR=r;out.push(c)}
