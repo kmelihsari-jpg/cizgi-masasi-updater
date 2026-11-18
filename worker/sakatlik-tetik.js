@@ -139,7 +139,7 @@ export async function sakatlikKarari(env) {
 
 async function sakatlikIsle(env, sadeceKarar) {
   // Parmak izi VARSAYILAN KAPALI: Workers ucretsiz planinda (10 ms CPU) olcum P50 ~7.9 ms / P99 ~13 ms cikti, sigmiyor.
-  // Kapaliyken sakatlik workflow'u her sakatlik slotunda kosulsuz tetiklenir (takvim tasarrufu yine gecerli: 39 -> 19/gun).
+  // Kapaliyken sakatlik workflow'u her sakatlik slotunda kosulsuz tetiklenir (takvim: 25/gun, eskiden 39).
   // Acmak icin ortam degiskeni PARMAK_IZI=1 (yalniz CPU ucretli planda ya da hafifletilince onerilir).
   if (env.PARMAK_IZI !== '1') {
     if (sadeceKarar) return 'TETIKLENIRDI: parmak izi kapali (PARMAK_IZI=1 degil)';
@@ -165,7 +165,8 @@ const hhmm = (s, d) => String(s).padStart(2, '0') + ':' + String(d).padStart(2, 
 function aralik(saatler, dakikalar) { return saatler.flatMap((s) => dakikalar.map((d) => hhmm(s, d))); }
 export const SAKATLIK_SLOTLARI = new Set([
   ...aralik([17, 18, 19, 20, 21], [5]),            // 17-22: saatte 1
-  ...aralik([22, 23, 0, 1, 2, 3, 4], [5, 35]),     // 22-05: 30 dk
+  ...aralik([22, 23, 3, 4], [5, 35]),              // 22-00 ve 03-05: 30 dk
+  ...aralik([0, 1, 2], [5, 20, 35, 50]),           // 00-03: 15 dk (mac oncesi yogun saatler, 18 Kasim 2026)
 ]);
 export function sakatlikSlotu(t) { const { saat, dk } = saatIstanbul(t); return SAKATLIK_SLOTLARI.has(hhmm(saat, dk)); }
 // Iddaa: Istanbul 17, 18, 19, 20 - saatin ilk tiki (:05)

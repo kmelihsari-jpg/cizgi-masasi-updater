@@ -57,6 +57,27 @@
       nb.onclick = function(){refresh(true, 'nba')};
     }
   }
+  // Sakatlik cekim plani (TSI). worker/sakatlik-tetik.js SAKATLIK_SLOTLARI ile ayni tutulmali.
+  var PLAN=[[17,22,[5]],[22,24,[5,35]],[0,3,[5,20,35,50]],[3,5,[5,35]]];
+  var PLAN_YAZI='17–22 saatte bir · 22–00 yarım saatte bir · 00–03 15 dakikada bir · 03–05 yarım saatte bir · 05–17 çekim yok';
+  function planDilimi(h){for(var i=0;i<PLAN.length;i++){if(h>=PLAN[i][0]&&h<PLAN[i][1])return PLAN[i]}return null}
+  function sonrakiCekim(now){
+    var ist=now+3*3600e3, t=Math.floor(ist/60000)*60000+60000;
+    for(var i=0;i<24*60;i++,t+=60000){var d=new Date(t),h=d.getUTCHours(),m=d.getUTCMinutes(),p=planDilimi(h);
+      if(p&&p[2].indexOf(m)>=0)return {h:h,m:m,dk:Math.round((t-ist)/60000),aralik:p[2].length}}
+    return null;
+  }
+  function iki(n){return (n<10?'0':'')+n}
+  function planYaz(){
+    var bar=el('cm-live-source');if(!bar)return;
+    var box=el('cm-inj-plan');
+    if(!box){box=document.createElement('div');box.id='cm-inj-plan';bar.insertAdjacentElement('afterend',box);
+      var st=document.createElement('style');st.textContent='#cm-inj-plan{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:8px 0 0;padding:8px 12px;border-radius:10px;border:1px dashed rgba(255,255,255,.14);font-size:12.5px;line-height:1.45;color:var(--mut,#9aa0a6)}#cm-inj-plan b{color:var(--ink,#fff);font-weight:600}#cm-inj-plan .cm-yogun{color:#f2994a}';document.head.appendChild(st)}
+    var n=sonrakiCekim(Date.now()), now=new Date(Date.now()+3*3600e3), simdi=planDilimi(now.getUTCHours());
+    var sonraki=n?('<span>Sonraki NBA raporu çekimi: <b>'+iki(n.h)+':'+iki(n.m)+'</b> ('+(n.dk<=1?'şimdi':n.dk<60?n.dk+' dk sonra':Math.floor(n.dk/60)+' sa '+(n.dk%60)+' dk sonra')+'; birkaç dakika içinde burada görünür)</span>'):'';
+    var durum=simdi?(simdi[2].length===4?'<span class="cm-yogun">Şu an yoğun saatler: 15 dakikada bir çekiliyor</span>':''):'<span>Şu an otomatik çekim yok; ESPN düğmesiyle elle kontrol edebilirsin</span>';
+    box.innerHTML=sonraki+durum+'<span>Plan (TSİ): '+PLAN_YAZI+'</span>';
+  }
   function parseUtc(s){
     if(typeof s!=='string'||!s) return NaN;
     return Date.parse(s.replace(' ','T')+'Z');
@@ -272,7 +293,7 @@
       if(manual&&mode==='nba'){
         setText('NBA resmî raporu yeniden okundu. Son kaydedilen rapor: '+
           new Date(time).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'})+
-          '. Yeni NBA PDF çekimi 15 dakikalık GitHub iş akışında yapılır.', 'info');
+          '. Yeni NBA PDF çekimi plana göre otomatik yapılır ('+PLAN_YAZI+').', 'info');
       }
     }catch(e){
       if(officialData&&Number.isFinite(officialTime)&&Date.now()-officialTime<=MAX_AGE_MS){
@@ -290,6 +311,7 @@
     if(ready)return;
     if(typeof injChanged!=='function'||!el('inj-st'))return;
     ready=true;initBanner();refresh(false);
+    try{planYaz();setInterval(function(){if(!document.hidden)planYaz()},60000)}catch(e){console.warn('Cizgi Masasi plan:',e)}
     setInterval(function(){if(!document.hidden)refresh(false)},PERIOD_MS);
     document.addEventListener('visibilitychange',function(){if(!document.hidden)refresh(false)});
   }

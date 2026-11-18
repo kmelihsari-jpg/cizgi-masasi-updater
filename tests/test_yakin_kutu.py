@@ -27,3 +27,23 @@ assert d['r'] == [2,10,3,1], d   # oran/gereken orana gore sirali; model >= %55;
 assert d['r5'] == 0, d        # vitrin 5 ve ustu -> kutu yok
 assert 1 not in d['rd'], d    # vitrinde olan oyuncu kutuya girmez
 print('PASS: yakin kutu (5 alti, %30 sinir, model %55, noBet/baslamis/vitrindeki elenir)', d)
+
+# Görsel kart yapısı: oran çubuğu, model ve eksik oran rozetleri, oyuncuya tıklama
+k = js.index('function cmRenderNear'); e = js.index('\n', js.index('goPlayer(Number(b.dataset.p),b.dataset.m)}}', k))
+render = r'''
+const el={hidden:true,innerHTML:'',onclick:null};const $=id=>id==='h-near'?el:null;
+const document={getElementById:()=>null,createElement:()=>({}),head:{appendChild:()=>{}}};
+const MK={PTS:{label:'PTS'}};const esc=s=>String(s);const fmt=(x,d)=>Number(x).toFixed(d??1);const tm=()=>'03:00';const P={7:{}};let gitti=null;const goPlayer=(a,b)=>{gitti=[a,b]};
+''' + js[k:e] + r'''
+cmRenderNear([{p:{id:7,name:'Bam Adebayo',team:'MIA'},g:{home:'MIA',ts:0},opp:'MIL',mk:'PTS',il:{n:20,odd:1.57},need:2.0,model:.72}]);
+el.onclick({target:{closest:()=>({dataset:{p:'7',m:'PTS'}})}});
+cmRenderNear([]);const bos=[el.hidden,el.innerHTML];
+console.log(JSON.stringify({gitti,bos}));
+'''
+html_out = subprocess.run(['node','-e',render.replace("cmRenderNear([]);const bos", "const h=el.innerHTML;console.log(h);cmRenderNear([]);const bos")],capture_output=True,text=True)
+assert html_out.returncode==0, html_out.stderr
+h, last = html_out.stdout.strip().splitlines()[0], json.loads(html_out.stdout.strip().splitlines()[-1])
+for parca in ['class="nb-grid"','class="nr-bet">PTS 20+','width:79%','iddaa <b>1.57</b>','gereken <b>2.00</b>','model %72','0.43 oran eksik','önerilmiş bahis değil','data-p="7"']:
+    assert parca in h, parca
+assert last['gitti'] == [7,'PTS'] and last['bos'] == [True,''], last
+print('PASS: yakin kutu kart gorunumu')

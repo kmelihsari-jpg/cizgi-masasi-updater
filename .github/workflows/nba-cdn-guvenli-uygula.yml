@@ -33,12 +33,15 @@ jobs:
           python scripts/test_nba_cdn_sync.py
           python tests/test_phantom_rows.py
           python tests/test_box_quality.py
+          python tests/test_slate_guncelle.py
       - name: Back up original seed as a workflow artifact
         run: |
           mkdir -p out
           cp seed/data.json out/seed-data-before-cdn.json
       - name: Apply verified additions only
         run: python scripts/update_nba_cdn.py --site seed --days 7 --apply --report out/nba-cdn-apply-report.json
+      - name: Mac takvimini (slate) NBA fiksturunden yenile
+        run: python scripts/slate_guncelle.py --data seed/data.json
       - name: Validate resulting JSON and patch
         run: |
           python -m json.tool seed/data.json > /dev/null
@@ -67,7 +70,7 @@ jobs:
             exit 1
           fi
           if git diff --quiet -- seed/data.json; then
-            echo 'No new player-game rows to commit.'
+            echo 'No new player-game rows or schedule changes to commit.'
             exit 0
           fi
           git config user.name 'github-actions[bot]'
