@@ -198,5 +198,154 @@ const ok = (name) => console.log('OK', ++n, name);
   ok('tarayici scripti: ilk ping, 30 sn sinyali, sekme degisimi, gizli sekme sayilmaz, DNT');
 }
 
+
+// 8) ilk giris isim sorusu: bir kez sorar, Kaydet/Gec sonrasi bir daha sormaz
+{
+  const html = fs.readFileSync(path.join(root, 'site-patches/index.html'), 'utf8');
+  const code = html.match(/<script id="cm-ziyaret-sayac">([\s\S]*?)<\/script>/)[1];
+  class El {
+    constructor(tag) { this.tag = tag; this.children = []; this.attrs = {}; this.listeners = {}; this.parentNode = null; this.value = ''; this.focused = false; }
+    setAttribute(k, v) { this.attrs[k] = v; }
+    appendChild(c) { c.parentNode = this; this.children.push(c); return c; }
+    removeChild(c) { this.children = this.children.filter((x) => x !== c); c.parentNode = null; }
+    addEventListener(e, f) { this.listeners[e] = f; }
+    focus() { this.focused = true; }
+  }
+  const find = (el, pred) => (pred(el) ? el : el.children.map((c) => find(c, pred)).find(Boolean));
+  const stores = { local: {}, session: {} };
+  const mk = (o) => ({ getItem: (k) => (k in o ? o[k] : null), setItem: (k, v) => { o[k] = String(v); } });
+  function run({ search = '', readyState = 'complete', ls = null } = {}) {
+    const sent = [], timeouts = [], body = new El('body'), docListeners = {};
+    const sandbox = {
+      navigator: { doNotTrack: null, language: 'tr-TR' }, screen: { width: 390, height: 844 },
+      location: { protocol: 'https:', search }, URL, crypto: globalThis.crypto,
+      localStorage: ls || mk(stores.local), sessionStorage: mk(stores.session),
+      document: { referrer: '', readyState, visibilityState: 'visible', body,
+        querySelector: () => ({ id: 'tab-home' }), getElementById: (id) => find(body, (e) => e.id === id) || null,
+        createElement: (t) => new El(t), addEventListener: (e, f) => { docListeners[e] = f; } },
+      fetch: (u, o) => { sent.push(JSON.parse(o.body)); return Promise.resolve({}); },
+      setInterval: () => 1, setTimeout: (f) => timeouts.push(f), Date,
+    };
+    sandbox.window = { addEventListener() {}, localStorage: sandbox.localStorage, sessionStorage: sandbox.sessionStorage };
+    sandbox.window.top = sandbox.window; sandbox.window.self = sandbox.window;
+    vm.runInNewContext(code, sandbox);
+    return { sent, timeouts, body, docListeners, overlay: () => find(body, (e) => e.id === 'cm-ad-ov') };
+  }
+  // ilk giris: kimlik yok -> 1.5 sn sonra pencere
+  let r = run();
+  assert.equal(r.timeouts.length, 1);
+  assert.equal(r.overlay(), undefined);
+  r.timeouts[0]();
+  const ov = r.overlay();
+  assert.ok(ov, 'pencere acilmadi');
+  const form = ov.children[0];
+  const input = find(form, (e) => e.tag === 'input');
+  const skip = find(form, (e) => e.tag === 'button' && e.attrs.type === undefined && e.type === 'button');
+  assert.equal(input.focused, true);
+  // bos isimle kaydedilmez, pencere kapanmaz
+  input.value = '   ';
+  form.listeners.submit({ preventDefault() {} });
+  assert.ok(r.overlay());
+  assert.equal(stores.local.cm_ad, undefined);
+  // isim girip kaydet: temizlenir, saklanir, hemen ping gider
+  input.value = ' <b>Azra</b> ';
+  const before = r.sent.length;
+  form.listeners.submit({ preventDefault() {} });
+  assert.equal(stores.local.cm_ad, 'bAzra/b');
+  assert.equal(stores.local.cm_ad_asked, '1');
+  assert.equal(r.overlay(), undefined);
+  assert.equal(r.sent.length, before + 1);
+  assert.equal(r.sent.at(-1).nick, 'bAzra/b');
+  // sonraki giris: isim var -> sorulmaz ve ping isimle gider
+  r = run();
+  assert.equal(r.timeouts.length, 0);
+  assert.equal(r.sent[0].nick, 'bAzra/b');
+  // Gec: isim kaydedilmez ama bir daha sorulmaz
+  stores.local = {}; stores.session = {};
+  r = run(); r.timeouts[0]();
+  find(r.overlay(), (e) => e.tag === 'button' && e.type === 'button').listeners.click();
+  assert.equal(r.overlay(), undefined);
+  assert.equal(stores.local.cm_ad, undefined);
+  assert.equal(stores.local.cm_ad_asked, '1');
+  r = run();
+  assert.equal(r.timeouts.length, 0);
+  // ?ad= ile gelen kisiye sorulmaz
+  stores.local = {}; stores.session = {};
+  r = run({ search: '?ad=Melih' });
+  assert.equal(r.timeouts.length, 0);
+  assert.equal(stores.local.cm_ad, 'Melih');
+  // sayfa daha yukleniyorsa DOMContentLoaded beklenir
+  stores.local = {}; stores.session = {};
+  r = run({ readyState: 'loading' });
+  assert.equal(r.timeouts.length, 0);
+  r.docListeners.DOMContentLoaded();
+  assert.equal(r.timeouts.length, 1);
+  // --- "sadece bir kez" garantileri ---
+  // a) pencere gosterilince isaretlenir; hicbir seye basmadan kapatilsa bile bir daha cikmaz
+  stores.local = {}; stores.session = {};
+  r = run(); r.timeouts[0]();
+  assert.ok(r.overlay());
+  assert.equal(stores.local.cm_ad_asked, '1', 'gosterildigi anda isaretlenmeli');
+  r = run();                                   // sekmeyi kapatip tekrar geldi (hicbir butona basmadi)
+  assert.equal(r.timeouts.length, 0);
+  assert.equal(r.overlay(), undefined);
+  // b) ayni anda iki sekme acilirsa ikisinde birden cikmaz
+  stores.local = {}; stores.session = {};
+  const A = run(), B = run();
+  assert.equal(A.timeouts.length, 1);
+  assert.equal(B.timeouts.length, 1);
+  A.timeouts[0]();
+  B.timeouts[0]();
+  assert.ok(A.overlay());
+  assert.equal(B.overlay(), undefined, 'ikinci sekmede de cikti');
+  // c) depolama yazilamiyorsa (gizli mod/engelli) ASLA sorma: her yuklemede cikma riski olur
+  for (const ls of [
+    { getItem() { throw new Error('engelli'); }, setItem() { throw new Error('engelli'); } },
+    { getItem: () => null, setItem() {} },     // sessizce kaydetmeyen depolama
+  ]) {
+    stores.session = {};
+    r = run({ ls });
+    r.timeouts.forEach((f) => f());
+    assert.equal(r.overlay(), undefined, 'kalici olmayan depolamada pencere cikmamali');
+  }
+  ok('isim sorusu: ilk giriste bir kez, bos kabul edilmez, Kaydet/Gec/?ad= sonrasi bir daha sormaz');
+}
+
+// 9) panel: ayni isimli cihazlar tek kisi altinda, farkli cihazlar alt satir olur
+{
+  const env = { DB: makeDb(), PANEL_KEY: 'gizli' };
+  const html = await (await get(env, '/panel')).text();
+  const script = html.match(/<script>([\s\S]*)<\/script>/)[1];
+  const els = {};
+  const el = (id) => (els[id] ||= { id, innerHTML: '', textContent: '', hidden: false, addEventListener() {}, value: '' });
+  const rowsIn = [
+    { vid: 'v1', nick: 'Azra', device: 'iPhone', os: 'iOS', browser: 'Safari', city: 'Istanbul', country: 'TR', sessions: 3, sec: 600, first_seen: 100, last_seen: 500 },
+    { vid: 'v2', nick: 'azra', device: 'Masaüstü', os: 'Windows', browser: 'Chrome', city: 'Istanbul', country: 'TR', sessions: 1, sec: 60, first_seen: 200, last_seen: 900 },
+    { vid: 'v3', nick: 'Melih', device: 'Mac', os: 'macOS', browser: 'Safari', city: 'Ankara', country: 'TR', sessions: 2, sec: 120, first_seen: 50, last_seen: 400 },
+    { vid: 'v4', nick: '', device: 'Android telefon', os: 'Android', browser: 'Chrome', city: '', country: 'TR', sessions: 1, sec: 30, first_seen: 10, last_seen: 20 },
+    { vid: 'v5', nick: '', device: 'iPad', os: 'iPadOS', browser: 'Safari', city: '', country: '', sessions: 1, sec: 5, first_seen: 5, last_seen: 6 },
+    { vid: 'v6', nick: '<i>x</i>', device: 'Mac', os: 'macOS', browser: 'Chrome', city: '', country: '', sessions: 1, sec: 5, first_seen: 1, last_seen: 2 },
+  ];
+  const data = { success: true, now: 1000, online_count: 0, today: {}, online: [], days: [], recent: [], visitors: rowsIn, pages: [] };
+  const sandbox = {
+    document: { getElementById: el }, localStorage: { getItem: () => 'gizli', setItem() {}, removeItem() {} },
+    fetch: async () => ({ status: 200, json: async () => data }), setInterval: () => 1, Date, Math, Set, Map, String, Array, Number,
+  };
+  vm.runInNewContext(script, sandbox);
+  await new Promise((r) => setTimeout(r, 20));
+  const t = els['t-vis'].innerHTML;
+  const person = (t.match(/<tr class="person">/g) || []).length;
+  const subs = (t.match(/<tr class="sub">/g) || []).length;
+  assert.equal(person, 5, 'Azra(2 cihaz) + Melih + 2 isimsiz + <i>x</i> = 5 kisi satiri');
+  assert.equal(subs, 2, 'sadece Azra icin 2 alt satir');
+  assert.ok(t.includes('2 cihaz'));
+  assert.ok(t.indexOf('Azra') < t.indexOf('Melih'), 'son gorulmeye gore: Azra (900) once');
+  assert.equal((t.match(/\(isimsiz\)/g) || []).length, 2, 'isimsizler birlestirilmez');
+  assert.ok(!t.includes('<i>x</i>') && t.includes('&lt;i&gt;x&lt;/i&gt;'), 'isim HTML olarak yorumlanmaz');
+  // toplamlar: Azra 3+1 oturum, 660 sn = 11 dk
+  assert.ok(/<td>4<\/td><td>11 dk<\/td>/.test(t), t);
+  ok('panel: ayni isim (buyuk/kucuk harf fark etmez) tek kisi, cihazlar alt satir, isimsizler ayri, HTML kacisli');
+}
+
 console.log('TUM TESTLER GECTI:', n);
 fs.rmSync(tmp, { recursive: true, force: true });

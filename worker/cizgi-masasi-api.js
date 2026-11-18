@@ -260,7 +260,7 @@ async function panelData(request, env) {
     all(`SELECT vid, MAX(nick) AS nick, MAX(device) AS device, MAX(os) AS os, MAX(browser) AS browser,
            MAX(city) AS city, COUNT(*) AS sessions, COALESCE(SUM(active_sec),0) AS sec,
            MIN(started_at) AS first_seen, MAX(last_seen) AS last_seen
-         FROM visit_sessions GROUP BY vid ORDER BY MAX(last_seen) DESC LIMIT 50`),
+         FROM visit_sessions GROUP BY vid ORDER BY MAX(last_seen) DESC LIMIT 300`),
     all(`SELECT page, COALESCE(SUM(sec),0) AS sec, COALESCE(SUM(views),0) AS views
          FROM visit_pages WHERE day >= ? GROUP BY page ORDER BY sec DESC`, istDay(now - 6 * 86400)),
   ]);
@@ -288,6 +288,8 @@ input,button{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid #2
 button{background:#1f6feb;border-color:#1f6feb;cursor:pointer}
 #login{max-width:340px;margin:20vh auto;text-align:center}#err{color:#f85149;margin-top:8px}
 .muted{color:#7d8b99}
+tr.sub td{color:#9fb3c8;font-size:13px;background:#141b22}tr.sub td:first-child{padding-left:24px;color:#7d8b99}
+tr.person td:first-child{font-weight:600}
 </style></head><body>
 <div id="login"><h1>Ziyaret Paneli</h1><p class="sub">Panel anahtarını gir</p>
 <form id="f"><input id="k" type="password" autocomplete="current-password" placeholder="anahtar" style="width:100%;margin:8px 0"><button style="width:100%">Aç</button></form><div id="err"></div></div>
@@ -296,11 +298,12 @@ button{background:#1f6feb;border-color:#1f6feb;cursor:pointer}
 <div class="cards" id="cards"></div>
 <h2>Şu an sitede</h2><div class="wrap"><table id="t-online"></table></div>
 <h2>Son 14 gün</h2><div class="wrap"><table id="t-days"></table></div>
-<h2>Ziyaretçiler (cihaz bazında)</h2><div class="wrap"><table id="t-vis"></table></div>
+<h2>Kişiler ve cihazları</h2><div class="wrap"><table id="t-vis"></table></div>
 <h2>Son oturumlar</h2><div class="wrap"><table id="t-rec"></table></div>
 <h2>Sayfalar (son 7 gün)</h2><div class="wrap"><table id="t-pages"></table></div>
 <p class="sub">Süre = sayfa açıkken ve ekranda görünürken geçen süre. IP adresi saklanmaz; 90 günden eski kayıtlar silinir.
-Birine isim vermek için ona <b>siteadresi/?ad=Azra</b> linkini gönder; cihazı o isimle görünür.</p>
+Siteye ilk girişte herkese bir kez isim sorulur. Aynı ismi yazan cihazlar tek kişi altında toplanır. İstersen
+<b>siteadresi/?ad=Azra</b> linkiyle de isim verilebilir.</p>
 </div>
 <script>
 const PAGES={'tab-home':'Ana sayfa','tab-player':'Oyuncu','tab-hit':'Hit rate','tab-sak':'Sakatlar','tab-team':'Takım','tab-cheat':'Cheat sheet','tab-qry':'Sorgu','tab-scan':'İddaa tarama','tab-card':'Karne'};
@@ -311,7 +314,32 @@ const who=r=>esc(r.nick||'(isimsiz)');const dev=r=>esc([r.device,r.os,r.browser]
 const place=r=>esc([r.city,r.country].filter(Boolean).join(', '));
 const page=p=>esc(PAGES[p]||p);
 function tbl(id,head,rows){document.getElementById(id).innerHTML='<tr>'+head.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+
- (rows.length?rows.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join(''):'<tr><td class="muted" colspan="'+head.length+'">Kayıt yok</td></tr>')}
+ (rows.length?rows.map(r=>{const o=Array.isArray(r)?{c:r}:r;return '<tr'+(o.cls?' class="'+o.cls+'"':'')+'>'+o.c.map(c=>'<td>'+c+'</td>').join('')+'</tr>'}).join(''):'<tr><td class="muted" colspan="'+head.length+'">Kayıt yok</td></tr>')}
+function groupPeople(rows){
+  const m=new Map();
+  for(const r of rows){
+    const nm=String(r.nick||'').trim();
+    const key=nm?'n:'+nm.toLowerCase():'v:'+r.vid;
+    let g=m.get(key);
+    if(!g){g={name:nm,devices:[],sessions:0,sec:0,first:r.first_seen,last:r.last_seen};m.set(key,g)}
+    g.devices.push(r);g.sessions+=r.sessions;g.sec+=r.sec;
+    g.first=Math.min(g.first,r.first_seen);g.last=Math.max(g.last,r.last_seen);
+  }
+  const out=[...m.values()];
+  out.forEach(g=>g.devices.sort((a,b)=>b.last_seen-a.last_seen));
+  return out.sort((a,b)=>b.last-a.last);
+}
+function peopleRows(rows){
+  const out=[];
+  for(const g of groupPeople(rows)){
+    const d0=g.devices[0],name=esc(g.name||'(isimsiz)');
+    if(g.devices.length===1){out.push({cls:'person',c:[name,dev(d0),place(d0),g.sessions,mins(g.sec),dt(g.first),dt(g.last)]});continue}
+    const cities=[...new Set(g.devices.map(place).filter(Boolean))].join(' / ');
+    out.push({cls:'person',c:[name,g.devices.length+' cihaz',cities,g.sessions,mins(g.sec),dt(g.first),dt(g.last)]});
+    for(const d of g.devices)out.push({cls:'sub',c:['↳',dev(d),place(d),d.sessions,mins(d.sec),dt(d.first_seen),dt(d.last_seen)]});
+  }
+  return out;
+}
 let key=localStorage.getItem('cm_panel_key')||'',timer=null;
 async function load(){
  const r=await fetch('/api/panel-data',{headers:{Authorization:'Bearer '+key},cache:'no-store'});
@@ -328,7 +356,7 @@ async function load(){
   '<div class="card"><b>'+(t.sessions?mins(t.sec/t.sessions):'-')+'</b><span>oturum başı ortalama</span></div>';
  tbl('t-online',['Kim','Cihaz','Yer','Şu an','Süre'],d.online.map(r=>[who(r),dev(r),place(r),page(r.page),mins(r.active_sec)]));
  tbl('t-days',['Gün','Cihaz','Oturum','Toplam süre'],d.days.map(r=>[esc(r.day),r.visitors,r.sessions,mins(r.sec)]));
- tbl('t-vis',['Kim','Cihaz','Yer','Oturum','Toplam süre','İlk görülme','Son görülme'],d.visitors.map(r=>[who(r),dev(r),place(r),r.sessions,mins(r.sec),dt(r.first_seen),dt(r.last_seen)]));
+ tbl('t-vis',['Kim','Cihaz','Yer','Oturum','Toplam süre','İlk görülme','Son görülme'],peopleRows(d.visitors));
  tbl('t-rec',['Kim','Cihaz','Ekran','Başladı','Süre','Son sayfa'],d.recent.map(r=>[who(r),dev(r),esc(r.screen),dt(r.started_at),mins(r.active_sec),page(r.page)]));
  tbl('t-pages',['Sayfa','Toplam süre','Açılış'],d.pages.map(r=>[page(r.page),mins(r.sec),r.views]));
  document.getElementById('upd').textContent='Son güncelleme: '+new Date().toLocaleTimeString('tr-TR')+' · 30 sn\\'de bir yenilenir';
