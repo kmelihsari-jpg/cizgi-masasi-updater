@@ -97,7 +97,7 @@ const ok = (name) => console.log('OK', ++n, name);
   assert.equal((await get(env, '/api/panel-data')).status, 401);
   assert.equal((await get(env, '/api/panel-data', { Authorization: 'Bearer yanlis' })).status, 401);
   assert.equal((await get(env, '/api/panel-data', { Authorization: 'Bearer gizlj' })).status, 401);
-  await ping(env, { sid: SID, vid: VID, page: 'tab-home', dt: 40, nv: 1, nick: 'Melih', screen: '1920x1080' }, { ua: WIN_EDGE });
+  await ping(env, { sid: SID, vid: VID, page: 'tab-home', dt: 40, nv: 1, nick: 'Deneme', screen: '1920x1080' }, { ua: WIN_EDGE });
   await ping(env, { sid: 'second123456', vid: 'vid2second12', page: 'tab-team', dt: 10, nv: 1 });
   // eski kayit (100 gun once) panel acilinca silinir
   const old = Math.floor(Date.now() / 1000) - 100 * 86400;
@@ -113,7 +113,7 @@ const ok = (name) => console.log('OK', ++n, name);
   assert.equal(d.visitors.length, 2);
   assert.equal(d.days.length, 1);
   assert.deepEqual(d.pages.map((p) => p.page).sort(), ['tab-home', 'tab-team']);
-  assert.equal(d.recent.find((x) => x.sid === SID).nick, 'Melih');
+  assert.equal(d.recent.find((x) => x.sid === SID).nick, 'Deneme');
   assert.equal(env.DB.raw.prepare('SELECT COUNT(*) AS n FROM visit_sessions').get().n, 2);
   assert.equal(env.DB.raw.prepare('SELECT COUNT(*) AS n FROM visit_pages').get().n, 2);
   ok('panel: yetki, sayilar, ziyaretci/gun/sayfa listeleri, 90 gun temizligi');
@@ -345,6 +345,68 @@ const ok = (name) => console.log('OK', ++n, name);
   // toplamlar: Azra 3+1 oturum, 660 sn = 11 dk
   assert.ok(/<td>4<\/td><td>11 dk<\/td>/.test(t), t);
   ok('panel: ayni isim (buyuk/kucuk harf fark etmez) tek kisi, cihazlar alt satir, isimsizler ayri, HTML kacisli');
+}
+
+
+// 11) Worker: "Melih" kaydedilmez, o cihazin eski kayitlari silinir
+{
+  const env = { DB: makeDb() };
+  await ping(env, { sid: 'oldsess00001', vid: 'melihvid0001', page: 'tab-home', dt: 30, nv: 1 });          // isimsizken kaydedilmisti
+  await ping(env, { sid: 'friend000001', vid: 'friendvid001', page: 'tab-home', dt: 30, nv: 1, nick: 'Azra' });
+  assert.equal(env.DB.raw.prepare('SELECT COUNT(*) AS n FROM visit_sessions').get().n, 2);
+  const r = await ping(env, { sid: 'newsess00001', vid: 'melihvid0001', page: 'tab-home', dt: 0, nick: 'Melih' });
+  assert.equal(r.status, 200);
+  assert.equal((await r.json()).ignored, true);
+  const left = env.DB.raw.prepare('SELECT vid FROM visit_sessions').all().map((x) => x.vid);
+  assert.deepEqual(left, ['friendvid001'], 'Melih cihazinin eski ve yeni kaydi kalmamali, arkadas kalmali');
+  // yazim varyantlari da sayilmaz
+  for (const nick of ['melih', 'MELIH', 'MELİH', 'Melıh', '  melih  ', 'Mélih']) {
+    const x = await ping(env, { sid: 'varsess00001', vid: 'varvid000001', page: 'tab-home', dt: 5, nick });
+    assert.equal((await x.json()).ignored, true, nick);
+  }
+  assert.equal(env.DB.raw.prepare("SELECT COUNT(*) AS n FROM visit_sessions WHERE vid='varvid000001'").get().n, 0);
+  // benzer ama farkli isimler normal kaydedilir
+  for (const nick of ['Melihan', 'Melis', 'Emel']) {
+    const x = await ping(env, { sid: 'ok' + nick.toLowerCase() + '01', vid: 'okvid' + nick.toLowerCase() + '1', page: 'tab-home', dt: 5, nick });
+    assert.equal((await x.json()).ignored, undefined, nick);
+  }
+  assert.equal(env.DB.raw.prepare('SELECT COUNT(*) AS n FROM visit_sessions').get().n, 4);
+  ok('Worker: Melih (her yazimi) kaydedilmez ve cihazinin eski kayitlari silinir; Melihan/Melis/Emel normal kaydedilir');
+}
+
+// 12) tarayici: nick Melih ise tek temizlik sinyali, sonra hic istek yok
+{
+  const html = fs.readFileSync(path.join(root, 'site-patches/index.html'), 'utf8');
+  const code = html.match(/<script id="cm-ziyaret-sayac">([\s\S]*?)<\/script>/)[1];
+  const mkStore = (o) => ({ getItem: (k) => (k in o ? o[k] : null), setItem: (k, v) => { o[k] = String(v); } });
+  const local = {}, session = {};
+  function run(search) {
+    const sent = [], timers = [];
+    let t = 1_000_000;
+    const sandbox = {
+      navigator: { doNotTrack: null, language: 'tr-TR' }, screen: { width: 1, height: 1 }, location: { protocol: 'https:', search }, URL,
+      crypto: globalThis.crypto, localStorage: mkStore(local), sessionStorage: mkStore(session),
+      document: { referrer: '', readyState: 'complete', visibilityState: 'visible', querySelector: () => ({ id: 'tab-home' }), addEventListener() {} },
+      fetch: (u, o) => { sent.push(JSON.parse(o.body)); return Promise.resolve({}); },
+      setInterval: (f) => timers.push(f), setTimeout() {}, Date: { now: () => t },
+    };
+    sandbox.window = { addEventListener() {}, localStorage: sandbox.localStorage, sessionStorage: sandbox.sessionStorage };
+    vm.runInNewContext(code, sandbox);
+    for (let i = 0; i < 20; i++) { t += 5000; timers[0](); }       // 100 sn ekranda
+    return sent;
+  }
+  let sent = run('?ad=MELİH');
+  assert.equal(sent.length, 1, 'tek bir temizlik sinyali gitmeli');
+  assert.deepEqual([sent[0].nick, sent[0].dt], ['MELİH', 0]);
+  assert.equal(local.cm_self, '1');
+  sent = run('');                                                    // ayni cihaz tekrar acildi: hic istek yok
+  assert.equal(sent.length, 0, 'Melih cihazi bir daha hic istek atmamali');
+  // ismi baska bir sey yaparsa normal sayilir ve tekrar gonderilir
+  local.cm_ad = 'Azra';
+  sent = run('');
+  assert.ok(sent.length > 1 && sent.every((x) => x.nick === 'Azra'));
+  assert.equal(local.cm_self, '0');
+  ok('tarayici: Melih ise tek temizlik sinyali sonra sessiz; isim degisirse normal calisir');
 }
 
 console.log('TUM TESTLER GECTI:', n);

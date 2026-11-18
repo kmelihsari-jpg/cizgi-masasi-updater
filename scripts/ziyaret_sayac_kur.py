@@ -28,7 +28,14 @@ SNIPPET = r'''<script id="cm-ziyaret-sayac">
     function pg(){var b=document.querySelector('.tab[aria-pressed="true"]')||document.querySelector('[data-bv][aria-pressed="true"]');return b&&(b.id||b.getAttribute('data-bv'))||'tab-home'}
     var ref='';try{ref=document.referrer?new URL(document.referrer).hostname:''}catch(e){}
     var cur=pg(),acc=0,lastT=Date.now(),lastSend=0;
+    /* Site sahibi ("Melih") kendi cihazlarini panelde gormek istemez: bu isimle sadece BIR temizlik
+       sinyali gider (sunucu o cihazin eski kayitlarini siler), sonra hic gonderilmez. */
+    function isSelf(n){try{return String(n||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ı/g,'i').toLowerCase().trim()==='melih'}catch(e){return false}}
     function send(p,ms,nv){
+      if(isSelf(nick)){
+        if(get('localStorage','cm_self')==='1')return;
+        set('localStorage','cm_self','1');ms=0;nv=false;
+      }else if(get('localStorage','cm_self')==='1'){set('localStorage','cm_self','0')}
       var body=JSON.stringify({sid:sid,vid:vid,page:p,dt:Math.round(ms/1000),nv:nv?1:0,nick:nick,
         screen:(screen.width||0)+'x'+(screen.height||0),lang:navigator.language||'',ref:ref});
       lastSend=Date.now();

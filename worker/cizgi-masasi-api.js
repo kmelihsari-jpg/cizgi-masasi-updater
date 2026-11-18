@@ -159,6 +159,9 @@ const ID_RE = /^[a-z0-9]{8,40}$/;
 const istDay = (ts) => new Date((ts + 10800) * 1000).toISOString().slice(0, 10);
 const clean = (v, n) => String(v ?? '').replace(/[\u0000-\u001f<>"'`]/g, '').trim().slice(0, n);
 
+// "MELİH", "melih ", "Melıh" gibi yazimlari ayni sayar (Turkce i/İ/ı, aksan, bosluk).
+const normName = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ı/g, 'i').toLowerCase().trim();
+
 function parseUa(uaRaw) {
   const ua = String(uaRaw || '');
   let os = 'Bilinmiyor', device = 'Masaüstü';
@@ -200,6 +203,11 @@ async function visitPing(request, env) {
   const dt = Math.max(0, Math.min(65, Math.round(Number(b.dt) || 0)));
   const page = clean(b.page, 40) || 'tab-home';
   const nick = clean(b.nick, 30);
+  // Site sahibi ("Melih") kaydedilmez; o cihazin daha once tutulan oturumlari da silinir.
+  if (normName(nick) === 'melih') {
+    await env.DB.prepare('DELETE FROM visit_sessions WHERE vid = ?').bind(b.vid).run();
+    return json({ success: true, ignored: true });
+  }
   const ua = parseUa(request.headers.get('User-Agent'));
   const cf = request.cf || {};
   await env.DB.batch([
@@ -303,7 +311,7 @@ tr.person td:first-child{font-weight:600}
 <h2>Sayfalar (son 7 gün)</h2><div class="wrap"><table id="t-pages"></table></div>
 <p class="sub">Süre = sayfa açıkken ve ekranda görünürken geçen süre. IP adresi saklanmaz; 90 günden eski kayıtlar silinir.
 Siteye ilk girişte herkese bir kez isim sorulur. Aynı ismi yazan cihazlar tek kişi altında toplanır. İstersen
-<b>siteadresi/?ad=Azra</b> linkiyle de isim verilebilir.</p>
+<b>siteadresi/?ad=Azra</b> linkiyle de isim verilebilir. Site sahibi olarak <b>Melih</b> yazan cihazlar kaydedilmez.</p>
 </div>
 <script>
 const PAGES={'tab-home':'Ana sayfa','tab-player':'Oyuncu','tab-hit':'Hit rate','tab-sak':'Sakatlar','tab-team':'Takım','tab-cheat':'Cheat sheet','tab-qry':'Sorgu','tab-scan':'İddaa tarama','tab-card':'Karne'};
