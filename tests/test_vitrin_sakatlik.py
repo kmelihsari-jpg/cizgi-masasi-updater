@@ -124,6 +124,21 @@ console.log(JSON.stringify(out));'''
     assert r['none'] == [1], r
     assert r['locked'] == [7, 5], r
 
+    # vitrin bos: baremler eskiyse "henuz gelmedi", tazeyse "sakatlik haberi" metni
+    code2 = r"""
+const day='D';let S={hDay:day},slate=[{ts:1}],IDDRAW={ts:null};const dayKey=()=>day;
+""" + home[home.index('function cmHeroOrtu()'):home.index('function cmOrtuKalk()')] + r"""
+const o={};
+IDDRAW={ts:Date.now()-20*3600e3};o.eski=cmHeroOrtu();
+IDDRAW={ts:Date.now()-1*3600e3};o.taze=cmHeroOrtu();
+IDDRAW=null;o.yok=cmHeroOrtu();
+slate=[];o.macyok=cmHeroOrtu();
+console.log(JSON.stringify(o));"""
+    r2 = json.loads(node_run(code2))
+    assert 'Vitrin misafir gelince açılır' in r2['eski'] and 'Baremler gelince örtü kalkar' in r2['eski'], r2
+    assert 'vitrinlik bir şey çıkmadı' in r2['taze'] and 'sakatlık haberi gelirse açılır' in r2['taze'], r2
+    assert 'misafir gelince' in r2['yok'] and r2['macyok'] == '', r2
+
 # 8) Karne otomasyonu: ayni mactan en fazla 3 kayit
 import karne_automation as K
 assert K.MAC_MAX == 3
