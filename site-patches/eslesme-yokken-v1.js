@@ -76,11 +76,28 @@
       '<span class="cm-wob-ln">'+MK[r.mk].label+' '+r.li.txt+o+srcT+'</span>'+
       '<span class="cm-wob-hr '+hcls(r.pr)+'">'+r.h+'/'+r.n+' · '+pct(r.pr)+'</span>'+bars(r)+'</div>';
   }
+  /* Seçilebilir oyuncular: takımda en az 1 maç kaçırmış, maç başı 8+ dk oynayan herkes (withoutTable'ın 24 dk sınırı yok). */
+  function wobCands(t,both){
+    var cur=new Set(D.dates),tds=Array.from(teamDS(t)).sort(),out=[];
+    var src=function(id){return both?(HIST[id]||[]).concat(byP[id]||[]):(byP[id]||[])};
+    Object.values(P).forEach(function(p){
+      if(p.team!==t||!byP[p.id]||mpg(p.id)<8)return;
+      var mg=src(p.id).filter(function(x){return x.t===t});if(!mg.length)return;
+      var md=new Set(mg.map(function(x){return x.ds})),lo=mg.map(function(x){return x.ds}).sort()[0];
+      var missed=tds.filter(function(d){return d>=lo&&(both||cur.has(d))&&!md.has(d)}).length;
+      if(missed>=1)out.push({m:p,missed:missed,inj:injOf(p.name),mpg:mpg(p.id)});
+    });
+    out.sort(function(a,b){return b.mpg-a.mpg});
+    return out;
+  }
   function wobHtml(){
-    var t=S.team;if(!t)return '';var both=!!S.woBoth,W=withoutTable(t,both);if(!W.length)return '';
-    var key=W.find(function(x){return x.m.id===S.woKey})||W.find(function(x){return x.inj&&x.inj[0]==='OUT'})||W[0];
+    var t=S.team;if(!t)return '';var both=!!S.woBoth,W=withoutTable(t,both),C=wobCands(t,both);if(!C.length)return '';
+    var wk=W.find(function(x){return x.m.id===S.woKey})||W.find(function(x){return x.inj&&x.inj[0]==='OUT'})||W[0];
+    var key=C.find(function(x){return x.m.id===S.cmWob})||(wk&&C.find(function(x){return x.m.id===wk.m.id}))||C.find(function(x){return x.inj&&x.inj[0]==='OUT'})||C[0];
     var rows=wobRows(t,key,both);
-    var head='<div class="cm-wob-h"><b>'+esc(key.m.name)+' yokken baremler</b><span>Bu gecenin baremi, '+esc(key.m.name.split(' ').slice(-1)[0])+' oynamadığı maçlarda kaç kez geçildi. Barem iddaa, yoksa DK/FD; ikisi de yoksa sezon ortalamasından tahmini çizgi.</span></div>';
+    var sel='<select class="cm-wob-sel" data-cmwob aria-label="Kim yokken">'+C.map(function(x){
+      return '<option value="'+x.m.id+'"'+(x===key?' selected':'')+'>'+esc(x.m.name)+' · '+x.missed+' maç'+(x.inj&&x.inj[0]==='OUT'?' · OUT':'')+'</option>'}).join('')+'</select>';
+    var head='<div class="cm-wob-h"><div class="cm-wob-t"><b>Yokken baremler</b>'+sel+'</div><span>Bu gecenin baremi, seçili oyuncunun oynamadığı '+key.missed+' maçta kaç kez geçildi. Barem iddaa, yoksa DK/FD; ikisi de yoksa sezon ortalamasından tahmini çizgi.</span></div>';
     if(!rows.length)return '<div class="cm-wob">'+head+'<p class="note">Bu oyuncu yokken oynamış takım arkadaşı ya da barem yok.</p></div>';
     var first=rows.slice(0,10),rest=rows.slice(10);
     return '<div class="cm-wob">'+head+'<div class="cm-wob-l">'+first.map(rowHtml).join('')+'</div>'+
@@ -88,9 +105,11 @@
   }
   function wobRender(){
     var box=document.getElementById('t-wo');if(!box)return;
+    if(window.__cmWobTeam!==S.team){window.__cmWobTeam=S.team;S.cmWob=null}
     try{var h=wobHtml();if(h)box.insertAdjacentHTML('beforeend',h)}catch(err){console.error('cm-wob',err)}
-    if(!window.__cmWobBound){window.__cmWobBound=1;var go=function(e){var r=e.target.closest('[data-eob]');if(!r)return;e.stopPropagation();goPlayer(Number(r.dataset.eob),r.dataset.eobm)};
-      box.addEventListener('click',go);box.addEventListener('keydown',function(e){if(e.key==='Enter')go(e)})}
+    if(!window.__cmWobBound){window.__cmWobBound=1;var go=function(e){if(e.target.closest('[data-wk]')){S.cmWob=null;return}var r=e.target.closest('[data-eob]');if(!r)return;e.stopPropagation();goPlayer(Number(r.dataset.eob),r.dataset.eobm)};
+      box.addEventListener('click',go);box.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.target.closest('select'))go(e)});
+      box.addEventListener('change',function(e){var s=e.target.closest('[data-cmwob]');if(!s)return;e.stopPropagation();S.cmWob=Number(s.value);renderTeam()})}
   }
   if(typeof renderTeam==='function'){var _rt=renderTeam;renderTeam=function(){var r=_rt.apply(this,arguments);wobRender();return r}}
 
