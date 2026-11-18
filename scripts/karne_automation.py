@@ -23,6 +23,18 @@ def as_docs(raw):
     if isinstance(raw,list): return raw
     return []
 
+MAC_MAX=3
+
+def game_key(p):
+    """Ayni mac = ayni iki takim (sirasi onemsiz)."""
+    return tuple(sorted([str(p.get('team')),str(p.get('opp'))]))
+
+def game_counts(items):
+    out={}
+    for p in items:
+        k=game_key(p);out[k]=out.get(k,0)+1
+    return out
+
 def valid_pick(p, starts, now):
     try:
         odd=float(p['odd']); n=int(p['n']); line=float(p['line']); pid=int(p['id'])
@@ -149,7 +161,15 @@ def snapshot(args):
             if any(k in previous for k in ('early','earlyAt','searly')):
                 print('SETTLED LOCK',day);continue
             keys={int(p['id']) for p in previous.get('picks',[])+previous.get('injPicks',[])}
-            added=[dict(p,capturedAt=stamp) for p in picks if int(p['id']) not in keys]
+            # Ayni mactan en fazla MAC_MAX bahis: onceki kayitlar + yeni eklenenler birlikte sayilir (kayitlar degismez).
+            mac_say=game_counts(previous.get('picks',[])+previous.get('injPicks',[]))
+            added=[]
+            for p in picks:
+                if int(p['id']) in keys:continue
+                gk=game_key(p)
+                if mac_say.get(gk,0)>=MAC_MAX:continue
+                mac_say[gk]=mac_say.get(gk,0)+1
+                added.append(dict(p,capturedAt=stamp))
             if added:
                 previous.setdefault('picks',[]).extend(added)
                 previous.setdefault('first',[]).extend(added)

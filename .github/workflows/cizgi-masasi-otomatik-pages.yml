@@ -15,6 +15,7 @@ on:
       - 'scripts/site_update_status.py'
       - 'scripts/dvp_position_patch.py'
       - 'scripts/karne_returning.py'
+      - 'scripts/vitrin_sakatlik_kur.py'
       - 'seed/confirmed-active.json'
   workflow_run:
     workflows:
@@ -254,6 +255,13 @@ jobs:
       - name: Confirmed return model yamasini uygula
         shell: bash
         run: python3 scripts/karne_returning.py --model public/model.js --confirmed seed/confirmed-active.json
+
+      - name: Vitrin, sakatlik ve mac basina 3 sinir yamasi
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tests/test_vitrin_sakatlik.py
+          python3 scripts/vitrin_sakatlik_kur.py --site public --patches site-patches
 
       - name: Mobil genis gorunumu siteye ekle
         shell: bash
