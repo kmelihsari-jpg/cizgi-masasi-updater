@@ -77,6 +77,35 @@ console.log('OK');
             f.unlink(missing_ok=True)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
+    @unittest.skipUnless(shutil.which('node'), 'node yok')
+    def test_grafik_cercevesi(self):
+        """Canli renderChart (18 Kasim kopyasi): REB'de rc, AST'de pot cercevesi; 3PM ayni; bozuk metinde dokunmaz."""
+        harness = r'''
+const fs=require('fs');global.window=global;const box={};
+global.document={getElementById:id=>box[id]||(box[id]={innerHTML:'',style:{},insertAdjacentHTML(){},addEventListener(){},parentNode:{insertBefore(){}}}),createElement:()=>({})};
+global.$=id=>document.getElementById(id);
+eval(fs.readFileSync(process.argv[3],'utf8').replace('function renderChart','global.renderChart=function renderChart'));
+global.S={side:'over',pos:'C'};global.val=(x,mk)=>({PTS:x.pts,REB:x.reb,AST:x.ast,'3PM':x.fg3m})[mk];global.rankFor=()=>5;global.fmtG=g=>g.ds;
+global.esc=s=>String(s).replace(/"/g,'&quot;');global.fmt=n=>Number(n).toFixed(1);
+const orig=renderChart;require(process.argv[2]);
+if(renderChart===orig)throw new Error('yama uygulanmadi');
+const s=[{ds:'a',o:'MIL',min:30,pts:10,reb:8,ast:4,fg3m:1,fg3a:3,rc:15,pot:10},{ds:'b',o:'MIL',min:30,pts:9,reb:14,ast:3,fg3m:0,fg3a:2,rc:14,pot:2}];
+const run=mk=>{renderChart(s,mk,5.5,null);return $('chart').innerHTML};
+let h=run('REB');if(!h.includes('<i>8/15</i>')||!h.includes('ribaund şansı'))throw new Error('REB '+h);
+h=run('AST');if(!h.includes('<i>4/10</i>')||!h.includes('potansiyel asist')||!h.includes('Asist/potansiyel: 3/2'))throw new Error('AST '+h);
+h=run('3PM');if(!h.includes('<i>1/3</i>')||!h.includes('üçlük denemesi'))throw new Error('3PM '+h);
+h=run('PTS');if(h.includes('pcb-att')||h.includes('pcb-leg'))throw new Error('PTS cerceve olmamali');
+if(CM_chartPatch('function x(){}')!==null)throw new Error('bozuk metinde null donmeli');
+console.log('OK');
+'''
+        f = ROOT / 'tests' / '_grafik_harness.js'
+        try:
+            f.write_text(harness, encoding='utf-8')
+            r = subprocess.run(['node', str(f), str(ROOT / 'site-patches/eslesme-yokken-v1.js'), str(ROOT / 'tests/fixture-renderchart-20261118.js')], capture_output=True, text=True)
+        finally:
+            f.unlink(missing_ok=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -535,6 +535,31 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
       box.addEventListener('click',go);box.addEventListener('keydown',function(e){if(e.key==='Enter')go(e)})}
   }
   if(typeof renderTeam==='function'){var _rt=renderTeam;renderTeam=function(){var r=_rt.apply(this,arguments);wobRender();return r}}
+
+  /* ---------- 3) Grafik: REB'de ribaund şansı (rc), AST'de potansiyel asist (pot) çerçevesi ----------
+     3PM'deki üçlük denemesi çerçevesiyle aynı çizim. renderChart'ın metninde 3 küçük değişiklik yapılır;
+     beklenen metin bulunamazsa hiçbir şey değişmez (grafik eskisi gibi kalır). */
+  window.CM_ATT={'3PM':['fg3a','Üçlük','üçlük denemesi','isabet','isabet/deneme'],REB:['rc','Ribaund/şans','ribaund şansı','ribaund','ribaund/şans'],AST:['pot','Asist/potansiyel','potansiyel asist','asist','asist/potansiyel']};
+  function chartPatch(src){
+    var R=[
+      ["const att=mk==='3PM'?sample.map(x=>x.fg3a!=null&&x.fg3a!==''?Number(x.fg3a):null):null;",
+       "const AT=CM_ATT[mk],att=AT?sample.map(x=>x[AT[0]]!=null&&x[AT[0]]!==''?Number(x[AT[0]]):null):null;"],
+      ["`<br>Üçlük: ${v}/${a}${a?` (%${Math.round(v/a*100)})`:''}`",
+       "`<br>${AT[1]}: ${v}/${a}${a?` (%${Math.round(v/a*100)})`:''}`"],
+      ["'<p class=\"note pcb-leg\"><span class=\"pcb-legbox\"></span> Çerçeve: üçlük denemesi · dolu çubuk: isabet · üstteki rakam isabet/deneme</p>'",
+       "`<p class=\"note pcb-leg\"><span class=\"pcb-legbox\"></span> Çerçeve: ${AT[2]} · dolu çubuk: ${AT[3]} · üstteki rakam ${AT[4]}</p>`"]
+    ];
+    for(var i=0;i<R.length;i++){if(src.split(R[i][0]).length!==2)return null;src=src.replace(R[i][0],function(){return R[i][1]})}
+    return src;
+  }
+  window.CM_chartPatch=chartPatch;
+  try{
+    if(typeof renderChart==='function'){
+      var ps=chartPatch(renderChart.toString());
+      if(ps){var nf=(0,eval)('('+ps+')');if(typeof nf==='function')renderChart=nf}
+      else console.warn('cm-att: renderChart beklenen bicimde degil, cerceve eklenmedi');
+    }
+  }catch(err){console.error('cm-att',err)}
 })();
 </script>
 <!--CM_ESLESME_YOKKEN_V1_BITIR-->
