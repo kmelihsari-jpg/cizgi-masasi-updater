@@ -87,7 +87,7 @@ def snapshot(args):
     out=[]
     today_tr=dt.datetime.now(TZ).date().isoformat()
     # Site and headless model must use the exact same confirmed-return safeguards.
-    from karne_returning import patch_text, records
+    from karne_returning import patch_site, records
     confirmed=records(args.confirmed)
     with sync_playwright() as p:
         browser=p.chromium.launch(headless=True,args=['--no-sandbox'],**({'executable_path':os.environ['CM_CHROMIUM']} if os.environ.get('CM_CHROMIUM') else {}))
@@ -98,7 +98,7 @@ def snapshot(args):
             u=route.request.url.split('?')[0]
             if u.endswith('/model.js'):
                 response=route.fetch()
-                content=patch_text(response.text(),confirmed)
+                content=patch_site(response.text(),confirmed)
                 return route.fulfill(response=response,body=content)
             if u.endswith('/data.json'):
                 return route.fulfill(status=200,body=json.dumps(data),content_type='application/json')

@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""Oran kademesi (19 Kasim 2026): iddaa merdiveninin uc (15-20 oranli) basamaklari Kasa'yi domine etmesin.
+model.js'e idempotent yama (karne_returning.patch_text icinden cagrilir; site ve headless Karne ayni modeli kullanir).
+  oran <= 2.50 : mevcut kurallar (saglam / deger) aynen
+  2.50 - 5.00  : 'surpriz' etiketi; assess 'go' + getiri >= %12 + DK/FD piyasa teyidi (model, piyasanin ana baremindeki olasiligina +-0.08 yakin) gerekir; gecede en fazla 1
+  > 5.00       : Kasa'ya girmez
+"""
+import argparse
+from pathlib import Path
+
+MARK = '/* CM-ORAN-KADEME-V1 */'
+
+CONST = MARK + '''
+const ORAN={hi1:2.5,hi2:5,ev:.12,agree:.08,maxSur:1};
+function cmMktAgree(p,mk,r){const ml=mktLine(p.id,mk);if(!ml||!ml.o)return false;const a=1/ml.o,b=ml.u?1/ml.u:null,pi=b?a/(a+b):a/1.05;const m=lineProbs(r.mu,Math.max(1.02,MK[mk].phi),ml.line).over;return Math.abs(m-pi)<=ORAN.agree}
+'''
+
+OLD1 = "deg=r.a.tag==='go';if(!sag&&!deg)return null;"
+NEW1 = ("deg=r.a.tag==='go';let sur=false;if(odd>ORAN.hi2)return null;"
+        "if(odd>ORAN.hi1){if(!deg||!(r.a.ev>=ORAN.ev)||!cmMktAgree(p,mk,r))return null;sur=true}else if(!sag&&!deg)return null;")
+OLD2 = "const tag=sag?'saglam':'deger',"
+NEW2 = "const tag=sur?'surpriz':sag?'saglam':'deger',"
+OLD3 = "const m=c.chk.length?flag:best,o=m.get(c.p.id);if(!o||cmp(c,o)<0)m.set(c.p.id,c)}"
+NEW3 = ("if(c.tag==='surpriz'){if(!c.chk.length){const so=sur.get(c.p.id);if(!so||cmp(c,so)<0)sur.set(c.p.id,c)}continue}"
+        "const m=c.chk.length?flag:best,o=m.get(c.p.id);if(!o||cmp(c,o)<0)m.set(c.p.id,c)}")
+OLD4 = "const cmp=(x,y)=>y.ev-x.ev||y.sup.length-x.sup.length||x.p.id-y.p.id||(x.mk<y.mk?-1:x.mk>y.mk?1:0)||x.line-y.line,best=new Map(),flag=new Map();"
+NEW4 = OLD4[:-1] + ",sur=new Map();"
+OLD5 = "const cc=cmCapGame([...best.values()].sort(cmp),CM_MAC_MAX);return {pass:cc.keep,"
+NEW5 = ("const cc=cmCapGame([...best.values()].sort(cmp),CM_MAC_MAX);"
+        "for(const sc of [...sur.values()].filter(c=>!best.has(c.p.id)&&!flag.has(c.p.id)).sort(cmp).slice(0,ORAN.maxSur)){const g=sc.g||{},k=(g.home||'')+'@'+(g.away||'')+'@'+(g.ts||'');"
+        "if(cc.keep.filter(c=>{const h=c.g||{};return (h.home||'')+'@'+(h.away||'')+'@'+(h.ts||'')===k}).length<CM_MAC_MAX)cc.keep.push(sc);else cc.cap.push(sc)}"
+        "return {pass:cc.keep,")
+
+
+def patch_model(source):
+    if MARK in source:
+        return source
+    if 'function kasaCand(r,day,now)' not in source or 'function kasaAll(day,now)' not in source:
+        raise RuntimeError('model.js beklenen fonksiyonlari bulunamadi, oran kademesi uygulanmadi')
+    for old in (OLD1, OLD2, OLD3, OLD4, OLD5):
+        if source.count(old) != 1:
+            raise RuntimeError('oran kademesi: beklenen kod tam 1 kez bulunamadi: ' + old[:60])
+    source = (source.replace(OLD1, NEW1, 1).replace(OLD2, NEW2, 1).replace(OLD3, NEW3, 1)
+              .replace(OLD4, NEW4, 1).replace(OLD5, NEW5, 1))
+    return source.replace('function kasaCand(r,day,now)', CONST + 'function kasaCand(r,day,now)', 1)
+
+
+if __name__ == '__main__':
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--model', default='public/model.js')
+    a = ap.parse_args()
+    p = Path(a.model)
+    old = p.read_text(encoding='utf-8')
+    new = patch_model(old)
+    if new != old:
+        p.write_text(new, encoding='utf-8')
+    print('ORAN KADEME V1: uygulandi' if new != old else 'ORAN KADEME V1: zaten uygulanmis')

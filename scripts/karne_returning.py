@@ -92,11 +92,16 @@ def patch_datachk(source):
 def patch_text(source,rows):
     return patch_datachk(_patch_returns(source,rows))
 
+def patch_site(source,rows):
+    """patch_text + oran kademesi (oran_kademe.py). Site yayini ve headless Karne bunu kullanir."""
+    from oran_kademe import patch_model
+    return patch_model(patch_text(source,rows))
+
 
 def patch_file(model,confirmation):
     model=Path(model)
     old=model.read_text(encoding='utf-8')
-    updated=patch_text(old,records(confirmation))
+    updated=patch_site(old,records(confirmation))
     if updated!=old:model.write_text(updated,encoding='utf-8')
     print('RETURN V3:',len(records(confirmation)),'guvenilir aktif kadro dogrulamasi, model yama uygulandi')
 
