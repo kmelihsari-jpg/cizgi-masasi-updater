@@ -33,16 +33,34 @@
   function el(id){return document.getElementById(id)}
   function setText(message, mode){
     if (!banner) return;
-    banner.textContent = message;
+    var msg = banner.querySelector('.cmls-msg') || banner;
+    msg.textContent = message;
     banner.dataset.state = mode || 'info';
+    updShort();
+  }
+  // 4A (19 Kasım): tek satırlık durum özeti; ayrıntı ve çekim planı tıklanınca açılır.
+  function updShort(){
+    if(!banner) return;
+    var sh = banner.querySelector('.cmls-short'); if(!sh) return;
+    var rm = window.CMREMOTE, st = banner.dataset.state, n = sonrakiCekim(Date.now());
+    var nx = n ? ' · sonraki çekim '+iki(n.h)+':'+iki(n.m) : ' · şu an otomatik çekim yok';
+    var age = rm && rm.updatedAt ? Date.now()-rm.updatedAt : Infinity;
+    banner.dataset.age = age > 90*60*1000 ? 'old' : 'fresh';
+    var t = rm && rm.updatedAt ? new Date(rm.updatedAt).toLocaleTimeString('tr-TR',{timeZone:'Europe/Istanbul',hour:'2-digit',minute:'2-digit'}) : '';
+    var h;
+    if(st === 'warn' && !(rm && rm.reportKey)) h = '<b>Sakatlık kaynağı sorunlu</b> · son geçerli liste kullanılıyor';
+    else if(rm && rm.reportKey) h = '<b>'+(st === 'warn' ? 'Son kontrol başarısız' : age > 90*60*1000 ? 'Sakatlık listesi eski' : 'Sakatlık güncel')+'</b> · NBA resmi '+t+nx;
+    else if(rm) h = '<b>NBA resmi rapor yok</b> · ESPN geçici liste'+nx;
+    else h = '<b>Sakatlık kontrol ediliyor…</b>';
+    sh.innerHTML = h;
   }
   function initBanner(){
     if(banner) return;
     var bar = document.querySelector('.injbar');
     if(!bar) return;
-    banner = document.createElement('div');
+    banner = document.createElement('details');
     banner.id = 'cm-live-source';
-    banner.setAttribute('role','status');
+    banner.innerHTML = '<summary><span class="cmls-dot" aria-hidden="true"></span><span class="cmls-short" role="status"></span><span class="cmls-more">ayrıntı ▾</span></summary><div class="cmls-body"><div class="cmls-msg"></div></div>';
     bar.insertAdjacentElement('afterend',banner);
     setText('NBA resmî raporu kontrol ediliyor…');
     // ESPN: gercek kaynak cekimi. NBA: kayitli resmî raporu yeniden oku.
@@ -71,12 +89,13 @@
   function planYaz(){
     var bar=el('cm-live-source');if(!bar)return;
     var box=el('cm-inj-plan');
-    if(!box){box=document.createElement('div');box.id='cm-inj-plan';bar.insertAdjacentElement('afterend',box);
+    if(!box){box=document.createElement('div');box.id='cm-inj-plan';(bar.querySelector('.cmls-body')||bar).appendChild(box);
       var st=document.createElement('style');st.textContent='#cm-inj-plan{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:8px 0 0;padding:8px 12px;border-radius:10px;border:1px dashed rgba(255,255,255,.14);font-size:12.5px;line-height:1.45;color:var(--mut,#9aa0a6)}#cm-inj-plan b{color:var(--ink,#fff);font-weight:600}#cm-inj-plan .cm-yogun{color:#f2994a}';document.head.appendChild(st)}
     var n=sonrakiCekim(Date.now()), now=new Date(Date.now()+3*3600e3), simdi=planDilimi(now.getUTCHours());
     var sonraki=n?('<span>Sonraki NBA raporu çekimi: <b>'+iki(n.h)+':'+iki(n.m)+'</b> ('+(n.dk<=1?'şimdi':n.dk<60?n.dk+' dk sonra':Math.floor(n.dk/60)+' sa '+(n.dk%60)+' dk sonra')+'; birkaç dakika içinde burada görünür)</span>'):'';
     var durum=simdi?(simdi[2].length===4?'<span class="cm-yogun">Şu an yoğun saatler: 15 dakikada bir çekiliyor</span>':''):'<span>Şu an otomatik çekim yok; ESPN düğmesiyle elle kontrol edebilirsin</span>';
     box.innerHTML=sonraki+durum+'<span>Plan (TSİ): '+PLAN_YAZI+'</span>';
+    updShort();
   }
   function parseUtc(s){
     if(typeof s!=='string'||!s) return NaN;
