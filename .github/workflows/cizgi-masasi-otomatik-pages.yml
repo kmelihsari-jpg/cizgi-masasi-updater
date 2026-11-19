@@ -334,6 +334,26 @@ jobs:
           print('MOBIL V3 HAZIR: sol baslik + oyuncu grafik okunabilirligi')
           PY_CM_MOBILE_V3
 
+      - name: Referans veri (seed DVP/TeamRankings)
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, shutil
+          from pathlib import Path
+          checks = (('dvp.json', lambda o: len(o.get('t', {})) == 30),
+                    ('teamrankings.json', lambda o: len(o.get('s', {})) >= 140))
+          for name, check in checks:
+              src, dst = Path('seed') / name, Path('public') / name
+              if not src.exists():
+                  print(name, 'seed yok, canli kopya kaliyor'); continue
+              try:
+                  o = json.loads(src.read_text(encoding='utf-8')); assert check(o)
+              except Exception as e:
+                  print('::warning::' + name + ' gecersiz, canli kopya kaliyor: ' + str(e)); continue
+              shutil.copyfile(src, dst)
+              print(name, 'seed kopyasi yayina alindi:', o.get('updated'))
+          PY
+
       - name: Oyuncu DVP manuel pozisyon secici V1
         shell: bash
         run: |
