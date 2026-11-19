@@ -45,6 +45,7 @@ class YakinTest(unittest.TestCase):
         self.assertEqual(o['names'], ['Aday Bir', 'Aday Iki'])
         self.assertIn('7+', o['firstBet']); self.assertEqual(o['rowsAfter'], 2)
         self.assertTrue(o['wrappedCalledOrig']); self.assertEqual(o['goto'], [1, 'REB'])
+        self.assertTrue(o['info']); self.assertIn('Merdiven Altı', o['title'])
         self.assertTrue(o['hiddenWhenEmpty']); self.assertTrue(o['noDayHidden'])
 
 

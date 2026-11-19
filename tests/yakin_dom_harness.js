@@ -39,7 +39,7 @@ const box=w.document.getElementById('cm-yk');
 out.hostAfterNear=w.document.getElementById('h-near').nextSibling===box;
 out.visible=!box.hidden;out.rows=q('.cm-yk-r').length;
 out.names=[...q('.cm-yk-top b')].map(x=>x.textContent);
-out.firstBet=q('.cm-yk-bet')[0].textContent.replace(/\s+/g,' ');
+out.info=!!w.document.querySelector('.cm-yk-info')&&w.document.querySelector('.cm-yk-info').textContent.includes('Temel kapılar');out.title=w.document.querySelector('.cm-yk-hd h3').textContent;out.firstBet=q('.cm-yk-bet')[0].textContent.replace(/\s+/g,' ');
 out.evChips=[...q('.cm-yk-ch span:last-child')].map(x=>x.textContent);
 w.eval('renderHome()');out.wrappedCalledOrig=w.eval('RH')===1;out.rowsAfter=q('.cm-yk-r').length;
 q('.cm-yk-r')[0].click();out.goto=w.eval('GOTO');
