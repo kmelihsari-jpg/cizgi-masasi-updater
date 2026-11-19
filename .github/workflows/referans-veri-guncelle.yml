@@ -11,10 +11,11 @@ on:
         options:
           - dvp
           - teamrankings
+          - rotation
           - both
 
   schedule:
-    # Her gun 08:20 Turkiye saati (DVP + TeamRankings)
+    # Her gun 08:20 Turkiye saati (DVP + TeamRankings + Rotasyon)
     - cron: '20 5 * * *'
 
 permissions:
@@ -47,10 +48,12 @@ jobs:
           echo "Istenen veri: ${KAYNAK}"
           mkdir -p out
           run_one() { python scripts/update_reference_stats.py --source "$1" --out out || echo "::warning::$1 uretilemedi"; }
+          run_rot() { python scripts/rotation_fetch.py --out out/rotation.json --prev seed/rotation.json || echo "::warning::rotasyon uretilemedi"; }
           case "$KAYNAK" in
             dvp) run_one dvp ;;
             teamrankings) run_one teamrankings ;;
-            *) run_one dvp; run_one teamrankings ;;
+            rotation) run_rot ;;
+            *) run_one dvp; run_one teamrankings; run_rot ;;
           esac
 
       - name: Dogrula (bozuk dosya yazilmaz)
@@ -73,6 +76,11 @@ jobs:
                       n = len(obj.get('s', {}))
                       assert n >= 140, f'TeamRankings en az 140 kategori olmali: {n}'
                       print('TeamRankings dogrulandi:', n, obj.get('updated'))
+                  elif f.name == 'rotation.json':
+                      t = obj.get('t', {})
+                      assert len(t) >= 28 and obj.get('updated'), f'Rotasyon eksik: {len(t)} takim'
+                      assert all(len(p.get('b', [])) == 48 for v in t.values() for p in v.get('p', [])), 'b dizisi 48 degil'
+                      print('Rotasyon dogrulandi:', len(t), 'takim,', obj.get('updated'))
                   else:
                       continue
                   ok += 1
@@ -87,13 +95,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for f in dvp teamrankings; do
+          for f in dvp teamrankings rotation; do
             if [ -f "out/$f.json" ]; then cp "out/$f.json" "seed/$f.json"; git add "seed/$f.json"; fi
           done
           if git diff --cached --quiet; then echo "Degisiklik yok"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Referans veri: DVP/TeamRankings $(TZ=Europe/Istanbul date +%F)"
+          git commit -m "Referans veri: DVP/TeamRankings/Rotasyon $(TZ=Europe/Istanbul date +%F)"
           for i in 1 2 3; do
             if git pull --rebase -q origin main && git push origin HEAD:main; then exit 0; fi
             sleep 10
