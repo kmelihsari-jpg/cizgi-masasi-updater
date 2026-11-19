@@ -12,7 +12,12 @@ def main():
     src = SRC.read_text(encoding='utf-8')
     once = ok.patch_model(src)
     assert ok.patch_model(once) == once, 'idempotent degil'
-    assert once.count(ok.MARK) == 1
+    assert once.count(ok.MARK) == 1 and once.count(ok.MARK2) == 1
+    assert 'const SAG={lo:1.4,hi:1.75,' in once
+    v1 = ok._patch_kademe(src)
+    assert 'lo:1.5' in v1 and ok.MARK2 not in v1
+    v2 = ok.patch_model(v1)
+    assert 'lo:1.4' in v2 and v2 == once, 'kademe yamali modele saglam bandi eklenmedi'
     # karne_returning.patch_text zinciri de ayni yamayi uygular
     chained = kr.patch_site(src, [])
     assert ok.MARK in chained and 'CM-RETURNING-PLAYER-V3' in chained
@@ -34,6 +39,7 @@ def main():
     assert res['surNoMkt']['pass'] == [], res['surNoMkt']
     assert len(res['twoSur']['pass']) == 1, res['twoSur']
     assert len(res['sameP']['pass']) == 1 and res['sameP']['pass'][0].split('|')[1] != 'surpriz', res['sameP']
+    assert len(res['sag145']['pass']) == 1 and res['sag145']['pass'][0].split('|')[1] == 'saglam', res['sag145']
     print('OK test_oran_kademe', json.dumps(res))
 
 if __name__ == '__main__':

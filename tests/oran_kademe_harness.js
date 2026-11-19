@@ -29,5 +29,6 @@ const out=vm.runInContext(`(function(){
   res.twoSur=run([row(1,27.5,3.5,27),row(2,27.5,3.2,27)],m2);
   // 5) Oyuncunun normal bahsi varsa surpriz eklenmez (oyuncu basina tek bahis)
   res.sameP=run([row(1,19.5,1.6,27),row(1,27.5,3.5,27)],agree);
+  res.sag145=run([row(1,12.5,1.45,27)]);
   return res})()`,ctx);
 console.log(JSON.stringify(out));

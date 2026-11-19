@@ -4,11 +4,15 @@ model.js'e idempotent yama (karne_returning.patch_text icinden cagrilir; site ve
   oran <= 2.50 : mevcut kurallar (saglam / deger) aynen
   2.50 - 5.00  : 'surpriz' etiketi; assess 'go' + getiri >= %12 + DK/FD piyasa teyidi (model, piyasanin ana baremindeki olasiligina +-0.08 yakin) gerekir; gecede en fazla 1
   > 5.00       : Kasa'ya girmez
+Saglam bandi 1.40-1.75 (eski 1.50-1.75): ayri isaret CM-SAGLAM-BAND-V1, kademe yamasi uygulanmis modele de eklenir.
 """
 import argparse
 from pathlib import Path
 
 MARK = '/* CM-ORAN-KADEME-V1 */'
+MARK2 = '/* CM-SAGLAM-BAND-V1 */'
+SAG_OLD = 'const SAG={lo:1.5,hi:1.75,'
+SAG_NEW = 'const SAG={lo:1.4,hi:1.75,'
 
 CONST = MARK + '''
 const ORAN={hi1:2.5,hi2:5,ev:.12,agree:.08,maxSur:1};
@@ -32,7 +36,7 @@ NEW5 = ("const cc=cmCapGame([...best.values()].sort(cmp),CM_MAC_MAX);"
         "return {pass:cc.keep,")
 
 
-def patch_model(source):
+def _patch_kademe(source):
     if MARK in source:
         return source
     if 'function kasaCand(r,day,now)' not in source or 'function kasaAll(day,now)' not in source:
@@ -45,6 +49,18 @@ def patch_model(source):
     return source.replace('function kasaCand(r,day,now)', CONST + 'function kasaCand(r,day,now)', 1)
 
 
+def _patch_saglam(source):
+    if MARK2 in source:
+        return source
+    if source.count(SAG_OLD) != 1:
+        raise RuntimeError('saglam bandi: const SAG satiri tam 1 kez bulunamadi, degisiklik yapilmadi')
+    return source.replace(SAG_OLD, MARK2 + '\n' + SAG_NEW, 1)
+
+
+def patch_model(source):
+    return _patch_saglam(_patch_kademe(source))
+
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--model', default='public/model.js')
@@ -54,4 +70,4 @@ if __name__ == '__main__':
     new = patch_model(old)
     if new != old:
         p.write_text(new, encoding='utf-8')
-    print('ORAN KADEME V1: uygulandi' if new != old else 'ORAN KADEME V1: zaten uygulanmis')
+    print('ORAN KADEME V1 + SAGLAM 1.40-1.75: uygulandi' if new != old else 'ORAN KADEME V1 + SAGLAM 1.40-1.75: zaten uygulanmis')
