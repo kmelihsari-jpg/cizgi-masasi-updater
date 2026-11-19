@@ -1,0 +1,17 @@
+#cm-yk{margin:18px 0}
+.cm-yk-box{padding:16px;border:1px solid var(--line,#333);border-radius:16px;background:rgba(255,255,255,.015)}
+.cm-yk-hd{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:4px}
+.cm-yk-hd h3{margin:0;font-family:var(--display,inherit);font-size:1.25rem}
+.cm-yk-tag{font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;border:1px dashed var(--muted,#999);color:var(--muted,#999)}
+.cm-yk-box .note{margin:0 0 12px;font-size:.8rem}
+.cm-yk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.cm-yk-r{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:12px;border:1px solid var(--line,#333);background:var(--surface,#111);color:inherit;text-align:left;font:inherit;cursor:pointer}
+.cm-yk-r:hover{border-color:var(--accent,#f2994a)}
+.cm-yk-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.cm-yk-top small{color:var(--muted,#999);font-size:.72rem;white-space:nowrap}
+.cm-yk-bet{font-size:1.25rem;font-weight:700}
+.cm-yk-bet small{font-size:.8rem;font-weight:400;color:var(--muted,#999)}
+.cm-yk-ch{display:flex;gap:6px;flex-wrap:wrap}
+.cm-yk-ch span{font-size:.72rem;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.06)}
+.cm-yk-ch .cm-yk-p{background:rgba(110,207,120,.14);color:var(--good,#6fcf78)}
+.cm-yk-ch .cm-yk-n{background:rgba(242,153,74,.14);color:var(--accent,#f2994a)}
