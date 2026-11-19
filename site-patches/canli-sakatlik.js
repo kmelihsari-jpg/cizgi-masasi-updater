@@ -337,3 +337,8 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);
   else start();
 })();
+
+/* CM_STAMP_SAKATLIK_KALDIR (19 Kasim): alt satirdaki eski sakatlik tarihi (injuries.json) kaldirilir; guncel durum ustteki panelde. */
+(function(){function fix(){var s=document.getElementById('stamp');if(!s)return;var t=s.textContent,n=t.replace(/\s*\u00b7\s*sakatl\u0131k[^\u00b7]*$/i,'');if(n!==t)s.textContent=n}
+function start(){fix();var s=document.getElementById('stamp');if(s&&window.MutationObserver)new MutationObserver(fix).observe(s,{childList:true,characterData:true,subtree:true})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start()})();
