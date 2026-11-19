@@ -8,7 +8,8 @@ Example:
 param(
   [Parameter(Mandatory=$true)][string]$CacheDir,
   [Parameter(Mandatory=$true)][string]$Output,
-  [int]$RecentDays=4
+  [int]$RecentDays=4,
+  [string]$DataJson=''
 )
 $ErrorActionPreference='Stop'
 $cutoff = (Get-Date).Date.AddDays(-$RecentDays)
@@ -43,10 +44,28 @@ if ($records.Count -lt 1) {throw 'No valid local NBA tracking records: original 
 $payload=[ordered]@{
  source='local-nba-tracking-cache-v1'
  exported_at=(Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
- dates=@($dates)
- records=@($records)
+ dates=$dates.ToArray()
+ records=$records.ToArray()
 }
-$json=ConvertTo-Json -InputObject $payload -Depth 6 -Compress
+# Piyasa baremleri (DK/FD): guncelle.ps1 data.json icindeki mkt/mktAt. Yoksa/bozuksa atlanir, takip aktarimi bozulmaz.
+if (-not $DataJson) { $DataJson = Join-Path (Split-Path -Parent $CacheDir) 'data.json' }
+try {
+  if (Test-Path -LiteralPath $DataJson -PathType Leaf) {
+    $dj = ConvertFrom-Json -InputObject ([IO.File]::ReadAllText($DataJson,[Text.Encoding]::UTF8))
+    if ($dj.mkt -and $dj.mktAt) {
+      $mm = [ordered]@{}
+      foreach ($pp in $dj.mkt.PSObject.Properties) {
+        $one = [ordered]@{}
+        foreach ($kk in $pp.Value.PSObject.Properties) { $one[$kk.Name] = @($kk.Value) }
+        $mm[$pp.Name] = $one
+      }
+      $payload['mkt'] = $mm
+      $payload['mktAt'] = [string]$dj.mktAt
+      Write-Host "Piyasa baremleri eklendi: $($mm.Count) oyuncu, $($dj.mktAt)"
+    } else { Write-Host 'Piyasa baremi yok; atlandi.' }
+  } else { Write-Host "data.json bulunamadi, piyasa baremi atlandi: $DataJson" }
+} catch { Write-Host "UYARI: piyasa baremi okunamadi, atlandi: $_" }
+$json=ConvertTo-Json -InputObject $payload -Depth 8 -Compress
 $destDir=Split-Path -Parent $Output
 if (-not (Test-Path -LiteralPath $destDir)) {New-Item -ItemType Directory -Path $destDir -Force | Out-Null}
 $tmp=$Output+'.tmp'

@@ -8,6 +8,34 @@ import json
 from pathlib import Path
 
 FIELDS = ('pot', 'rc', 'rcon', 'runc', 'rdef')
+MKT_KEYS = ('PTS', 'REB', 'AST', '3PM')
+
+def merge_mkt(data, report):
+    """Piyasa (DK/FD) baremlerini data['mkt'] olarak yazar. Yalniz daha yeni mktAt kabul edilir.
+    Gecersiz yapi hata verir; mkt yoksa hicbir sey degismez. True = degisti."""
+    mkt = report.get('mkt'); at = report.get('mktAt')
+    if mkt is None and at is None: return False
+    if not isinstance(mkt, dict) or not isinstance(at, str): raise ValueError('Bad mkt payload')
+    dt.datetime.strptime(at, '%Y-%m-%dT%H:%M:%SZ')
+    clean = {}
+    for pid, mks in mkt.items():
+        if not str(pid).isdigit() or not isinstance(mks, dict): raise ValueError('Bad mkt player: ' + str(pid))
+        row = {}
+        for mk, v in mks.items():
+            if mk not in MKT_KEYS: continue
+            ok = (isinstance(v, list) and len(v) == 4 and v[3] in ('draftkings', 'fanduel')
+                  and all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in v[:2])
+                  and 0 <= v[0] <= 200 and 1.0 < v[1] < 50
+                  and (v[2] is None or (isinstance(v[2], (int, float)) and 1.0 < v[2] < 50)))
+            if not ok: raise ValueError('Bad mkt entry: %s %s %r' % (pid, mk, v))
+            row[mk] = v
+        if row: clean[str(pid)] = row
+    if not clean: return False
+    old = data.get('mktAt')
+    if isinstance(old, str) and old >= at and data.get('mkt') == clean: return False
+    if isinstance(old, str) and old > at: return False
+    data['mkt'] = clean; data['mktAt'] = at
+    return True
 
 def merge(data, report):
     assert isinstance(data, dict) and isinstance(data.get('rows'), list)
@@ -47,7 +75,8 @@ def merge(data, report):
             if old != value:
                 row[ci[field]]=value;touched=True
         if touched:changed+=1
-    return {'source_records_with_metrics':imported,'matched_records':matched,
+    mkt_changed = merge_mkt(data, report)
+    return {'mkt_changed':mkt_changed,'source_records_with_metrics':imported,'matched_records':matched,
             'changed_player_games':changed,'not_found_in_boxscore':len(unseen),
             'unmatched_examples':unseen[:10]}
 
@@ -64,7 +93,7 @@ def main():
     print(json.dumps(result,ensure_ascii=False))
     if result['source_records_with_metrics'] and not result['matched_records']:
         raise SystemExit('No player/date match: refusing to publish')
-    if result['changed_player_games'] and not args.dry_run:
+    if (result['changed_player_games'] or result['mkt_changed']) and not args.dry_run:
         data['updated']=dt.datetime.now(dt.timezone.utc).isoformat()
         path.write_text(json.dumps(data,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8')
         print('SAVED',path)
