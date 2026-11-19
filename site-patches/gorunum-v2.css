@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 /* Çizgi Masası · gorunum-v2 — 19 Kasım 2026 (Tema D renkleri) */
 :root{--v2-p:#0D0D0F;--v2-p2:#16161A;--v2-ln:#232327;--v2-mu:#8E8E96;--v2-or:#FF7A1A;--v2-gr:#34C46A;--v2-rd:#F0524D;--v2-ye:#F2B53A}
 .lbl{font:600 11px/1.3 Inter,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--v2-mu)}
@@ -123,29 +124,40 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
 #inj-st:empty{display:none}
 
 /* ---------- 5E Maç kartları ---------- */
-#view-home #h-games .gcard.g5{box-sizing:border-box;cursor:pointer;display:flex!important;flex-direction:column;gap:0!important;text-align:left;color:inherit;font:inherit;border:1px solid var(--v2-ln)!important;border-radius:12px!important;padding:0!important;box-shadow:none!important;overflow:hidden;min-width:0;transform:none!important;
-  background:linear-gradient(100deg,color-mix(in srgb,var(--ca) 26%,transparent) 0%,color-mix(in srgb,var(--ca) 7%,transparent) 46%,color-mix(in srgb,var(--ch) 7%,transparent) 54%,color-mix(in srgb,var(--ch) 28%,transparent) 100%),#0b0b0d!important}
-#view-home #h-games .gcard.g5:hover{border-color:#4a4a52!important}
+#view-home #h-games .gcard.g5{box-sizing:border-box;cursor:pointer;display:flex!important;flex-direction:column;gap:8px!important;text-align:left;color:inherit;font:inherit;border:2px solid #1c1c1c!important;border-radius:10px!important;padding:9px!important;box-shadow:inset 0 0 30px rgba(255,122,26,.05)!important;overflow:hidden;min-width:0;transform:none!important;background:#050505!important}
+#view-home #h-games .gcard.g5:hover{border-color:#3a2a1a!important}
 #view-home #h-games .gcard.g5:before,#view-home #h-games .gcard.g5:after{display:none!important}
-@media(min-width:601px){#view-home #h-games.hgames{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))!important;gap:10px!important;border-top:0!important;overflow:visible!important}}
-@media(max-width:600px){#view-home #h-games.hgames{grid-auto-columns:80%!important;gap:8px!important;border-top:0!important}}
 #view-home #h-games .gcard.g5:focus-visible{outline:2px solid var(--v2-or);outline-offset:2px}
-.g5-top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px 4px}
-.g5-top b{font:700 19px 'Barlow Condensed',sans-serif;color:var(--v2-or)}
-.g5-top span{font-size:11.5px;color:var(--v2-mu);text-align:right}
-.g5-top span.fast{color:var(--v2-gr)}.g5-top span.slow{color:var(--v2-ye)}
-.g5-tm{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:2px 12px 10px}
-.g5-s{min-width:0}.g5-s.h{text-align:right}
-.g5-s .g5-c{font:700 30px/1 'Barlow Condensed',sans-serif;color:#F5F5F7;display:inline-flex;align-items:baseline;gap:5px}
-.g5-s .g5-c em{font-style:normal;font-size:16px;color:var(--v2-mu)}
-.g5-s small{display:block;font-size:12px;color:var(--v2-mu);margin-top:2px}
-.g5-s small .b2b{color:var(--v2-ye);font-weight:700}
-.g5-o{display:block;font-size:12px;color:var(--v2-rd);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.g5-o.q{color:var(--v2-ye)}
-.g5-b{display:flex;align-items:center;gap:9px;padding:8px 12px;border-top:1px solid rgba(255,255,255,.07);font-size:13px;min-height:42px;margin-top:auto}
-.g5-b .pav,.g5-b .ib-b{flex:none;width:26px!important;height:26px!important}
-.g5-b b{font-weight:600}.g5-b .gr{color:var(--v2-gr);font-weight:700}
-.g5-b .mu{color:var(--v2-mu)}
+@media(min-width:601px){#view-home #h-games.hgames{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))!important;gap:10px!important;border-top:0!important;overflow:visible!important}}
+@media(max-width:600px){#view-home #h-games.hgames{grid-auto-columns:80%!important;gap:8px!important;border-top:0!important}}
+.led-scr{font-family:VT323,ui-monospace,monospace;background:radial-gradient(#1a0d04 1px,transparent 1.2px) 0 0/4px 4px,#0a0603;border:1px solid #241509;border-radius:6px;padding:7px 10px 6px}
+.led-r1{display:flex;justify-content:space-between;gap:8px;color:#ff9a3c;font-size:21px;line-height:1;letter-spacing:2px;text-shadow:0 0 6px rgba(255,140,40,.7);white-space:nowrap}
+.led-r1 span:last-child{font-size:17px;letter-spacing:1px;overflow:hidden;text-overflow:ellipsis}
+.led-r1 .f{color:#9dff7a;text-shadow:0 0 6px rgba(120,255,90,.55)}.led-r1 .s{color:#ffd24a}
+.led-r2{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-top:5px}
+.led-t{font-size:40px;line-height:.95;letter-spacing:3px;color:#ffd27a;text-shadow:0 0 8px rgba(255,200,100,.6)}
+.led-t.r{text-align:right}
+.led-t small{display:block;font-size:18px;letter-spacing:1px;color:#b98a4a;text-shadow:none}
+.led-t small b{font-weight:400;color:#ffd24a;text-shadow:0 0 5px rgba(255,210,74,.6)}
+.led-vs{color:#7a4a1a;font-size:22px;padding:0 6px}
+.led-x{display:flex;justify-content:space-between;align-items:center;min-height:26px;margin-top:5px}
+.led-av{display:inline-flex;align-items:center}.led-av.r{margin-left:auto}
+.led-av .pav+.pav{margin-left:-6px}
+.led-av em{font:normal 17px VT323,monospace;color:#ff5a4a;margin-left:5px;text-shadow:0 0 5px rgba(255,80,60,.6)}
+.led-pk{display:flex;align-items:center;gap:8px;font-size:13px;min-height:30px;padding:0 2px}
+.led-pk b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.led-p{margin-left:auto;color:var(--v2-gr);font-weight:700}
+.led-go{margin-left:auto;color:var(--v2-mu);font-size:12.5px}
+.led-pk .mu{color:var(--v2-mu);font-size:12.5px}
+/* küçük avatar boyları (pav sprite yüzdeyle ölçeklenir) */
+.pav.cm-a22{width:22px!important;height:22px!important;font-size:8px!important;border:1.5px solid #050505}
+.pav.cm-a26{width:26px!important;height:26px!important;font-size:9px!important}
+.pav.cm-a30{width:30px!important;height:30px!important;font-size:10px!important}
+.pav.cm-a36{width:36px!important;height:36px!important;font-size:12px!important}
+.pav.cm-o{box-shadow:0 0 0 1.5px var(--v2-rd)}.pav.cm-q{box-shadow:0 0 0 1.5px var(--v2-ye)}
+.ku-who .pav,.kf-r .pav{width:34px!important;height:34px!important;font-size:12px!important}
+.ob-dm.up small{color:var(--v2-gr)}.ob-dm.dn small{color:var(--v2-rd)}.ob-dm.eq small{color:var(--v2-mu)}
+.ob-dm.dn .ob-bar i{background:var(--v2-rd)}.ob-dm.eq .ob-bar i{background:#55555c}
 
 /* ---------- 6B+ Sorgu ---------- */
 #cmq{margin:6px 0 0}
