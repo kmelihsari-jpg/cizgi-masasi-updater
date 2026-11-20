@@ -31,7 +31,7 @@ js = (SP / 'gorunum-v2.js').read_text(encoding='utf-8')
 css = (SP / 'gorunum-v2.css').read_text(encoding='utf-8')
 assert kur.install(html, js, css) == html, 'index.html bloğu güncel değil: python scripts/gorunum_v2_kur.py'
 # yayın workflow'unun index.html / canli-sakatlik / gorunum-ana için aradığı işaretler
-for need in ('id="nba-inj-check"', 'id="inj-up"', 'baslat.js', 'canli-sakatlik.js', 'gorunum-ana.js?v=20261119b', 'canli-sakatlik.js?v=20261120a'):
+for need in ('id="nba-inj-check"', 'id="inj-up"', 'baslat.js', 'canli-sakatlik.js', 'gorunum-ana.js?v=20261119b', 'canli-sakatlik.js?v=20261120b'):
     assert need in html, need
 panel = (SP / 'canli-sakatlik.js').read_text(encoding='utf-8')
 assert 'ESPN_REFRESH_API' in panel and "refresh(true, 'espn')" in panel

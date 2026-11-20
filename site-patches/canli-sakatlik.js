@@ -342,3 +342,26 @@
 (function(){function fix(){var s=document.getElementById('stamp');if(!s)return;var t=s.textContent,n=t.replace(/\s*\u00b7\s*sakatl\u0131k[^\u00b7]*$/i,'');if(n!==t)s.textContent=n}
 function start(){fix();var s=document.getElementById('stamp');if(s&&window.MutationObserver)new MutationObserver(fix).observe(s,{childList:true,characterData:true,subtree:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start()})();
+/* CM_SAKATLIK_ETIKET (20 Kasim): eski injuries.json tarihi ("Akşam listesi (13 Kasim ...)" / "Sakatlık listesi: ...")
+   yerine guncel kaynak yazilir: NBA resmi rapor (ya da ESPN gecici liste) ve son kontrol saati. Sadece metin; veri degismez. */
+(function(){
+  function saat(ms){return new Date(ms).toLocaleTimeString('tr-TR',{timeZone:'Europe/Istanbul',hour:'2-digit',minute:'2-digit'})}
+  function etiket(){
+    var rm=window.CMREMOTE;
+    if(rm&&rm.reportKey&&rm.updatedAt)return 'NBA resmî rapor · son kontrol '+saat(rm.updatedAt)+' (TSİ)';
+    if(rm&&rm.updatedAt)return 'ESPN geçici liste · '+saat(rm.updatedAt)+' (TSİ)';
+    return 'Sakatlık kontrol ediliyor…';
+  }
+  function fixSak(){var s=document.getElementById('sak-src');if(!s)return;var t=s.textContent||'';
+    if(/^Akşam listesi/.test(t)){var n=etiket();if(n!==t)s.textContent=n}}
+  function fixBar(){var s=document.getElementById('inj-st');if(!s)return;var t=s.textContent||'';
+    var m=/^Sakatlık listesi:[^·]*(?:·\s*)?(.*)$/.exec(t);if(m){var n=m[1]||'';if(n!==t)s.textContent=n}}
+  function izle(id,fn){var s=document.getElementById(id);if(!s)return false;fn();
+    if(window.MutationObserver)new MutationObserver(fn).observe(s,{childList:true,characterData:true,subtree:true});return true}
+  var a=false,b=false,iv=false,deneme=0;
+  function start(){if(!a)a=izle('sak-src',fixSak);if(!b)b=izle('inj-st',fixBar);
+    // Sakatlar sekmesi metni CMREMOTE gelince yeniden yazilir; yine de saat degisimini kacirmamak icin dakikada bir yenile.
+    if(!iv){iv=true;setInterval(function(){var s=document.getElementById('sak-src');if(s&&/^(NBA resmî rapor|ESPN geçici liste|Sakatlık kontrol ediliyor)/.test(s.textContent||'')){var n=etiket();if(n!==s.textContent)s.textContent=n}},60000)}
+    if((!a||!b)&&++deneme<60)setTimeout(start,1000)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
