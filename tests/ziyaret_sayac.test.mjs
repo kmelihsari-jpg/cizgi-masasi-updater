@@ -199,116 +199,49 @@ const ok = (name) => console.log('OK', ++n, name);
 }
 
 
-// 8) ilk giris isim sorusu: bir kez sorar, Kaydet/Gec sonrasi bir daha sormaz
+// 8) isim sorusu YOK; bot/Linux/headless girisleri hic gonderilmez (istemci) ve kaydedilmez (Worker)
 {
   const html = fs.readFileSync(path.join(root, 'site-patches/index.html'), 'utf8');
   const code = html.match(/<script id="cm-ziyaret-sayac">([\s\S]*?)<\/script>/)[1];
-  class El {
-    constructor(tag) { this.tag = tag; this.children = []; this.attrs = {}; this.listeners = {}; this.parentNode = null; this.value = ''; this.focused = false; }
-    setAttribute(k, v) { this.attrs[k] = v; }
-    appendChild(c) { c.parentNode = this; this.children.push(c); return c; }
-    removeChild(c) { this.children = this.children.filter((x) => x !== c); c.parentNode = null; }
-    addEventListener(e, f) { this.listeners[e] = f; }
-    focus() { this.focused = true; }
-  }
-  const find = (el, pred) => (pred(el) ? el : el.children.map((c) => find(c, pred)).find(Boolean));
-  const stores = { local: {}, session: {} };
-  const mk = (o) => ({ getItem: (k) => (k in o ? o[k] : null), setItem: (k, v) => { o[k] = String(v); } });
-  function run({ search = '', readyState = 'complete', ls = null } = {}) {
-    const sent = [], timeouts = [], body = new El('body'), docListeners = {};
-    const sandbox = {
-      navigator: { doNotTrack: null, language: 'tr-TR' }, screen: { width: 390, height: 844 },
-      location: { protocol: 'https:', search }, URL, crypto: globalThis.crypto,
-      localStorage: ls || mk(stores.local), sessionStorage: mk(stores.session),
-      document: { referrer: '', readyState, visibilityState: 'visible', body,
-        querySelector: () => ({ id: 'tab-home' }), getElementById: (id) => find(body, (e) => e.id === id) || null,
-        createElement: (t) => new El(t), addEventListener: (e, f) => { docListeners[e] = f; } },
+  assert.ok(!code.includes('cm-ad-ov') && !code.includes('Adın ne') && !code.includes('cm_ad_asked'), 'isim sorusu kalmamali');
+  const run = (nav) => {
+    const sent = [], timeouts = [];
+    const store = () => { const m = {}; return { getItem: (k) => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = String(v); } }; };
+    const sb = {
+      navigator: { doNotTrack: null, language: 'tr-TR', ...nav }, screen: { width: 390, height: 844 },
+      location: { protocol: 'https:', search: '' }, URL, crypto: globalThis.crypto,
+      localStorage: store(), sessionStorage: store(),
+      document: { referrer: '', readyState: 'complete', visibilityState: 'visible', querySelector: () => null, addEventListener() {}, body: { appendChild() {} }, createElement: () => ({ setAttribute() {}, appendChild() {} }) },
       fetch: (u, o) => { sent.push(JSON.parse(o.body)); return Promise.resolve({}); },
-      setInterval: () => 1, setTimeout: (f) => timeouts.push(f), Date,
+      setInterval() {}, setTimeout: (f) => timeouts.push(f), Date: { now: () => 1_000_000 },
     };
-    sandbox.window = { addEventListener() {}, localStorage: sandbox.localStorage, sessionStorage: sandbox.sessionStorage };
-    sandbox.window.top = sandbox.window; sandbox.window.self = sandbox.window;
-    vm.runInNewContext(code, sandbox);
-    return { sent, timeouts, body, docListeners, overlay: () => find(body, (e) => e.id === 'cm-ad-ov') };
+    sb.window = { addEventListener() {}, localStorage: sb.localStorage, sessionStorage: sb.sessionStorage, top: null, self: null };
+    vm.runInNewContext(code, sb);
+    timeouts.forEach((f) => f());
+    return sent;
+  };
+  const WIN = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+  const LINUX = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+  const HEADLESS = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/126.0.0.0 Safari/537.36';
+  assert.equal(run({ userAgent: WIN }).length, 1, 'Windows sayilir');
+  assert.equal(run({ userAgent: ANDROID }).length, 1, 'Android (UA icinde Linux var) sayilir');
+  assert.equal(run({ userAgent: IPHONE }).length, 1, 'iPhone sayilir');
+  assert.equal(run({ userAgent: LINUX }).length, 0, 'Linux masaustu sayilmaz');
+  assert.equal(run({ userAgent: HEADLESS }).length, 0, 'headless sayilmaz');
+  assert.equal(run({ userAgent: WIN, webdriver: true }).length, 0, 'webdriver (otomasyon) sayilmaz');
+  // Worker tarafi: Linux/headless/bos UA hic satir yazmaz, mobil ve masaustu yazar
+  const env = { DB: makeDb(), PANEL_KEY: 'gizli' };
+  const send = (ua, i) => ping(env, { sid: 'sid' + String(i).padStart(9, '0'), vid: 'vid' + String(i).padStart(9, '0'), page: 'tab-home', dt: 0, nv: 1 }, { ua });
+  for (const [i, ua] of [LINUX, HEADLESS, 'curl/8.0', 'Googlebot/2.1', ''].entries()) {
+    const r = await send(ua, i);
+    assert.equal(r.status, 200);
+    assert.equal((await r.json()).ignored, true, 'yok sayilmali: ' + ua);
   }
-  // ilk giris: kimlik yok -> 1.5 sn sonra pencere
-  let r = run();
-  assert.equal(r.timeouts.length, 1);
-  assert.equal(r.overlay(), undefined);
-  r.timeouts[0]();
-  const ov = r.overlay();
-  assert.ok(ov, 'pencere acilmadi');
-  const form = ov.children[0];
-  const input = find(form, (e) => e.tag === 'input');
-  const skip = find(form, (e) => e.tag === 'button' && e.attrs.type === undefined && e.type === 'button');
-  assert.equal(input.focused, true);
-  // bos isimle kaydedilmez, pencere kapanmaz
-  input.value = '   ';
-  form.listeners.submit({ preventDefault() {} });
-  assert.ok(r.overlay());
-  assert.equal(stores.local.cm_ad, undefined);
-  // isim girip kaydet: temizlenir, saklanir, hemen ping gider
-  input.value = ' <b>Azra</b> ';
-  const before = r.sent.length;
-  form.listeners.submit({ preventDefault() {} });
-  assert.equal(stores.local.cm_ad, 'bAzra/b');
-  assert.equal(stores.local.cm_ad_asked, '1');
-  assert.equal(r.overlay(), undefined);
-  assert.equal(r.sent.length, before + 1);
-  assert.equal(r.sent.at(-1).nick, 'bAzra/b');
-  // sonraki giris: isim var -> sorulmaz ve ping isimle gider
-  r = run();
-  assert.equal(r.timeouts.length, 0);
-  assert.equal(r.sent[0].nick, 'bAzra/b');
-  // Gec: isim kaydedilmez ama bir daha sorulmaz
-  stores.local = {}; stores.session = {};
-  r = run(); r.timeouts[0]();
-  find(r.overlay(), (e) => e.tag === 'button' && e.type === 'button').listeners.click();
-  assert.equal(r.overlay(), undefined);
-  assert.equal(stores.local.cm_ad, undefined);
-  assert.equal(stores.local.cm_ad_asked, '1');
-  r = run();
-  assert.equal(r.timeouts.length, 0);
-  // ?ad= ile gelen kisiye sorulmaz
-  stores.local = {}; stores.session = {};
-  r = run({ search: '?ad=Melih' });
-  assert.equal(r.timeouts.length, 0);
-  assert.equal(stores.local.cm_ad, 'Melih');
-  // sayfa daha yukleniyorsa DOMContentLoaded beklenir
-  stores.local = {}; stores.session = {};
-  r = run({ readyState: 'loading' });
-  assert.equal(r.timeouts.length, 0);
-  r.docListeners.DOMContentLoaded();
-  assert.equal(r.timeouts.length, 1);
-  // --- "sadece bir kez" garantileri ---
-  // a) pencere gosterilince isaretlenir; hicbir seye basmadan kapatilsa bile bir daha cikmaz
-  stores.local = {}; stores.session = {};
-  r = run(); r.timeouts[0]();
-  assert.ok(r.overlay());
-  assert.equal(stores.local.cm_ad_asked, '1', 'gosterildigi anda isaretlenmeli');
-  r = run();                                   // sekmeyi kapatip tekrar geldi (hicbir butona basmadi)
-  assert.equal(r.timeouts.length, 0);
-  assert.equal(r.overlay(), undefined);
-  // b) ayni anda iki sekme acilirsa ikisinde birden cikmaz
-  stores.local = {}; stores.session = {};
-  const A = run(), B = run();
-  assert.equal(A.timeouts.length, 1);
-  assert.equal(B.timeouts.length, 1);
-  A.timeouts[0]();
-  B.timeouts[0]();
-  assert.ok(A.overlay());
-  assert.equal(B.overlay(), undefined, 'ikinci sekmede de cikti');
-  // c) depolama yazilamiyorsa (gizli mod/engelli) ASLA sorma: her yuklemede cikma riski olur
-  for (const ls of [
-    { getItem() { throw new Error('engelli'); }, setItem() { throw new Error('engelli'); } },
-    { getItem: () => null, setItem() {} },     // sessizce kaydetmeyen depolama
-  ]) {
-    stores.session = {};
-    r = run({ ls });
-    r.timeouts.forEach((f) => f());
-    assert.equal(r.overlay(), undefined, 'kalici olmayan depolamada pencere cikmamali');
-  }
-  ok('isim sorusu: ilk giriste bir kez, bos kabul edilmez, Kaydet/Gec/?ad= sonrasi bir daha sormaz');
+  assert.equal(env.DB.raw.prepare('SELECT COUNT(*) c FROM visit_sessions').get().c, 0);
+  for (const [i, ua] of [WIN, ANDROID, IPHONE].entries()) assert.equal((await send(ua, 10 + i)).status, 200);
+  const rows = env.DB.raw.prepare('SELECT os FROM visit_sessions ORDER BY os').all().map((x) => x.os);
+  assert.deepEqual(rows, ['Android', 'Windows', 'iOS']);
+  ok('isim sorusu yok; Linux/headless/webdriver/bot sayilmaz (istemci + Worker), Android/iPhone/Windows sayilir');
 }
 
 // 9) panel: ayni isimli cihazlar tek kisi altinda, farkli cihazlar alt satir olur

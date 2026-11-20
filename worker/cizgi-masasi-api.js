@@ -190,9 +190,19 @@ function parseUa(uaRaw) {
   return { os, device, browser };
 }
 
+// Otomasyon/bot ve Linux masaustu girisleri kaydedilmez (GitHub Karne tarayicisi headless Chrome ile Linux'tan girer).
+// Android ayri sayilir (parseUa once Android'e bakar), bu yuzden telefonlar etkilenmez.
+function isBotUa(uaRaw) {
+  const ua = String(uaRaw || '');
+  if (!ua) return true;
+  if (/HeadlessChrome|Playwright|Puppeteer|Lighthouse|python-requests|curl\/|Googlebot|bingbot|YandexBot|Baiduspider|\bbot\b|crawl|spider/i.test(ua)) return true;
+  return parseUa(ua).os === 'Linux';
+}
+
 async function visitPing(request, env) {
   const origin = request.headers.get('Origin') || '';
   if (!SITE_ORIGINS.has(origin)) return json({ success: false, error: 'Forbidden' }, 403);
+  if (isBotUa(request.headers.get('User-Agent'))) return json({ success: true, ignored: true });
   let b;
   try { b = JSON.parse(await request.text()); }
   catch { return json({ success: false, error: 'Invalid JSON' }, 400); }
