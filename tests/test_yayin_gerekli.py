@@ -53,6 +53,18 @@ class YayinKarari(unittest.TestCase):
         r = [f'1|PTS|20|1.8|{GELECEK}']
         self.assertTrue(karar('workflow_run', IDDAA, seed_iddaa=idd(r, 0.1), canli_iddaa=idd(r, 4.0), now=NOW)[0])
 
+    def test_siki_mod_tazeleme_yok(self):
+        r = [f'1|PTS|20|1.8|{GELECEK}']
+        self.assertTrue(karar('workflow_run', IDDAA, seed_iddaa=idd(r, 0.1), canli_iddaa=idd(r, 5.0), now=NOW, cf_toplam=469)[0])
+        self.assertFalse(karar('workflow_run', IDDAA, seed_iddaa=idd(r, 0.1), canli_iddaa=idd(r, 5.0), now=NOW, cf_toplam=470)[0])
+
+    def test_siki_modda_degisiklik_yine_yayinlanir(self):
+        a = [f'1|PTS|20|1.8|{GELECEK}']
+        b = [f'1|PTS|20|1.9|{GELECEK}']
+        self.assertTrue(karar('workflow_run', IDDAA, seed_iddaa=idd(a, 0.1), canli_iddaa=idd(b, 5.0), now=NOW, cf_toplam=495)[0])
+        k = {'docs': [{'picks': [1]}]}
+        self.assertTrue(karar('workflow_run', KARNE, seed_karne=k, canli_karne={'docs': []}, now=NOW, cf_toplam=495)[0])
+
     def test_iddaa_stale_yayinla(self):
         self.assertTrue(karar('workflow_run', IDDAA, seed_iddaa=idd([], 0.1), canli_iddaa=idd([], 1, stale=True), now=NOW)[0])
 
@@ -67,6 +79,10 @@ class YayinKarari(unittest.TestCase):
         pages = (wf / 'cizgi-masasi-otomatik-pages.yml').read_text(encoding='utf-8')
         self.assertIn('scripts/yayin_gerekli.py', pages)
         self.assertIn("steps.gerek.outputs.yayinla != 'false'", pages)
+        self.assertIn('scripts/cf_deploy_sayac.py', pages)
+        self.assertIn('CF_TOPLAM: ${{ steps.kota.outputs.cf_toplam }}', pages)
+        self.assertIn('issues: write', pages)
+        self.assertNotIn('--kota', pages)
 
 
 if __name__ == '__main__':

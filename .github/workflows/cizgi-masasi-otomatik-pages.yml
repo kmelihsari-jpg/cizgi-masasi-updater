@@ -32,6 +32,7 @@ on:
 
 permissions:
   contents: read
+  issues: write   # yalniz Cloudflare kota uyarisi issue'su (ayda en fazla 2)
 
 concurrency:
   group: cizgi-masasi-pages-production
@@ -48,12 +49,23 @@ jobs:
         with:
           ref: main
 
+      - name: Cloudflare Pages aylik deploy sayaci (tum projeler, sadece okur)
+        id: kota
+        continue-on-error: true
+        shell: bash
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/cf_deploy_sayac.py --out cf-kota.json
+
       - name: Yayin gerekli mi (Pages ayda 500 deploy; degisiklik yoksa atla)
         id: gerek
         shell: bash
         env:
           OLAY: ${{ github.event_name }}
           KAYNAK: ${{ github.event.workflow_run.name }}
+          CF_TOPLAM: ${{ steps.kota.outputs.cf_toplam }}
         run: python3 scripts/yayin_gerekli.py
 
       - name: Mevcut siteyi koruyarak yayin paketini hazirla
