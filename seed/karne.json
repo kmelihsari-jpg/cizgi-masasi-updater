@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-15",
   "startBalance": 100,
-  "generatedAt": "2026-11-20T15:16:19.354489+00:00",
+  "generatedAt": "2026-11-20T16:16:39.523421+00:00",
   "docs": [
     {
       "date": "2026-11-15",
@@ -2567,6 +2567,44 @@
           "est": false,
           "why": "value",
           "need": 2.41
+        },
+        {
+          "id": 1629680,
+          "name": "Matisse Thybulle",
+          "team": "LAL",
+          "opp": "SAC",
+          "pos": "SG",
+          "mk": "STL",
+          "line": 1.5,
+          "n": 2,
+          "odd": 1.53,
+          "ev": 0.098,
+          "rk": 7,
+          "mu": 2.8,
+          "model": 0.774,
+          "est": false,
+          "tag": "saglam",
+          "pm": 0.718,
+          "capturedAt": "2026-11-20T16:16:39.523421+00:00"
+        },
+        {
+          "id": 1631128,
+          "name": "Christian Braun",
+          "team": "DEN",
+          "opp": "HOU",
+          "pos": "SG",
+          "mk": "STL",
+          "line": 1.5,
+          "n": 2,
+          "odd": 1.87,
+          "ev": 0.058,
+          "rk": 6,
+          "mu": 2.4,
+          "model": 0.682,
+          "est": false,
+          "tag": "deger",
+          "pm": 0.624,
+          "capturedAt": "2026-11-20T16:16:39.523421+00:00"
         }
       ],
       "picks": [
@@ -2588,6 +2626,44 @@
           "tag": "saglam",
           "pm": 0.687,
           "capturedAt": "2026-11-20T15:16:19.354489+00:00"
+        },
+        {
+          "id": 1629680,
+          "name": "Matisse Thybulle",
+          "team": "LAL",
+          "opp": "SAC",
+          "pos": "SG",
+          "mk": "STL",
+          "line": 1.5,
+          "n": 2,
+          "odd": 1.53,
+          "ev": 0.098,
+          "rk": 7,
+          "mu": 2.8,
+          "model": 0.774,
+          "est": false,
+          "tag": "saglam",
+          "pm": 0.718,
+          "capturedAt": "2026-11-20T16:16:39.523421+00:00"
+        },
+        {
+          "id": 1631128,
+          "name": "Christian Braun",
+          "team": "DEN",
+          "opp": "HOU",
+          "pos": "SG",
+          "mk": "STL",
+          "line": 1.5,
+          "n": 2,
+          "odd": 1.87,
+          "ev": 0.058,
+          "rk": 6,
+          "mu": 2.4,
+          "model": 0.682,
+          "est": false,
+          "tag": "deger",
+          "pm": 0.624,
+          "capturedAt": "2026-11-20T16:16:39.523421+00:00"
         }
       ],
       "shadow": [
