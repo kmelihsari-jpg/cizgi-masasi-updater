@@ -4,8 +4,9 @@ name: NBA Resmi Sakatlik Senkronizasyonu
 on:
   workflow_dispatch:
   # Zamanlama artik Cloudflare Worker'da (cizgi-sakatlik-tetik): GitHub'in kendi cron'u gecikmeli/atlamali oldugu icin
-  # kapatildi. Worker bu workflow'u workflow_dispatch ile tetikler. Cron saatleri Worker'daki Trigger events'te (UTC):
-  # '5 14-16 * * *', '5,35 17-18 * * *', '5,20,35,50 19-23,0-2 * * *'
+  # kapatildi. Worker bu workflow'u workflow_dispatch ile tetikler. Tek cron '5,20,35,50 * * * *' (UTC); hangi tikte
+  # tetiklenecegi worker/sakatlik-tetik.js icindeki SAKATLIK_SLOTLARI'nda (Istanbul): 09:05, 13:05, 17-22 saatte 1,
+  # 22-03 15 dk, 03-05 30 dk. Gunde 31 tetik (20 Kasim 2026).
 
 permissions:
   contents: read

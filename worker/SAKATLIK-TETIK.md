@@ -17,8 +17,12 @@ tetiklemeleri aynidir. Tek fark: sakatlik workflow'u artik yalniz NBA raporunun 
 5. Geri donus: eski Worker'a cron'lari geri ekle, v2'den sil.
 
 ## Sakatlik saat plani (Istanbul)
-17-22: saatte 1 (:05) | 22-00: 30 dk (:05, :35) | 00-03: 15 dk (:05, :20, :35, :50) | 03-05: 30 dk | 05-17: kapali
-Gunde 25 tetikleme (18 Kasim 2026'dan beri; once 19, en basta 39). Iddaa (17-20 :05) ve karne (18-20, :05 tikinden 10 dk sonra) saatleri degismedi.
+Gunduz: 09:05 ve 13:05 | 17-22: saatte 1 (:05) | 22-03: 15 dk (:05, :20, :35, :50) | 03-05: 30 dk (:05, :35)
+Gunde 31 tetikleme (20 Kasim 2026'dan beri; 18 Kasim'da 25, once 19, en basta 39). Repo 20 Kasim'da public yapildi: Actions dakikasi kotadan dusmuyor.
+
+## Iddaa ve karne (Istanbul)
+Iddaa: 16:05'ten 02:05'e saatte 1 (:05 tiki), 11 run/gun. Karne snapshot: her iddaa tikinden 10 dk sonra, 16:15'ten 00:15'e (9 run/gun).
+Karne settle (12:15) GitHub cron'unda, degismedi.
 
 ## Parmak izi (VARSAYILAN KAPALI)
 Workers ucretsiz planinda olcum: P50 ~7.9 ms, P99 ~13 ms (sinir 10 ms). Bu yuzden kod varsayilan olarak parmak izi KULLANMAZ;

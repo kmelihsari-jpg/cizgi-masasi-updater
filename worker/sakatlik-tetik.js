@@ -139,7 +139,7 @@ export async function sakatlikKarari(env) {
 
 async function sakatlikIsle(env, sadeceKarar) {
   // Parmak izi VARSAYILAN KAPALI: Workers ucretsiz planinda (10 ms CPU) olcum P50 ~7.9 ms / P99 ~13 ms cikti, sigmiyor.
-  // Kapaliyken sakatlik workflow'u her sakatlik slotunda kosulsuz tetiklenir (takvim: 25/gun, eskiden 39).
+  // Kapaliyken sakatlik workflow'u her sakatlik slotunda kosulsuz tetiklenir (takvim: 31/gun; 18 Kasim'da 25, en basta 39).
   // Acmak icin ortam degiskeni PARMAK_IZI=1 (yalniz CPU ucretli planda ya da hafifletilince onerilir).
   if (env.PARMAK_IZI !== '1') {
     if (sadeceKarar) return 'TETIKLENIRDI: parmak izi kapali (PARMAK_IZI=1 degil)';
@@ -164,15 +164,16 @@ function saatIstanbul(t) {
 const hhmm = (s, d) => String(s).padStart(2, '0') + ':' + String(d).padStart(2, '0');
 function aralik(saatler, dakikalar) { return saatler.flatMap((s) => dakikalar.map((d) => hhmm(s, d))); }
 export const SAKATLIK_SLOTLARI = new Set([
+  ...aralik([9, 13], [5]),                         // 05-17 arasi gunduz: 2 kontrol (20 Kasim 2026)
   ...aralik([17, 18, 19, 20, 21], [5]),            // 17-22: saatte 1
-  ...aralik([22, 23, 3, 4], [5, 35]),              // 22-00 ve 03-05: 30 dk
-  ...aralik([0, 1, 2], [5, 20, 35, 50]),           // 00-03: 15 dk (mac oncesi yogun saatler, 18 Kasim 2026)
+  ...aralik([3, 4], [5, 35]),                      // 03-05: 30 dk
+  ...aralik([22, 23, 0, 1, 2], [5, 20, 35, 50]),   // 22-03: 15 dk (22-00 20 Kasim 2026'da 30 dk'dan 15 dk'ya)
 ]);
 export function sakatlikSlotu(t) { const { saat, dk } = saatIstanbul(t); return SAKATLIK_SLOTLARI.has(hhmm(saat, dk)); }
-// Iddaa: Istanbul 17, 18, 19, 20 - saatin ilk tiki (:05)
-export function iddaaZamani(t) { const { saat, dk } = saatIstanbul(t); return saat >= 17 && saat <= 20 && dk < 10; }
-// Karne snapshot: Istanbul 18, 19, 20 - iddaa'dan 10 dk sonra (18:15, 19:15, 20:15)
-export function karneZamani(t) { const { saat, dk } = saatIstanbul(t); return saat >= 18 && saat <= 20 && dk < 10; }
+// Iddaa: Istanbul 16:05'ten 02:05'e saatte 1 (saatin ilk tiki :05) - 20 Kasim 2026
+export function iddaaZamani(t) { const { saat, dk } = saatIstanbul(t); return (saat >= 16 || saat <= 2) && dk < 10; }
+// Karne snapshot: her iddaa'dan 10 dk sonra, 16:15'ten 00:15'e (son snapshot 00:15)
+export function karneZamani(t) { const { saat, dk } = saatIstanbul(t); return (saat >= 16 || saat === 0) && dk < 10; }
 
 export default {
   async scheduled(event, env, ctx) {

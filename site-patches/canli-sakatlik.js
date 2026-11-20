@@ -76,8 +76,8 @@
     }
   }
   // Sakatlik cekim plani (TSI). worker/sakatlik-tetik.js SAKATLIK_SLOTLARI ile ayni tutulmali.
-  var PLAN=[[17,22,[5]],[22,24,[5,35]],[0,3,[5,20,35,50]],[3,5,[5,35]]];
-  var PLAN_YAZI='17–22 saatte bir · 22–00 yarım saatte bir · 00–03 15 dakikada bir · 03–05 yarım saatte bir · 05–17 çekim yok';
+  var PLAN=[[9,10,[5]],[13,14,[5]],[17,22,[5]],[22,24,[5,20,35,50]],[0,3,[5,20,35,50]],[3,5,[5,35]]];
+  var PLAN_YAZI='gündüz 09:05 ve 13:05 · 17–22 saatte bir · 22–03 15 dakikada bir · 03–05 yarım saatte bir';
   function planDilimi(h){for(var i=0;i<PLAN.length;i++){if(h>=PLAN[i][0]&&h<PLAN[i][1])return PLAN[i]}return null}
   function sonrakiCekim(now){
     var ist=now+3*3600e3, t=Math.floor(ist/60000)*60000+60000;

@@ -48,6 +48,14 @@ jobs:
         with:
           ref: main
 
+      - name: Yayin gerekli mi (Pages ayda 500 deploy; degisiklik yoksa atla)
+        id: gerek
+        shell: bash
+        env:
+          OLAY: ${{ github.event_name }}
+          KAYNAK: ${{ github.event.workflow_run.name }}
+        run: python3 scripts/yayin_gerekli.py
+
       - name: Mevcut siteyi koruyarak yayin paketini hazirla
         shell: bash
         run: |
@@ -450,7 +458,7 @@ jobs:
           if-no-files-found: error
 
       - name: Cloudflare Pages'e yayinla
-        if: github.event_name == 'workflow_run' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.yayinla == true)
+        if: steps.gerek.outputs.yayinla != 'false' && (github.event_name == 'workflow_run' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.yayinla == true))
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

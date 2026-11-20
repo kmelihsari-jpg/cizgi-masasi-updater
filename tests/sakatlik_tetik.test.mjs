@@ -84,14 +84,14 @@ const ist = (hh, mm) => Date.UTC(2026, 10, 17, hh - 3 + 24, mm) ; // Istanbul sa
 const tikler = [];
 for (let h = 0; h < 24; h++) for (const m of [5, 20, 35, 50]) tikler.push([h, m]);
 const calisan = tikler.filter(([h, m]) => sakatlikSlotu(ist(h, m))).map(([h, m]) => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-assert.equal(calisan.length, 25);
-assert.deepEqual(calisan, ['00:05','00:20','00:35','00:50','01:05','01:20','01:35','01:50','02:05','02:20','02:35','02:50','03:05','03:35','04:05','04:35','17:05','18:05','19:05','20:05','21:05','22:05','22:35','23:05','23:35']);
-// 17-22 saatte 1 (:35 yok), 22-00 ve 03-05 yarim saatte bir (:20/:50 yok), 00-03 15 dk, 05-17 hic
-assert.ok(!sakatlikSlotu(ist(20, 35)) && !sakatlikSlotu(ist(21, 35)) && !sakatlikSlotu(ist(22, 20)) && !sakatlikSlotu(ist(23, 50)) && !sakatlikSlotu(ist(3, 20)) && !sakatlikSlotu(ist(4, 50)) && !sakatlikSlotu(ist(5, 5)) && !sakatlikSlotu(ist(12, 5)));
-assert.ok(sakatlikSlotu(ist(0, 20)) && sakatlikSlotu(ist(1, 50)) && sakatlikSlotu(ist(2, 50)));
-// Iddaa/karne saatleri degismedi: yalniz :05 tikleri (karne Worker'da 10 dk bekleyip tetikler)
-assert.deepEqual(tikler.filter(([h, m]) => iddaaZamani(ist(h, m))).map(([h, m]) => h + ':' + m), ['17:5', '18:5', '19:5', '20:5']);
-assert.deepEqual(tikler.filter(([h, m]) => karneZamani(ist(h, m))).map(([h, m]) => h + ':' + m), ['18:5', '19:5', '20:5']);
+assert.equal(calisan.length, 31);
+assert.deepEqual(calisan, ['00:05','00:20','00:35','00:50','01:05','01:20','01:35','01:50','02:05','02:20','02:35','02:50','03:05','03:35','04:05','04:35','09:05','13:05','17:05','18:05','19:05','20:05','21:05','22:05','22:20','22:35','22:50','23:05','23:20','23:35','23:50']);
+// 17-22 saatte 1 (:35 yok), 03-05 yarim saatte bir (:20/:50 yok), 22-03 15 dk, gunduz yalniz 09:05 ve 13:05
+assert.ok(!sakatlikSlotu(ist(20, 35)) && !sakatlikSlotu(ist(21, 35)) && !sakatlikSlotu(ist(3, 20)) && !sakatlikSlotu(ist(4, 50)) && !sakatlikSlotu(ist(5, 5)) && !sakatlikSlotu(ist(12, 5)) && !sakatlikSlotu(ist(9, 35)));
+assert.ok(sakatlikSlotu(ist(0, 20)) && sakatlikSlotu(ist(1, 50)) && sakatlikSlotu(ist(2, 50)) && sakatlikSlotu(ist(22, 20)) && sakatlikSlotu(ist(23, 50)) && sakatlikSlotu(ist(9, 5)) && sakatlikSlotu(ist(13, 5)));
+// Iddaa 16:05-02:05 saatte 1; karne her iddaa'dan 10 dk sonra, son 00:15 (Worker :05 tikinde baslayip 10 dk bekler)
+assert.deepEqual(tikler.filter(([h, m]) => iddaaZamani(ist(h, m))).map(([h, m]) => h + ':' + m), ['0:5', '1:5', '2:5', '16:5', '17:5', '18:5', '19:5', '20:5', '21:5', '22:5', '23:5']);
+assert.deepEqual(tikler.filter(([h, m]) => karneZamani(ist(h, m))).map(([h, m]) => h + ':' + m), ['0:5', '16:5', '17:5', '18:5', '19:5', '20:5', '21:5', '22:5', '23:5']);
 
 // 12) Varsayilan (PARMAK_IZI yok): slotlarda kosulsuz tetikler, slot disinda tetiklemez, KV/PDF'e dokunmaz
 {
@@ -102,9 +102,22 @@ assert.deepEqual(tikler.filter(([h, m]) => karneZamani(ist(h, m))).map(([h, m]) 
   const env = { GITHUB_TOKEN: 'x' }; // KV bile yok: kullanilmamali
   const kos = async (hh, mm) => { cagrilar.length = 0; bekleyen.length = 0; await worker.scheduled({ scheduledTime: ist(hh, mm) }, env, ctx); await Promise.all(bekleyen); return [...cagrilar]; };
   assert.deepEqual(await kos(23, 35), ['nba-official-sync.yml']);
-  assert.deepEqual(await kos(22, 20), []);   // slot disi
-  assert.deepEqual(await kos(12, 5), []);    // gunduz kapali
-  assert.deepEqual(await kos(17, 5), ['nba-official-sync.yml', 'iddaa-lines-sync.yml']); // sakatlik + iddaa
+  assert.deepEqual(await kos(22, 20), ['nba-official-sync.yml']);   // 22-00 artik 15 dk
+  assert.deepEqual(await kos(12, 5), []);    // gunduz slot disi
+  assert.deepEqual(await kos(9, 5), ['nba-official-sync.yml']);    // gunduz kontrol 1
+  assert.deepEqual(await kos(13, 5), ['nba-official-sync.yml']);   // gunduz kontrol 2
+  assert.deepEqual(await kos(2, 5), ['nba-official-sync.yml', 'iddaa-lines-sync.yml']); // son iddaa 02:05, karne yok
+  assert.deepEqual(await kos(16, 20), []);   // iddaa yalniz :05 tikinde
+  {
+    // Karne: :05 tikinde baslar, 10 dk bekleyip snapshot tetikler (testte bekleme aninda biter)
+    const st = globalThis.setTimeout;
+    globalThis.setTimeout = (f) => st(f, 0);
+    try {
+      assert.deepEqual(await kos(16, 5), ['iddaa-lines-sync.yml', 'karne-otomatik.yml']);      // ilk iddaa + karne 16:15
+      assert.deepEqual(await kos(0, 5), ['nba-official-sync.yml', 'iddaa-lines-sync.yml', 'karne-otomatik.yml']); // son karne 00:15
+      assert.deepEqual(await kos(1, 5), ['nba-official-sync.yml', 'iddaa-lines-sync.yml']);   // 01:05 karne yok
+    } finally { globalThis.setTimeout = st; }
+  }
   assert.deepEqual(await kos(21, 35), []);   // 17-22 saatte 1: :35 yok
   assert.deepEqual(await kos(1, 20), ['nba-official-sync.yml']); // 00-03: 15 dk
   assert.deepEqual(await kos(3, 50), []);    // 03-05: yine 30 dk
@@ -116,3 +129,14 @@ const t0 = process.cpuUsage();
 for (const p of [PDF['0600'], PDF['0630'], PDF.degisik]) await parmakIzi(p);
 const ms = (process.cpuUsage(t0).user + process.cpuUsage(t0).system) / 3000;
 console.log(`PASS: 10 senaryo; parmak izi ortalama CPU ~${ms.toFixed(1)} ms/PDF`);
+
+// 13) Site paneli (canli-sakatlik.js PLAN) Worker SAKATLIK_SLOTLARI ile ayni olmali
+{
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../site-patches/canli-sakatlik.js', import.meta.url), 'utf8');
+  const PLAN = JSON.parse(/var PLAN=(\[\[.*?\]\]);/.exec(src)[1]);
+  const plandan = [];
+  for (const [a, b, dks] of PLAN) for (let h = a; h < b; h++) for (const m of dks) plandan.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+  assert.deepEqual(plandan.sort(), [...SAKATLIK_SLOTLARI].sort());
+  console.log('PASS: site PLAN = Worker slotlari (' + plandan.length + ')');
+}
