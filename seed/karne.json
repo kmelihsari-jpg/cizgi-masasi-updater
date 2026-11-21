@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-21",
   "startBalance": 100,
-  "generatedAt": "2026-11-21T18:15:29.460725+00:00",
+  "generatedAt": "2026-11-21T21:16:11.389774+00:00",
   "docs": [
     {
       "date": "2026-11-21",
@@ -298,6 +298,25 @@
           "tag": "deger",
           "pm": 0.545,
           "capturedAt": "2026-11-21T16:16:14.955233+00:00"
+        },
+        {
+          "id": 202331,
+          "name": "Paul George",
+          "team": "BOS",
+          "opp": "SAC",
+          "pos": "SF",
+          "mk": "STL",
+          "line": 1.5,
+          "n": 2,
+          "odd": 1.61,
+          "ev": 0.064,
+          "rk": 19,
+          "mu": 2.5,
+          "model": 0.707,
+          "est": false,
+          "tag": "saglam",
+          "pm": 0.661,
+          "capturedAt": "2026-11-21T21:16:11.389774+00:00"
         }
       ],
       "picks": [
@@ -376,6 +395,25 @@
           "tag": "deger",
           "pm": 0.545,
           "capturedAt": "2026-11-21T16:16:14.955233+00:00"
+        },
+        {
+          "id": 202331,
+          "name": "Paul George",
+          "team": "BOS",
+          "opp": "SAC",
+          "pos": "SF",
+          "mk": "STL",
+          "line": 1.5,
+          "n": 2,
+          "odd": 1.61,
+          "ev": 0.064,
+          "rk": 19,
+          "mu": 2.5,
+          "model": 0.707,
+          "est": false,
+          "tag": "saglam",
+          "pm": 0.661,
+          "capturedAt": "2026-11-21T21:16:11.389774+00:00"
         }
       ],
       "shadow": [
