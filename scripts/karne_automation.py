@@ -6,7 +6,7 @@ Settle: yalnizca oynandigi dogrulanmis NBA maclarinin sonucunu hesaplar.
 import argparse, datetime as dt, json, os, pathlib, sys, time
 from zoneinfo import ZoneInfo
 
-START = '2026-11-15'
+START = '2026-11-21'
 VALID = {'PTS','REB','AST','STL','BLK','3PM','SRA','RA'}
 TZ=ZoneInfo('Europe/Istanbul')
 
@@ -126,7 +126,7 @@ def snapshot(args):
                 return !!game && game.ts>now+60000 && game.ts<=now+MAX_AHEAD;
               }
               for(const day of dayList()) {
-                if(day < '2026-11-15')continue;
+                if(day < '2026-11-21')continue;
                 const games=slate.filter(g=>dayKey(g.ts)===day && g.ts>now+60000 && g.ts<=now+MAX_AHEAD);
                 if(!games.length)continue;
                 const doc=tonightDoc(day,null,now);

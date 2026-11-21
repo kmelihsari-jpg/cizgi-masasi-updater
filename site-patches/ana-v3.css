@@ -1,0 +1,75 @@
+/* Çizgi Masası · ana-v3 — 21 Kasım 2026 */
+/* 1B sakatlık bandı */
+#view-home .cm3-outs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 10px}
+#view-home .cm3-ol{font-size:11px;letter-spacing:1.2px;font-weight:600;text-transform:uppercase;color:var(--muted,#8E8E96);margin-right:2px}
+#view-home .cm3-oc{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(240,82,77,.5);background:var(--surface2,#16161A);color:var(--ink,#F5F5F7);border-radius:999px;padding:4px 11px;font:500 13px Inter,sans-serif;cursor:pointer}
+#view-home .cm3-oc small{color:var(--bad,#F0524D);font-size:11px}
+/* 2A maç kartı */
+#view-home #h-games.cm3-games{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))!important;gap:10px!important;overflow:visible!important;border-top:0!important}
+@media(max-width:600px){#view-home #h-games.cm3-games{grid-auto-flow:column!important;grid-template-columns:none!important;grid-auto-columns:78%!important;overflow-x:auto!important}}
+#view-home #h-games .gcard.cm3g{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:7px;background:var(--surface,#0D0D0F);border:1px solid var(--line,#232327);border-radius:12px;overflow:hidden;padding:0 0 10px;color:var(--ink,#F5F5F7);font:14px/1.4 Inter,sans-serif}
+#view-home #h-games .gcard.cm3g:hover{border-color:#3a3a42}
+#view-home #h-games .gcard.cm3g:focus-visible{outline:2px solid var(--accent,#FF7A1A);outline-offset:2px}
+.cm3g-s{display:flex;height:4px}.cm3g-s i{flex:1}
+.cm3g-r1,.cm3g-r2,.cm3g-pk{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px}
+.cm3g-tm{color:var(--accent,#FF7A1A);font:600 13px "JetBrains Mono",ui-monospace,monospace}
+.cm3g-pc{font-size:12px;color:var(--muted,#8E8E96)}.cm3g-pc.f{color:var(--good,#34C46A)}.cm3g-pc.s{color:#C9C9D0}
+.cm3g-t{display:inline-flex;align-items:center;gap:6px}.cm3g-t.r{flex-direction:row-reverse}
+.cm3g-t i{width:9px;height:9px;border-radius:50%;flex:none}
+.cm3g-t b{font:700 22px/1 "Barlow Condensed",sans-serif;letter-spacing:.3px}
+.cm3g-t small{color:var(--muted,#8E8E96);font-size:12px}
+.cm3g-t em{font-style:normal;font-size:10px;font-weight:700;color:var(--warn,#F2B53A)}
+.cm3g-at{color:#5C5C64;font-size:13px}
+.cm3g-pk{justify-content:flex-start;border-top:1px solid var(--line,#232327);margin:0 12px;padding:7px 0 0;font-size:13px;flex-wrap:wrap}
+.cm3g-pk .mu{color:var(--muted,#8E8E96)}.cm3g-p{color:var(--good,#34C46A);font-weight:700}
+/* 3C Vitrin'deki diğer bahisler */
+.cm3v-h{font-size:11px;letter-spacing:1.2px;font-weight:600;text-transform:uppercase;color:var(--muted,#8E8E96);margin:14px 0 8px}
+.cm3v{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+@media(max-width:600px){.cm3v{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:78%;overflow-x:auto;padding-bottom:4px}}
+.cm3v-c{display:flex;flex-direction:column;gap:6px;background:var(--surface2,#16161A);border:1px solid var(--line,#232327);border-radius:12px;padding:12px;cursor:pointer}
+.cm3v-c:hover{border-color:#3a3a42}
+.cm3v-t{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.cm3v-o{font:700 17px "JetBrains Mono",ui-monospace,monospace}
+.cm3v-b{font:700 22px/1.1 "Barlow Condensed",sans-serif;color:var(--accent,#FF7A1A)}
+.cm3v-f{display:flex;justify-content:space-between;font-size:12px}
+.cm3v-f .up{color:var(--good,#34C46A)}.cm3v-f .dn{color:var(--bad,#F0524D)}.cm3v-f .mu,.cm3v-c .mu{color:var(--muted,#8E8E96)}
+.cm3v-k{align-self:flex-start;margin-top:2px;font-size:12px;font-weight:600;color:var(--accent,#FF7A1A);border:1px solid rgba(255,122,26,.45);border-radius:8px;padding:4px 9px;cursor:pointer}
+/* 4A Merdiven Altı */
+#cm3-yk{margin:18px 0}
+.cm3m-mi{font-size:11px;color:var(--muted,#8E8E96)}
+.cm3m-bar{display:block;height:7px;border-radius:4px;background:#33333a;overflow:hidden}
+.cm3m-bar i{display:block;height:100%;background:var(--good,#34C46A)}
+.cm3m-ev{font-size:12px;font-weight:600}.cm3m-ev.p{color:var(--good,#34C46A)}.cm3m-ev.n{color:var(--accent,#FF7A1A)}
+.cm-yk-r.cm3m.w{opacity:.72;border-style:dashed}
+.cm-yk-r.cm3m.w:hover{opacity:1}
+/* 6B Yeni OUT fırsat şeridi */
+.cm3o-w{display:grid;gap:10px}
+.cm3o{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:var(--surface2,#16161A);border:1px solid var(--line,#232327);border-radius:12px;padding:12px 14px;color:var(--ink,#F5F5F7);font:14px/1.4 Inter,sans-serif}
+.cm3o:hover{border-color:#3a3a42}
+.cm3o-l{display:flex;flex-direction:column;gap:2px}
+.cm3o-l small{color:var(--muted,#8E8E96);font-size:12px}
+.cm3o-l b{font:700 20px/1.1 "Barlow Condensed",sans-serif}.cm3o-l b em{font-style:normal;color:var(--accent,#FF7A1A)}
+.cm3o-r{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.cm3o-r b{font:700 30px/1 "Barlow Condensed",sans-serif;color:var(--good,#34C46A)}
+.cm3o-r small{font-size:11px;color:var(--muted,#8E8E96)}
+.cm3o-all summary{cursor:pointer;color:var(--muted,#8E8E96);font-size:13px;padding:4px 0}
+.cm3o-all[open] summary{margin-bottom:8px}.cm3o-all .cm3o{margin-bottom:8px}
+/* 7A Yükselenler */
+.cm3r-w{display:grid;gap:14px}
+.cm3r{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:6px;color:var(--ink,#F5F5F7);font:14px/1.4 Inter,sans-serif}
+.cm3r-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.cm3r-h small{color:var(--muted,#8E8E96);font-size:12px}
+.cm3r-h em{margin-left:auto;font-style:normal;font-size:12px;border:1px solid var(--line,#232327);background:var(--surface2,#16161A);border-radius:999px;padding:2px 9px}
+.cm3r-bar{position:relative;display:block;height:10px;border-radius:5px;background:#26262b;overflow:hidden}
+.cm3r-bar i{position:absolute;left:0;top:0;bottom:0;background:#55555c}
+.cm3r-bar i.up{background:var(--good,#34C46A)}
+.cm3r-f{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted,#8E8E96)}
+.cm3r-f b{color:var(--ink,#F5F5F7)}
+/* 8B Günün alt önerileri */
+.cm3u-w{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.cm3u{display:flex;flex-direction:column;gap:3px;background:var(--surface2,#16161A);border:1px solid var(--line,#232327);border-radius:12px;padding:10px 12px;cursor:pointer}
+.cm3u:hover{border-color:#3a3a42}
+.cm3u-n em{font-style:normal;font-size:10px;color:var(--warn,#F2B53A)}
+.cm3u-b{font:700 18px/1.1 "Barlow Condensed",sans-serif;color:#7FB3FF}
+.cm3u-d{font:700 28px/1 "Barlow Condensed",sans-serif;color:var(--good,#34C46A);margin-top:4px}
+.cm3u small{font-size:11px;color:var(--muted,#8E8E96)}
+.cm3u-k{align-self:flex-start;margin-top:6px;font-size:12px;border:1px solid var(--line,#232327);border-radius:8px;padding:4px 9px;cursor:pointer}

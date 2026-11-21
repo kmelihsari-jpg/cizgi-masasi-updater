@@ -1,6 +1,6 @@
 /* Cizgi Masasi V1: yeni Karne donemi ve Vitrin durum ozeti. */
 (function(){'use strict';
-  const START='2026-11-15';
+  const START='2026-11-21';
   // Eski kayıtlar arşivdir; yeni 100 birim hesabına dahil edilmez.
   if(typeof realRows==='function'){
     const base=realRows;
@@ -19,7 +19,7 @@
     const active=(a?.rows||[]).filter(s=>Number(String(s).split('|')[4])*1000>Date.now()).length;
     const ts=a?.updated ? new Date(a.updated).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'henüz yok';
     const oddsStatus=age<=6&&active>0?`${active} aktif barem · ${ts}`:(active>0?'Barem verisi eskidi · yeni seçim kapalı':'Yeni barem bekleniyor');
-    el.innerHTML='<div class="cmv-top"><strong>ÇİZGİ MASASI <span>VİTRİN</span></strong><small>Yeni Karne dönemi · 15 Kasım 2026</small></div>'+
+    el.innerHTML='<div class="cmv-top"><strong>ÇİZGİ MASASI <span>VİTRİN</span></strong><small>Yeni Karne dönemi · 21 Kasım 2026</small></div>'+
       '<div class="cmv-grid"><div><span>Kasa</span><b>'+fmt2(bal)+'</b><small>100 birim başlangıç</small></div>'+
       '<div><span>Karne</span><b>'+hits+'/'+n+'</b><small>Sonuçlanan tahminler</small></div>'+
       '<div><span>ROI</span><b>'+(k.staked?((k.roi||0)*100).toFixed(1)+'%':'—')+'</b><small>Oranlı ve sonuçlanan</small></div>'+
