@@ -29,6 +29,12 @@ class Blok(unittest.TestCase):
         self.assertEqual(K.install(html, JS, CSS), html, 'index.html icindeki ana-v3 kopyasi eski')
         self.assertIn('<!--CM_YAKIN_V1_BITIR-->', html, 'yakin bloğu silinmemeli')
 
+    def test_mobil_mac_listesi_yatay_kaymaz(self):
+        rule = next(l for l in CSS.splitlines() if l.startswith('#view-home #h-games.hgames.cm3-list{'))
+        for k in ('grid-auto-flow:row!important', 'grid-auto-columns:auto!important', 'min-width:0!important'):
+            self.assertIn(k, rule)
+        self.assertIn('#view-home #h-games.hgames.cm3-list>.gcard.cm3n{min-width:0!important', CSS)
+
     def test_no_writes_and_vitrin_rules_untouched(self):
         for bad in ('store.set', 'localStorage', 'fetch(', 'XMLHttpRequest', 'sendBeacon', 'saveTonight', 'kasaCand=', 'kasaAll=', 'heroCard=', 'noBet='):
             self.assertNotIn(bad, JS, bad)
