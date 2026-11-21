@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-21",
   "startBalance": 100,
-  "generatedAt": "2026-11-21T14:16:05.085190+00:00",
+  "generatedAt": "2026-11-21T16:16:14.955233+00:00",
   "docs": [
     {
       "date": "2026-11-21",
@@ -279,6 +279,25 @@
           "est": false,
           "why": "merdiven",
           "need": null
+        },
+        {
+          "id": 1630170,
+          "name": "Devin Vassell",
+          "team": "SAS",
+          "opp": "NOP",
+          "pos": "SG",
+          "mk": "STL",
+          "line": 1.5,
+          "n": 2,
+          "odd": 2.18,
+          "ev": 0.072,
+          "rk": 6,
+          "mu": 2,
+          "model": 0.598,
+          "est": false,
+          "tag": "deger",
+          "pm": 0.545,
+          "capturedAt": "2026-11-21T16:16:14.955233+00:00"
         }
       ],
       "picks": [
@@ -338,6 +357,25 @@
           "tag": "saglam",
           "pm": 0.73,
           "capturedAt": "2026-11-21T14:16:05.085190+00:00"
+        },
+        {
+          "id": 1630170,
+          "name": "Devin Vassell",
+          "team": "SAS",
+          "opp": "NOP",
+          "pos": "SG",
+          "mk": "STL",
+          "line": 1.5,
+          "n": 2,
+          "odd": 2.18,
+          "ev": 0.072,
+          "rk": 6,
+          "mu": 2,
+          "model": 0.598,
+          "est": false,
+          "tag": "deger",
+          "pm": 0.545,
+          "capturedAt": "2026-11-21T16:16:14.955233+00:00"
         }
       ],
       "shadow": [
@@ -553,6 +591,42 @@
           "rk": 5,
           "mu": 7.9,
           "model": 0.662,
+          "est": false,
+          "why": "merdiven",
+          "need": null
+        },
+        {
+          "id": 1629060,
+          "name": "Rui Hachimura",
+          "team": "LAC",
+          "opp": "DAL",
+          "pos": "SF",
+          "mk": "REB",
+          "line": 5.5,
+          "n": 6,
+          "odd": 1.82,
+          "ev": -0.03,
+          "rk": 7,
+          "mu": 6.1,
+          "model": 0.557,
+          "est": false,
+          "why": "merdiven",
+          "need": null
+        },
+        {
+          "id": 1627884,
+          "name": "Derrick Jones Jr.",
+          "team": "LAC",
+          "opp": "DAL",
+          "pos": "SF",
+          "mk": "3PM",
+          "line": 1.5,
+          "n": 2,
+          "odd": 2,
+          "ev": -0.067,
+          "rk": 19,
+          "mu": 1.6,
+          "model": 0.482,
           "est": false,
           "why": "merdiven",
           "need": null
