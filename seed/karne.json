@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-21",
   "startBalance": 100,
-  "generatedAt": "2026-11-21T16:16:14.955233+00:00",
+  "generatedAt": "2026-11-21T18:15:29.460725+00:00",
   "docs": [
     {
       "date": "2026-11-21",
@@ -627,6 +627,24 @@
           "rk": 19,
           "mu": 1.6,
           "model": 0.482,
+          "est": false,
+          "why": "merdiven",
+          "need": null
+        },
+        {
+          "id": 202331,
+          "name": "Paul George",
+          "team": "BOS",
+          "opp": "SAC",
+          "pos": "SF",
+          "mk": "STL",
+          "line": 1.5,
+          "n": 2,
+          "odd": 1.61,
+          "ev": -0.071,
+          "rk": 19,
+          "mu": 2,
+          "model": 0.595,
           "est": false,
           "why": "merdiven",
           "need": null
