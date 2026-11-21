@@ -1,8 +1,8 @@
 /* Çizgi Masası · ana-v3 "Masa" — 21 Kasım 2026
-   Melih'in onayladığı ana sayfa: Tabela (maçlar, kalkış tabelası), Gecenin vitrini aynen (diğer bahislerin
+   Melih'in onayladığı ana sayfa: Maçlar (N2: iki sütun liste, renkli takım etiketi, derece, önerilen bahis), Gecenin vitrini aynen (diğer bahislerin
    satırlarında "neden" açıklaması her zaman görünür), Merdiven Altı (Kâğıt üstünde ve "Oran düşük ama değerli"
-   buraya katıldı; basamak satırlar, model/iddaa çubuğu, barem bekleyenler katlanır), Revir raporu (yeni OUT'lar
-   takım takım, aynı takımın OUT'ları tek kartta), Asansör (yükselenler) ve Bodrum (alt öneriler) kapalı çekmece.
+   buraya katıldı; düz satırlar, model/iddaa çubuğu, barem bekleyenler katlanır), Revir raporu (yeni OUT'lar
+   takım takım, aynı takımın OUT'ları tek kartta), Yükselenler ve Günün alt önerileri kapalı çekmece.
    Karne: yeni dönemde Tribün (shadow) kaydı Merdiven Altı'nın SADECE oranlı adaylarıdır (tonightDoc sarmalayıcı;
    karne_automation.py başsız tarayıcıda aynı fonksiyonu çağırır). Barem bekleyenler karneye yazılmaz.
    Vitrin (Kasa) seçimi, Vitrin kartı, Karne kayıt kuralları ve Barem Geçmişi değişmez. */
@@ -89,28 +89,22 @@
     };
   }
 
-  /* ---- Tabela: maçlar kalkış tabelası gibi ---- */
+  /* ---- Maçlar (N2): iki sütun liste, takım kodu kendi renginde etiket, derece, önerilen bahis ---- */
   function outsOf(day){if(LAST.oday!==day){LAST.oday=day;try{LAST.outs=day?outBoost(day):[]}catch(e){LAST.outs=[]}}return LAST.outs||[]}
-  function F(t,c){return '<span class="cm3f'+(c?' '+c:'')+'">'+X(t)+'</span>'}
+  function lum(h){var m=/^#?([0-9a-f]{6})$/i.exec(String(h||''));if(!m)return 0;var n=parseInt(m[1],16);return (.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255))/255}
+  function tag(t){var c=col(t);return '<span class="cm3n-t" style="background:'+c+';color:'+(lum(c)>.62?'#14181D':'#fff')+'">'+X(t)+'</span>'}
   if(typeof cmGameCard==='function'){
     cmGameCard=function(g,picks){
-      var k=dayKey(g.ts),gp=null,top=null;try{gp=gamePace(g)}catch(e){}top=(picks||[]).find(function(c){return c.g===g});
-      var outs=outsOf(k).filter(function(o){return o.team===g.home||o.team===g.away});
-      var b2b=[g.away,g.home].filter(function(t){try{return (restInfo(t,k)||{}).b2b}catch(e){return false}});
-      var dur=outs.length?F(outs.map(function(o){return shortName(o.m.name)}).join(', ')+' OUT','rd'):b2b.length?F(b2b.join(', ')+' B2B','ye'):F('—');
+      var k=dayKey(g.ts),top=(picks||[]).find(function(c){return c.g===g});
+      function side(t){var rc=null,ri=null;try{rc=teamRecord(t)}catch(e){}try{ri=restInfo(t,k)}catch(e){}
+        return tag(t)+(rc?'<small>'+rc.w+'-'+rc.l+'</small>':'')+(ri&&ri.b2b?'<em>B2B</em>':'')}
       var pr=top?(top.a&&top.a.w!=null?top.a.w:top.model):null;
-      var pk=top?'<span class="mu">'+X(shortName(top.p.name))+' '+X(lbl(top.mk))+(top.il?' '+top.il.n+'+':'')+'</span>'+(pr!=null?' <b class="cm3g-p">%'+pc(pr)+'</b>':''):'<span class="mu">öne çıkan yok</span>';
-      var tag=gp?gp.tag:'';
-      return '<button class="gcard cm3t" data-home="'+X(g.home)+'" aria-label="'+X(g.away)+' @ '+X(g.home)+' '+X(tm(g.ts))+'">'+
-        '<span>'+F(tm(g.ts),'or')+'</span>'+
-        '<span class="cm3t-m"><i style="background:'+col(g.away)+';box-shadow:0 0 0 1.5px '+col(g.away,1)+'"></i>'+F(g.away)+'<em>@</em>'+F(g.home)+'<i style="background:'+col(g.home)+';box-shadow:0 0 0 1.5px '+col(g.home,1)+'"></i></span>'+
-        '<span>'+(gp?F(String(tag).toLocaleUpperCase('tr-TR'),tag==='hızlı'?'gr':''):'')+'</span>'+
-        '<span>'+dur+'</span><span class="cm3t-p">'+pk+'</span><span class="mu cm3t-a">›</span></button>';
+      var pk=top?'<span class="mu">Öne çıkan</span> <b>'+X(shortName(top.p.name))+' '+X(lbl(top.mk))+(top.il?' '+top.il.n+'+':'')+'</b>'+(pr!=null?' <b class="cm3g-p">%'+pc(pr)+'</b>':''):'<span class="mu">öne çıkan bahis yok</span>';
+      return '<button class="gcard cm3n" data-home="'+X(g.home)+'" aria-label="'+X(g.away)+' @ '+X(g.home)+' '+X(tm(g.ts))+'">'+
+        '<span class="cm3n-h">'+X(tm(g.ts))+'</span><span class="cm3n-m">'+side(g.away)+'<i>@</i>'+side(g.home)+'</span><span class="cm3n-p">'+pk+'</span></button>';
     };
   }
-  function tabelaHead(){var hg=$('h-games');if(!hg)return;hg.classList.add('cm3-board');
-    if(!hg.querySelector('.cm3t'))return;
-    if(!hg.querySelector('.cm3t-h')){var h=document.createElement('div');h.className='cm3t-h';h.innerHTML='<span>SAAT</span><span>MAÇ</span><span>TEMPO</span><span>DURUM</span><span>ÖNE ÇIKAN</span><span></span>';hg.insertBefore(h,hg.firstChild)}}
+  function tabelaHead(){var hg=$('h-games');if(hg&&hg.querySelector('.cm3n'))hg.classList.add('cm3-list')}
 
   /* ---- Revir raporu: yeni OUT'lar takım takım ---- */
   if(typeof renderOuts==='function'){
@@ -192,7 +186,7 @@
       return w.join(' · ')}
     function av(p){try{return pav(p,'pav-s')}catch(e){return ''}}
     L.forEach(function(c,i){var pos=c.ev>=0,ip=pc(1/c.odd);
-      h+='<div class="cm3mr" style="--st:'+Math.min(i,4)+'" data-p="'+c.p.id+'" data-m="'+X(c.mk)+'" role="button" tabindex="0">'+av(c.p)+
+      h+='<div class="cm3mr" data-p="'+c.p.id+'" data-m="'+X(c.mk)+'" role="button" tabindex="0">'+av(c.p)+
         '<div class="cm3mr-m"><div class="cm3mr-t"><b>'+X(c.p.name)+'</b><span class="cm3mr-bet">'+X(lbl(c.mk))+' '+X(c.n)+'+</span><small>'+vs(c.p,c.g)+' '+X(c.opp)+' · '+X(tm(c.g.ts))+'</small></div>'+
         '<div class="cm3mr-w">'+why(c)+'</div></div>'+
         '<div class="cm3mr-g"><span><small>model %'+pc(c.raw)+'</small><small>iddaa %'+ip+'</small></span><span class="cm3g2"><i style="width:'+pc(c.raw)+'%"></i><b style="left:'+ip+'%"></b></span></div>'+
@@ -222,7 +216,7 @@
   function watch(id){var r=$(id);if(!r||r.__cm3w)return;r.__cm3w=1;relabel(r);
     try{new MutationObserver(function(){relabel(r)}).observe(r,{childList:true,subtree:true,characterData:true})}catch(e){}}
 
-  /* ---- Asansör (yükselenler) ve Bodrum (alt öneriler): kapalı çekmeceler ---- */
+  /* ---- Yükselenler ve Günün alt önerileri: kapalı çekmeceler ---- */
   function drawer(id,name,sumFn){
     var w=$(id);if(!w)return;var hd=w.querySelector('.mini-head'),h3=hd&&hd.querySelector('h3');if(!h3)return;
     w.classList.add('cm3-dr');if(!w.__cm3){w.__cm3=1;w.classList.add('closed');
@@ -232,8 +226,8 @@
     s.textContent=sumFn();
   }
   function drawers(day){
-    drawer('h-risers-wrap','Asansör',function(){var R=[];try{R=day?risers(day):[]}catch(e){}return 'yükselenler · '+R.slice(0,3).map(function(r){return shortName(r.p.name)+' '+(r.startUp?'İlk 5':Math.round(r.mp)+'→'+Math.round(r.m2)+' dk')}).join(', ')});
-    drawer('h-unders-wrap','Bodrum',function(){var U=[];try{U=day?underList(day):[]}catch(e){}return 'günün alt önerileri · '+U.slice(0,2).map(function(c){return shortName(c.p.name)+' '+lbl(c.mk)+' '+c.line+' alt'}).join(', ')+(U.length>2?' +'+(U.length-2):'')});
+    drawer('h-risers-wrap','Yükselenler',function(){var R=[];try{R=day?risers(day):[]}catch(e){}return R.slice(0,3).map(function(r){return shortName(r.p.name)+' '+(r.startUp?'İlk 5':Math.round(r.mp)+'→'+Math.round(r.m2)+' dk')}).join(', ')});
+    drawer('h-unders-wrap','Günün alt önerileri',function(){var U=[];try{U=day?underList(day):[]}catch(e){}return U.slice(0,2).map(function(c){return shortName(c.p.name)+' '+lbl(c.mk)+' '+c.line+' alt'}).join(', ')+(U.length>2?' +'+(U.length-2):'')});
     var oh=document.querySelector('#h-outs-wrap .mini-head h3');if(oh&&oh.firstChild&&oh.firstChild.nodeType===3)oh.firstChild.nodeValue='Revir raporu';
     var ph=document.querySelector('#view-home .picks .sec-head');if(ph&&!ph.querySelector('.cm3-side')){var n=document.createElement('span');n.className='cm3-side';n.textContent='Vitrin · değerli bahisler · Kasa defteri';ph.appendChild(n)}
   }

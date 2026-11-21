@@ -51,8 +51,9 @@ w.eval('renderHome()');
 const d=w.document,q=s=>[...d.querySelectorAll(s)],out={};
 out.rh=w.eval('RH');
 // Tabela
-out.games=q('#h-games .gcard.cm3t').length;out.board=d.getElementById('h-games').classList.contains('cm3-board');out.head=!!d.querySelector('#h-games .cm3t-h');
-out.durum=q('#h-games .cm3t .cm3f.rd,#h-games .cm3t .cm3f.ye').map(x=>x.textContent);
+out.games=q('#h-games .gcard.cm3n').length;out.list=d.getElementById('h-games').classList.contains('cm3-list');
+out.tags=q('#h-games .cm3n-t').map(x=>x.textContent+'|'+x.style.background);out.rec=q('#h-games .cm3n-m small').map(x=>x.textContent);
+out.b2b=q('#h-games .cm3n-m em').map(x=>x.textContent);out.home=q('#h-games .cm3n').map(x=>x.dataset.home);
 // sakatlık çipleri yok, injbar yerinde
 out.noChips=!d.getElementById('cm3-outs');
 // Vitrin tablosu aynen

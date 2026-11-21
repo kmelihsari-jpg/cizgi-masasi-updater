@@ -1333,19 +1333,19 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
 <!--CM_ANA_V3_BASLA-->
 <style id="cm-ana-v3-css">
 /* Çizgi Masası · ana-v3 "Masa" — 21 Kasım 2026 */
-/* Tabela (maçlar) */
-#view-home #h-games.cm3-board{display:block!important;grid-template-columns:none!important;overflow:visible!important;border:1px solid var(--line,#232327)!important;border-radius:14px!important;background:#0A0A0B;padding:10px 12px!important;box-shadow:inset 0 0 40px rgba(255,122,26,.04)}
-#view-home #h-games .cm3t-h{padding:2px 8px 6px;font:600 10.5px Inter,sans-serif;letter-spacing:1.4px;color:var(--muted,#8E8E96)}
-#view-home #h-games .gcard.cm3t{all:unset;box-sizing:border-box;cursor:pointer;width:100%;padding:6px 8px;border-radius:8px;color:var(--ink,#F5F5F7);font:13px/1.3 Inter,sans-serif}
-#view-home #h-games .cm3t-h,#view-home #h-games .gcard.cm3t{display:grid!important;grid-template-columns:78px minmax(150px,1.3fr) 90px minmax(140px,1.6fr) minmax(150px,1.4fr) 16px!important;gap:10px!important;align-items:center!important}
-#view-home #h-games .gcard.cm3t:hover{background:#141417}
-#view-home #h-games .gcard.cm3t:focus-visible{outline:2px solid var(--accent,#FF7A1A)}
-.cm3f{display:inline-block;background:#111114;border:1px solid #26262b;border-radius:4px;padding:2px 6px;font:700 13.5px "JetBrains Mono",ui-monospace,monospace;letter-spacing:1px;color:#F5F5F7;position:relative;white-space:nowrap}
-.cm3f:after{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px solid #000}
-.cm3f.or{color:#FF9A3D}.cm3f.gr{color:#4BD97F}.cm3f.rd{color:#FF6B66;font-size:11.5px}.cm3f.ye{color:#F7C948;font-size:11.5px}
-.cm3t-m{display:inline-flex;align-items:center;gap:6px}.cm3t-m i{width:9px;height:9px;border-radius:50%;flex:none}.cm3t-m em{font-style:normal;color:#5C5C64}
-.cm3t-p{font-size:12.5px}.cm3t-p .mu,.cm3t-a{color:var(--muted,#8E8E96)}.cm3g-p{color:var(--good,#34C46A)}
-@media(max-width:700px){#view-home #h-games .cm3t-h{display:none!important}#view-home #h-games .gcard.cm3t{grid-template-columns:64px 1fr;row-gap:4px}#view-home #h-games .gcard.cm3t>span:nth-child(3),#view-home #h-games .gcard.cm3t>span:nth-child(6){display:none}#view-home #h-games .gcard.cm3t>span:nth-child(4),#view-home #h-games .gcard.cm3t>span:nth-child(5){grid-column:2}}
+/* Maçlar (N2) */
+#view-home #h-games.hgames.cm3-list{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:0 40px!important;overflow:visible!important;border:0!important;padding:0!important}
+#view-home #h-games.hgames .gcard.cm3n{all:unset;box-sizing:border-box;cursor:pointer;width:100%;padding:11px 4px;border-bottom:1px solid #1c1c20;color:var(--ink,#F5F5F7);font:13px/1.3 Inter,sans-serif}
+#view-home #h-games.hgames .gcard.cm3n{display:grid!important;grid-template-columns:54px minmax(0,1fr) auto!important;gap:12px!important;align-items:center!important}
+#view-home #h-games.hgames .gcard.cm3n:hover{background:#0f0f12}
+#view-home #h-games.hgames .gcard.cm3n:focus-visible{outline:2px solid var(--accent,#FF7A1A)}
+.cm3n-h{font:600 13px "JetBrains Mono",ui-monospace,monospace;color:var(--accent,#FF7A1A)}
+.cm3n-m{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}.cm3n-m small{color:var(--muted,#8E8E96);font-size:12px}.cm3n-m i{font-style:normal;color:var(--muted,#8E8E96)}
+.cm3n-m em{font-style:normal;font-size:10px;font-weight:700;color:var(--warn,#F2B53A)}
+.cm3n-t{display:inline-grid;place-items:center;min-width:34px;height:22px;padding:0 4px;border-radius:5px;font:700 11px Inter,sans-serif;letter-spacing:.3px}
+.cm3n-p{font-size:12.5px;text-align:right}.cm3n-p .mu{color:var(--muted,#8E8E96)}.cm3g-p{color:var(--good,#34C46A)}
+@media(max-width:900px){#view-home #h-games.hgames.cm3-list{grid-template-columns:1fr!important}}
+@media(max-width:560px){#view-home #h-games.hgames .gcard.cm3n{grid-template-columns:48px 1fr!important;row-gap:5px!important}.cm3n-p{grid-column:2;text-align:left}}
 /* Vitrin: diğer bahislerin neden satırı her zaman açık */
 #view-home #h-picks tr.why-tr{display:table-row!important}
 #view-home #h-picks tr.why-tr>td{padding-top:0!important;font-size:12.5px;color:#C9C9D0;border-top:0}
@@ -1357,7 +1357,7 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
 #cm3-yk .cm-yk-hd{gap:10px 14px}
 .cm3-stamp{display:inline-block;border:1.5px solid #F2B53A;color:#F2B53A;font:700 11px Inter,sans-serif;letter-spacing:1.5px;padding:2px 8px;border-radius:4px;transform:rotate(-4deg)}
 #cm3-yk .cm3mr-l{display:flex;flex-direction:column;gap:8px}
-.cm3mr{display:grid;grid-template-columns:auto minmax(0,1fr) 170px 110px 34px;gap:14px;align-items:center;padding:10px 14px;background:#0B0B0D;border:1px solid #1f1f24;border-radius:12px;cursor:pointer;margin-left:calc(var(--st,0) * 22px)}
+.cm3mr{display:grid;grid-template-columns:auto minmax(0,1fr) 170px 110px 34px;gap:14px;align-items:center;padding:10px 14px;background:#0B0B0D;border:1px solid #1f1f24;border-radius:12px;cursor:pointer}
 .cm3mr:hover{background:var(--surface2,#16161A)}
 .cm3mr-m{min-width:0;display:flex;flex-direction:column;gap:3px}
 .cm3mr-t{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}.cm3mr-t b{font-size:15px}.cm3mr-t small{color:var(--muted,#8E8E96);font-size:12px}
@@ -1385,14 +1385,14 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
 .cm3rv-b{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:4px;border-radius:8px;font:13px/1.3 Inter,sans-serif;color:var(--ink,#F5F5F7)}
 .cm3rv-b:hover{background:#141417}.cm3rv-b span{display:flex;flex-direction:column}.cm3rv-b small{color:var(--muted,#8E8E96);font-size:11px}
 .cm3rv-b em{font-style:normal;font-weight:700;color:var(--good,#34C46A);white-space:nowrap}
-/* Asansör / Bodrum çekmeceleri */
+/* Yükselenler / alt öneriler çekmeceleri */
 #view-home .cm3-dr .mini-head{cursor:pointer;background:linear-gradient(#141417,#0E0E10);border:1px solid #26262b;border-radius:12px;padding:12px 16px;box-shadow:inset 0 -3px 0 #1c1c20;position:relative}
 #view-home .cm3-dr .mini-head:after{content:"";position:absolute;right:16px;top:50%;width:34px;height:6px;margin-top:-3px;border-radius:4px;background:#3a3a42}
 #view-home .cm3-dr .mini-head h3{padding-right:54px}
 .cm3-dr-s{font:400 12.5px Inter,sans-serif;color:var(--muted,#8E8E96);margin-left:10px}
 #view-home .cm3-dr.closed .mini-head .note,#view-home .cm3-dr.closed .mlist{display:none!important}
 #view-home .cm3-dr:not(.closed) .mlist{margin-top:12px}
-/* Asansör içi: dakika çubuğu */
+/* Yükselenler içi: dakika çubuğu */
 .cm3r-w{display:grid;gap:14px}
 .cm3r{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:6px;color:var(--ink,#F5F5F7);font:14px/1.4 Inter,sans-serif}
 .cm3r-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.cm3r-h small{color:var(--muted,#8E8E96);font-size:12px}
@@ -1400,7 +1400,7 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
 .cm3r-bar{position:relative;display:block;height:10px;border-radius:5px;background:#26262b;overflow:hidden}
 .cm3r-bar i{position:absolute;left:0;top:0;bottom:0;background:#55555c}.cm3r-bar i.up{background:var(--good,#34C46A)}
 .cm3r-f{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted,#8E8E96)}.cm3r-f b{color:var(--ink,#F5F5F7)}
-/* Bodrum içi: fark kartları */
+/* Alt öneriler içi: fark kartları */
 .cm3u-w{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
 .cm3u{display:flex;flex-direction:column;gap:3px;background:var(--surface2,#16161A);border:1px solid var(--line,#232327);border-radius:12px;padding:10px 12px;cursor:pointer}
 .cm3u:hover{border-color:#3a3a42}.cm3u-n em{font-style:normal;font-size:10px;color:var(--warn,#F2B53A)}
@@ -1411,10 +1411,10 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
 </style>
 <script id="cm-ana-v3">
 /* Çizgi Masası · ana-v3 "Masa" — 21 Kasım 2026
-   Melih'in onayladığı ana sayfa: Tabela (maçlar, kalkış tabelası), Gecenin vitrini aynen (diğer bahislerin
+   Melih'in onayladığı ana sayfa: Maçlar (N2: iki sütun liste, renkli takım etiketi, derece, önerilen bahis), Gecenin vitrini aynen (diğer bahislerin
    satırlarında "neden" açıklaması her zaman görünür), Merdiven Altı (Kâğıt üstünde ve "Oran düşük ama değerli"
-   buraya katıldı; basamak satırlar, model/iddaa çubuğu, barem bekleyenler katlanır), Revir raporu (yeni OUT'lar
-   takım takım, aynı takımın OUT'ları tek kartta), Asansör (yükselenler) ve Bodrum (alt öneriler) kapalı çekmece.
+   buraya katıldı; düz satırlar, model/iddaa çubuğu, barem bekleyenler katlanır), Revir raporu (yeni OUT'lar
+   takım takım, aynı takımın OUT'ları tek kartta), Yükselenler ve Günün alt önerileri kapalı çekmece.
    Karne: yeni dönemde Tribün (shadow) kaydı Merdiven Altı'nın SADECE oranlı adaylarıdır (tonightDoc sarmalayıcı;
    karne_automation.py başsız tarayıcıda aynı fonksiyonu çağırır). Barem bekleyenler karneye yazılmaz.
    Vitrin (Kasa) seçimi, Vitrin kartı, Karne kayıt kuralları ve Barem Geçmişi değişmez. */
@@ -1501,28 +1501,22 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
     };
   }
 
-  /* ---- Tabela: maçlar kalkış tabelası gibi ---- */
+  /* ---- Maçlar (N2): iki sütun liste, takım kodu kendi renginde etiket, derece, önerilen bahis ---- */
   function outsOf(day){if(LAST.oday!==day){LAST.oday=day;try{LAST.outs=day?outBoost(day):[]}catch(e){LAST.outs=[]}}return LAST.outs||[]}
-  function F(t,c){return '<span class="cm3f'+(c?' '+c:'')+'">'+X(t)+'</span>'}
+  function lum(h){var m=/^#?([0-9a-f]{6})$/i.exec(String(h||''));if(!m)return 0;var n=parseInt(m[1],16);return (.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255))/255}
+  function tag(t){var c=col(t);return '<span class="cm3n-t" style="background:'+c+';color:'+(lum(c)>.62?'#14181D':'#fff')+'">'+X(t)+'</span>'}
   if(typeof cmGameCard==='function'){
     cmGameCard=function(g,picks){
-      var k=dayKey(g.ts),gp=null,top=null;try{gp=gamePace(g)}catch(e){}top=(picks||[]).find(function(c){return c.g===g});
-      var outs=outsOf(k).filter(function(o){return o.team===g.home||o.team===g.away});
-      var b2b=[g.away,g.home].filter(function(t){try{return (restInfo(t,k)||{}).b2b}catch(e){return false}});
-      var dur=outs.length?F(outs.map(function(o){return shortName(o.m.name)}).join(', ')+' OUT','rd'):b2b.length?F(b2b.join(', ')+' B2B','ye'):F('—');
+      var k=dayKey(g.ts),top=(picks||[]).find(function(c){return c.g===g});
+      function side(t){var rc=null,ri=null;try{rc=teamRecord(t)}catch(e){}try{ri=restInfo(t,k)}catch(e){}
+        return tag(t)+(rc?'<small>'+rc.w+'-'+rc.l+'</small>':'')+(ri&&ri.b2b?'<em>B2B</em>':'')}
       var pr=top?(top.a&&top.a.w!=null?top.a.w:top.model):null;
-      var pk=top?'<span class="mu">'+X(shortName(top.p.name))+' '+X(lbl(top.mk))+(top.il?' '+top.il.n+'+':'')+'</span>'+(pr!=null?' <b class="cm3g-p">%'+pc(pr)+'</b>':''):'<span class="mu">öne çıkan yok</span>';
-      var tag=gp?gp.tag:'';
-      return '<button class="gcard cm3t" data-home="'+X(g.home)+'" aria-label="'+X(g.away)+' @ '+X(g.home)+' '+X(tm(g.ts))+'">'+
-        '<span>'+F(tm(g.ts),'or')+'</span>'+
-        '<span class="cm3t-m"><i style="background:'+col(g.away)+';box-shadow:0 0 0 1.5px '+col(g.away,1)+'"></i>'+F(g.away)+'<em>@</em>'+F(g.home)+'<i style="background:'+col(g.home)+';box-shadow:0 0 0 1.5px '+col(g.home,1)+'"></i></span>'+
-        '<span>'+(gp?F(String(tag).toLocaleUpperCase('tr-TR'),tag==='hızlı'?'gr':''):'')+'</span>'+
-        '<span>'+dur+'</span><span class="cm3t-p">'+pk+'</span><span class="mu cm3t-a">›</span></button>';
+      var pk=top?'<span class="mu">Öne çıkan</span> <b>'+X(shortName(top.p.name))+' '+X(lbl(top.mk))+(top.il?' '+top.il.n+'+':'')+'</b>'+(pr!=null?' <b class="cm3g-p">%'+pc(pr)+'</b>':''):'<span class="mu">öne çıkan bahis yok</span>';
+      return '<button class="gcard cm3n" data-home="'+X(g.home)+'" aria-label="'+X(g.away)+' @ '+X(g.home)+' '+X(tm(g.ts))+'">'+
+        '<span class="cm3n-h">'+X(tm(g.ts))+'</span><span class="cm3n-m">'+side(g.away)+'<i>@</i>'+side(g.home)+'</span><span class="cm3n-p">'+pk+'</span></button>';
     };
   }
-  function tabelaHead(){var hg=$('h-games');if(!hg)return;hg.classList.add('cm3-board');
-    if(!hg.querySelector('.cm3t'))return;
-    if(!hg.querySelector('.cm3t-h')){var h=document.createElement('div');h.className='cm3t-h';h.innerHTML='<span>SAAT</span><span>MAÇ</span><span>TEMPO</span><span>DURUM</span><span>ÖNE ÇIKAN</span><span></span>';hg.insertBefore(h,hg.firstChild)}}
+  function tabelaHead(){var hg=$('h-games');if(hg&&hg.querySelector('.cm3n'))hg.classList.add('cm3-list')}
 
   /* ---- Revir raporu: yeni OUT'lar takım takım ---- */
   if(typeof renderOuts==='function'){
@@ -1604,7 +1598,7 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
       return w.join(' · ')}
     function av(p){try{return pav(p,'pav-s')}catch(e){return ''}}
     L.forEach(function(c,i){var pos=c.ev>=0,ip=pc(1/c.odd);
-      h+='<div class="cm3mr" style="--st:'+Math.min(i,4)+'" data-p="'+c.p.id+'" data-m="'+X(c.mk)+'" role="button" tabindex="0">'+av(c.p)+
+      h+='<div class="cm3mr" data-p="'+c.p.id+'" data-m="'+X(c.mk)+'" role="button" tabindex="0">'+av(c.p)+
         '<div class="cm3mr-m"><div class="cm3mr-t"><b>'+X(c.p.name)+'</b><span class="cm3mr-bet">'+X(lbl(c.mk))+' '+X(c.n)+'+</span><small>'+vs(c.p,c.g)+' '+X(c.opp)+' · '+X(tm(c.g.ts))+'</small></div>'+
         '<div class="cm3mr-w">'+why(c)+'</div></div>'+
         '<div class="cm3mr-g"><span><small>model %'+pc(c.raw)+'</small><small>iddaa %'+ip+'</small></span><span class="cm3g2"><i style="width:'+pc(c.raw)+'%"></i><b style="left:'+ip+'%"></b></span></div>'+
@@ -1634,7 +1628,7 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
   function watch(id){var r=$(id);if(!r||r.__cm3w)return;r.__cm3w=1;relabel(r);
     try{new MutationObserver(function(){relabel(r)}).observe(r,{childList:true,subtree:true,characterData:true})}catch(e){}}
 
-  /* ---- Asansör (yükselenler) ve Bodrum (alt öneriler): kapalı çekmeceler ---- */
+  /* ---- Yükselenler ve Günün alt önerileri: kapalı çekmeceler ---- */
   function drawer(id,name,sumFn){
     var w=$(id);if(!w)return;var hd=w.querySelector('.mini-head'),h3=hd&&hd.querySelector('h3');if(!h3)return;
     w.classList.add('cm3-dr');if(!w.__cm3){w.__cm3=1;w.classList.add('closed');
@@ -1644,8 +1638,8 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
     s.textContent=sumFn();
   }
   function drawers(day){
-    drawer('h-risers-wrap','Asansör',function(){var R=[];try{R=day?risers(day):[]}catch(e){}return 'yükselenler · '+R.slice(0,3).map(function(r){return shortName(r.p.name)+' '+(r.startUp?'İlk 5':Math.round(r.mp)+'→'+Math.round(r.m2)+' dk')}).join(', ')});
-    drawer('h-unders-wrap','Bodrum',function(){var U=[];try{U=day?underList(day):[]}catch(e){}return 'günün alt önerileri · '+U.slice(0,2).map(function(c){return shortName(c.p.name)+' '+lbl(c.mk)+' '+c.line+' alt'}).join(', ')+(U.length>2?' +'+(U.length-2):'')});
+    drawer('h-risers-wrap','Yükselenler',function(){var R=[];try{R=day?risers(day):[]}catch(e){}return R.slice(0,3).map(function(r){return shortName(r.p.name)+' '+(r.startUp?'İlk 5':Math.round(r.mp)+'→'+Math.round(r.m2)+' dk')}).join(', ')});
+    drawer('h-unders-wrap','Günün alt önerileri',function(){var U=[];try{U=day?underList(day):[]}catch(e){}return U.slice(0,2).map(function(c){return shortName(c.p.name)+' '+lbl(c.mk)+' '+c.line+' alt'}).join(', ')+(U.length>2?' +'+(U.length-2):'')});
     var oh=document.querySelector('#h-outs-wrap .mini-head h3');if(oh&&oh.firstChild&&oh.firstChild.nodeType===3)oh.firstChild.nodeValue='Revir raporu';
     var ph=document.querySelector('#view-home .picks .sec-head');if(ph&&!ph.querySelector('.cm3-side')){var n=document.createElement('span');n.className='cm3-side';n.textContent='Vitrin · değerli bahisler · Kasa defteri';ph.appendChild(n)}
   }
