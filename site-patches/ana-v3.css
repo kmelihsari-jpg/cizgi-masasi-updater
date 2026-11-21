@@ -1,74 +1,75 @@
-/* Çizgi Masası · ana-v3 — 21 Kasım 2026 */
-/* 1B sakatlık bandı */
-#view-home .cm3-outs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 10px}
-#view-home .cm3-ol{font-size:11px;letter-spacing:1.2px;font-weight:600;text-transform:uppercase;color:var(--muted,#8E8E96);margin-right:2px}
-#view-home .cm3-oc{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(240,82,77,.5);background:var(--surface2,#16161A);color:var(--ink,#F5F5F7);border-radius:999px;padding:4px 11px;font:500 13px Inter,sans-serif;cursor:pointer}
-#view-home .cm3-oc small{color:var(--bad,#F0524D);font-size:11px}
-/* 2A maç kartı */
-#view-home #h-games.cm3-games{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))!important;gap:10px!important;overflow:visible!important;border-top:0!important}
-@media(max-width:600px){#view-home #h-games.cm3-games{grid-auto-flow:column!important;grid-template-columns:none!important;grid-auto-columns:78%!important;overflow-x:auto!important}}
-#view-home #h-games .gcard.cm3g{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:7px;background:var(--surface,#0D0D0F);border:1px solid var(--line,#232327);border-radius:12px;overflow:hidden;padding:0 0 10px;color:var(--ink,#F5F5F7);font:14px/1.4 Inter,sans-serif}
-#view-home #h-games .gcard.cm3g:hover{border-color:#3a3a42}
-#view-home #h-games .gcard.cm3g:focus-visible{outline:2px solid var(--accent,#FF7A1A);outline-offset:2px}
-.cm3g-s{display:flex;height:4px}.cm3g-s i{flex:1}
-.cm3g-r1,.cm3g-r2,.cm3g-pk{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px}
-.cm3g-tm{color:var(--accent,#FF7A1A);font:600 13px "JetBrains Mono",ui-monospace,monospace}
-.cm3g-pc{font-size:12px;color:var(--muted,#8E8E96)}.cm3g-pc.f{color:var(--good,#34C46A)}.cm3g-pc.s{color:#C9C9D0}
-.cm3g-t{display:inline-flex;align-items:center;gap:6px}.cm3g-t.r{flex-direction:row-reverse}
-.cm3g-t i{width:9px;height:9px;border-radius:50%;flex:none}
-.cm3g-t b{font:700 22px/1 "Barlow Condensed",sans-serif;letter-spacing:.3px}
-.cm3g-t small{color:var(--muted,#8E8E96);font-size:12px}
-.cm3g-t em{font-style:normal;font-size:10px;font-weight:700;color:var(--warn,#F2B53A)}
-.cm3g-at{color:#5C5C64;font-size:13px}
-.cm3g-pk{justify-content:flex-start;border-top:1px solid var(--line,#232327);margin:0 12px;padding:7px 0 0;font-size:13px;flex-wrap:wrap}
-.cm3g-pk .mu{color:var(--muted,#8E8E96)}.cm3g-p{color:var(--good,#34C46A);font-weight:700}
-/* 3C Vitrin'deki diğer bahisler */
-.cm3v-h{font-size:11px;letter-spacing:1.2px;font-weight:600;text-transform:uppercase;color:var(--muted,#8E8E96);margin:14px 0 8px}
-.cm3v{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-@media(max-width:600px){.cm3v{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:78%;overflow-x:auto;padding-bottom:4px}}
-.cm3v-c{display:flex;flex-direction:column;gap:6px;background:var(--surface2,#16161A);border:1px solid var(--line,#232327);border-radius:12px;padding:12px;cursor:pointer}
-.cm3v-c:hover{border-color:#3a3a42}
-.cm3v-t{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
-.cm3v-o{font:700 17px "JetBrains Mono",ui-monospace,monospace}
-.cm3v-b{font:700 22px/1.1 "Barlow Condensed",sans-serif;color:var(--accent,#FF7A1A)}
-.cm3v-f{display:flex;justify-content:space-between;font-size:12px}
-.cm3v-f .up{color:var(--good,#34C46A)}.cm3v-f .dn{color:var(--bad,#F0524D)}.cm3v-f .mu,.cm3v-c .mu{color:var(--muted,#8E8E96)}
-.cm3v-k{align-self:flex-start;margin-top:2px;font-size:12px;font-weight:600;color:var(--accent,#FF7A1A);border:1px solid rgba(255,122,26,.45);border-radius:8px;padding:4px 9px;cursor:pointer}
-/* 4A Merdiven Altı */
-#cm3-yk{margin:18px 0}
-.cm3m-mi{font-size:11px;color:var(--muted,#8E8E96)}
-.cm3m-bar{display:block;height:7px;border-radius:4px;background:#33333a;overflow:hidden}
-.cm3m-bar i{display:block;height:100%;background:var(--good,#34C46A)}
+/* Çizgi Masası · ana-v3 "Masa" — 21 Kasım 2026 */
+/* Tabela (maçlar) */
+#view-home #h-games.cm3-board{display:block!important;grid-template-columns:none!important;overflow:visible!important;border:1px solid var(--line,#232327)!important;border-radius:14px!important;background:#0A0A0B;padding:10px 12px!important;box-shadow:inset 0 0 40px rgba(255,122,26,.04)}
+#view-home #h-games .cm3t-h{padding:2px 8px 6px;font:600 10.5px Inter,sans-serif;letter-spacing:1.4px;color:var(--muted,#8E8E96)}
+#view-home #h-games .gcard.cm3t{all:unset;box-sizing:border-box;cursor:pointer;width:100%;padding:6px 8px;border-radius:8px;color:var(--ink,#F5F5F7);font:13px/1.3 Inter,sans-serif}
+#view-home #h-games .cm3t-h,#view-home #h-games .gcard.cm3t{display:grid!important;grid-template-columns:78px minmax(150px,1.3fr) 90px minmax(140px,1.6fr) minmax(150px,1.4fr) 16px!important;gap:10px!important;align-items:center!important}
+#view-home #h-games .gcard.cm3t:hover{background:#141417}
+#view-home #h-games .gcard.cm3t:focus-visible{outline:2px solid var(--accent,#FF7A1A)}
+.cm3f{display:inline-block;background:#111114;border:1px solid #26262b;border-radius:4px;padding:2px 6px;font:700 13.5px "JetBrains Mono",ui-monospace,monospace;letter-spacing:1px;color:#F5F5F7;position:relative;white-space:nowrap}
+.cm3f:after{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px solid #000}
+.cm3f.or{color:#FF9A3D}.cm3f.gr{color:#4BD97F}.cm3f.rd{color:#FF6B66;font-size:11.5px}.cm3f.ye{color:#F7C948;font-size:11.5px}
+.cm3t-m{display:inline-flex;align-items:center;gap:6px}.cm3t-m i{width:9px;height:9px;border-radius:50%;flex:none}.cm3t-m em{font-style:normal;color:#5C5C64}
+.cm3t-p{font-size:12.5px}.cm3t-p .mu,.cm3t-a{color:var(--muted,#8E8E96)}.cm3g-p{color:var(--good,#34C46A)}
+@media(max-width:700px){#view-home #h-games .cm3t-h{display:none!important}#view-home #h-games .gcard.cm3t{grid-template-columns:64px 1fr;row-gap:4px}#view-home #h-games .gcard.cm3t>span:nth-child(3),#view-home #h-games .gcard.cm3t>span:nth-child(6){display:none}#view-home #h-games .gcard.cm3t>span:nth-child(4),#view-home #h-games .gcard.cm3t>span:nth-child(5){grid-column:2}}
+/* Vitrin: diğer bahislerin neden satırı her zaman açık */
+#view-home #h-picks tr.why-tr{display:table-row!important}
+#view-home #h-picks tr.why-tr>td{padding-top:0!important;font-size:12.5px;color:#C9C9D0;border-top:0}
+#view-home .picks .sec-head{position:relative}
+.cm3-side{font-size:12.5px;color:var(--muted,#8E8E96);font-weight:400;margin-left:auto}
+#view-home .picks .sec-head>.cm3-side{position:absolute;right:0;top:12px}
+/* Merdiven Altı */
+#cm3-yk{margin:26px 0}
+#cm3-yk .cm-yk-hd{gap:10px 14px}
+.cm3-stamp{display:inline-block;border:1.5px solid #F2B53A;color:#F2B53A;font:700 11px Inter,sans-serif;letter-spacing:1.5px;padding:2px 8px;border-radius:4px;transform:rotate(-4deg)}
+#cm3-yk .cm3mr-l{display:flex;flex-direction:column;gap:8px}
+.cm3mr{display:grid;grid-template-columns:auto minmax(0,1fr) 170px 110px 34px;gap:14px;align-items:center;padding:10px 14px;background:#0B0B0D;border:1px solid #1f1f24;border-radius:12px;cursor:pointer;margin-left:calc(var(--st,0) * 22px)}
+.cm3mr:hover{background:var(--surface2,#16161A)}
+.cm3mr-m{min-width:0;display:flex;flex-direction:column;gap:3px}
+.cm3mr-t{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}.cm3mr-t b{font-size:15px}.cm3mr-t small{color:var(--muted,#8E8E96);font-size:12px}
+.cm3mr-bet{font:700 19px/1 "Barlow Condensed",sans-serif;color:var(--accent,#FF7A1A)}
+.cm3mr-w{font-size:12.5px;color:#C9C9D0;line-height:1.4}
+.cm3mr-g>span:first-child{display:flex;justify-content:space-between;font-size:11px;color:var(--muted,#8E8E96)}
+.cm3g2{display:block;position:relative;height:8px;border-radius:5px;background:#26262b;overflow:hidden;margin-top:4px}
+.cm3g2 i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--good,#34C46A)}.cm3g2 b{position:absolute;top:0;bottom:0;width:2px;background:#fff}
+.cm3mr-r{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
+.cm3mr-r small{font-size:11px;color:var(--muted,#8E8E96);white-space:nowrap}
+.cm3mr-o{font:700 17px "JetBrains Mono",ui-monospace,monospace}.cm3mr-o.mu{font:500 12px Inter,sans-serif;color:var(--muted,#8E8E96)}
 .cm3m-ev{font-size:12px;font-weight:600}.cm3m-ev.p{color:var(--good,#34C46A)}.cm3m-ev.n{color:var(--accent,#FF7A1A)}
-.cm-yk-r.cm3m.w{opacity:.72;border-style:dashed}
-.cm-yk-r.cm3m.w:hover{opacity:1}
-/* 6B Yeni OUT fırsat şeridi */
-.cm3o-w{display:grid;gap:10px}
-.cm3o{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:var(--surface2,#16161A);border:1px solid var(--line,#232327);border-radius:12px;padding:12px 14px;color:var(--ink,#F5F5F7);font:14px/1.4 Inter,sans-serif}
-.cm3o:hover{border-color:#3a3a42}
-.cm3o-l{display:flex;flex-direction:column;gap:2px}
-.cm3o-l small{color:var(--muted,#8E8E96);font-size:12px}
-.cm3o-l b{font:700 20px/1.1 "Barlow Condensed",sans-serif}.cm3o-l b em{font-style:normal;color:var(--accent,#FF7A1A)}
-.cm3o-r{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
-.cm3o-r b{font:700 30px/1 "Barlow Condensed",sans-serif;color:var(--good,#34C46A)}
-.cm3o-r small{font-size:11px;color:var(--muted,#8E8E96)}
-.cm3o-all summary{cursor:pointer;color:var(--muted,#8E8E96);font-size:13px;padding:4px 0}
-.cm3o-all[open] summary{margin-bottom:8px}.cm3o-all .cm3o{margin-bottom:8px}
-/* 7A Yükselenler */
+.cm3mr-k{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line,#232327);border-radius:8px;color:var(--accent,#FF7A1A);font-weight:700}
+.cm3mr.w{opacity:.72;margin-left:0;border-style:dashed}.cm3mr.w:hover{opacity:1}
+.cm3mr-wd>summary{cursor:pointer;color:var(--muted,#8E8E96);font-size:12.5px;padding:6px 2px;list-style:none}
+.cm3mr-wd[open]>summary{margin-bottom:8px}.cm3mr-wd .cm3mr{margin-bottom:8px}
+@media(max-width:700px){.cm3mr{grid-template-columns:auto minmax(0,1fr) auto;margin-left:0}.cm3mr-g,.cm3mr-k{display:none}}
+/* Revir raporu */
+.cm3rv{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.cm3rv-c{background:var(--surface,#0D0D0F);border:1px solid var(--line,#232327);border-top:3px solid #555;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.cm3rv-h{display:flex;justify-content:space-between;align-items:baseline}.cm3rv-h b{font:700 22px "Barlow Condensed",sans-serif}.cm3rv-h span{font:600 12px "JetBrains Mono",monospace;color:var(--accent,#FF7A1A)}
+.cm3rv-os{display:flex;flex-direction:column;gap:6px}
+.cm3rv-o{display:flex;align-items:center;gap:8px;font-size:13px}.cm3rv-o .pav{filter:grayscale(1);opacity:.65}.cm3rv-o s{color:var(--muted,#8E8E96)}.cm3rv-o em{font-style:normal;font-size:11px;font-weight:700;color:var(--bad,#F0524D)}
+.cm3rv-l{font-size:10.5px;letter-spacing:1.3px;font-weight:600;text-transform:uppercase;color:var(--muted,#8E8E96);margin-top:2px}
+.cm3rv-b{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:4px;border-radius:8px;font:13px/1.3 Inter,sans-serif;color:var(--ink,#F5F5F7)}
+.cm3rv-b:hover{background:#141417}.cm3rv-b span{display:flex;flex-direction:column}.cm3rv-b small{color:var(--muted,#8E8E96);font-size:11px}
+.cm3rv-b em{font-style:normal;font-weight:700;color:var(--good,#34C46A);white-space:nowrap}
+/* Asansör / Bodrum çekmeceleri */
+#view-home .cm3-dr .mini-head{cursor:pointer;background:linear-gradient(#141417,#0E0E10);border:1px solid #26262b;border-radius:12px;padding:12px 16px;box-shadow:inset 0 -3px 0 #1c1c20;position:relative}
+#view-home .cm3-dr .mini-head:after{content:"";position:absolute;right:16px;top:50%;width:34px;height:6px;margin-top:-3px;border-radius:4px;background:#3a3a42}
+#view-home .cm3-dr .mini-head h3{padding-right:54px}
+.cm3-dr-s{font:400 12.5px Inter,sans-serif;color:var(--muted,#8E8E96);margin-left:10px}
+#view-home .cm3-dr.closed .mini-head .note,#view-home .cm3-dr.closed .mlist{display:none!important}
+#view-home .cm3-dr:not(.closed) .mlist{margin-top:12px}
+/* Asansör içi: dakika çubuğu */
 .cm3r-w{display:grid;gap:14px}
 .cm3r{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:6px;color:var(--ink,#F5F5F7);font:14px/1.4 Inter,sans-serif}
 .cm3r-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.cm3r-h small{color:var(--muted,#8E8E96);font-size:12px}
 .cm3r-h em{margin-left:auto;font-style:normal;font-size:12px;border:1px solid var(--line,#232327);background:var(--surface2,#16161A);border-radius:999px;padding:2px 9px}
 .cm3r-bar{position:relative;display:block;height:10px;border-radius:5px;background:#26262b;overflow:hidden}
-.cm3r-bar i{position:absolute;left:0;top:0;bottom:0;background:#55555c}
-.cm3r-bar i.up{background:var(--good,#34C46A)}
-.cm3r-f{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted,#8E8E96)}
-.cm3r-f b{color:var(--ink,#F5F5F7)}
-/* 8B Günün alt önerileri */
+.cm3r-bar i{position:absolute;left:0;top:0;bottom:0;background:#55555c}.cm3r-bar i.up{background:var(--good,#34C46A)}
+.cm3r-f{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted,#8E8E96)}.cm3r-f b{color:var(--ink,#F5F5F7)}
+/* Bodrum içi: fark kartları */
 .cm3u-w{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
 .cm3u{display:flex;flex-direction:column;gap:3px;background:var(--surface2,#16161A);border:1px solid var(--line,#232327);border-radius:12px;padding:10px 12px;cursor:pointer}
-.cm3u:hover{border-color:#3a3a42}
-.cm3u-n em{font-style:normal;font-size:10px;color:var(--warn,#F2B53A)}
+.cm3u:hover{border-color:#3a3a42}.cm3u-n em{font-style:normal;font-size:10px;color:var(--warn,#F2B53A)}
 .cm3u-b{font:700 18px/1.1 "Barlow Condensed",sans-serif;color:#7FB3FF}
 .cm3u-d{font:700 28px/1 "Barlow Condensed",sans-serif;color:var(--good,#34C46A);margin-top:4px}
 .cm3u small{font-size:11px;color:var(--muted,#8E8E96)}

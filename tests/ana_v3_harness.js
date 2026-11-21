@@ -3,10 +3,10 @@ const fs=require('fs'),{JSDOM}=require('jsdom');
 const js=fs.readFileSync(process.argv[2],'utf8');
 const dom=new JSDOM(`<body><div id="view-home"><div class="injbar"><button id="inj-up">ESPN</button></div>
 <details id="cm-live-source"><summary>NBA</summary></details><div id="inj-panel"></div>
-<div id="h-games"></div><section class="picks"><div id="h-hero"></div><div id="h-picks"></div><div id="h-near"><p>eski</p></div>
+<div id="h-games"></div><section class="picks"><div class="sec-head"><h3>Gecenin bahisleri</h3></div><div id="h-hero"></div><div id="h-picks"></div><div id="h-near"><p>eski</p></div>
 <div class="paperbox"><div id="h-oth-head"></div><div id="h-others"><p>kagit</p></div></div></section>
-<section id="h-outs-wrap"><div id="h-outs"></div></section><section id="h-risers-wrap"><div id="h-risers"></div></section>
-<section id="h-unders-wrap"><div id="h-unders"></div></section><button id="h-karne">Kasa 100 · Tribün 98</button><div id="h-chg"></div></div>
+<section id="h-outs-wrap"><div class="mini-head"><h3>Yeni OUT → öne çıkanlar</h3></div><div id="h-outs"></div></section><section id="h-risers-wrap"><div class="mini-head"><h3>Yükselenler</h3></div><div class="mlist" id="h-risers"></div></section>
+<section id="h-unders-wrap"><div class="mini-head"><h3>Günün alt önerileri</h3></div><div class="mlist" id="h-unders"></div></section><button id="h-karne">Kasa 100 · Tribün 98</button><div id="h-chg"></div></div>
 <div id="view-card"><h3>Kâğıt üstünde</h3></div></body>`,{runScripts:'outside-only'});
 const w=dom.window;
 w.eval(`
@@ -16,6 +16,7 @@ w.eval(`
  var G1={ts:NOW+36e5,home:'PHI',away:'MIL'},G2={ts:NOW+72e5,home:'SAS',away:'NOP'};
  var slate=[G1,G2];
  function mkP(id,name,team){return {id:id,name:name,team:team}}
+ function pav(p){return '<span class="pav" data-i="'+p.id+'"></span>'}
  var P={};var byP={};
  [[1,'Aday Bir','PHI'],[2,'Aday Iki','SAS'],[3,'Vitrin Uc','SAS'],[4,'Bekleyen Dort','MIL'],[5,'Out Bes','PHI'],[6,'Fayda Alti','PHI'],[7,'Fayda Yedi','PHI']].forEach(function(a){P[a[0]]=mkP(a[0],a[1],a[2]);byP[a[0]]=new Array(10).fill({})});
  function mpg(){return 30} function dayKey(){return '2026-11-21'} function injOf(){return null} function noBet(i){return i==='OUT'}
@@ -49,27 +50,26 @@ w.eval(js);
 w.eval('renderHome()');
 const d=w.document,q=s=>[...d.querySelectorAll(s)],out={};
 out.rh=w.eval('RH');
-// 2A
-out.games=q('#h-games .gcard.cm3g').length;out.gamesClass=d.getElementById('h-games').classList.contains('cm3-games');
-out.strip=q('.cm3g-s i').map(i=>i.style.background);out.b2b=q('.cm3g-t em').map(x=>x.textContent);
-// 1B
-const ban=d.getElementById('cm-live-source'),row=d.getElementById('cm3-outs');
-out.bandOrder=[ban.nextElementSibling&&ban.nextElementSibling.id,row.nextElementSibling&&row.nextElementSibling.className];
-out.chips=q('.cm3-oc').map(x=>x.textContent.trim());
-// 3C
-out.vitCards=q('.cm3v-c b').map(x=>x.textContent);out.tableGone=!d.querySelector('#h-picks table');
-out.addBtn=q('.cm3v-k').map(x=>x.dataset.add);
-// 4A
+// Tabela
+out.games=q('#h-games .gcard.cm3t').length;out.board=d.getElementById('h-games').classList.contains('cm3-board');out.head=!!d.querySelector('#h-games .cm3t-h');
+out.durum=q('#h-games .cm3t .cm3f.rd,#h-games .cm3t .cm3f.ye').map(x=>x.textContent);
+// sakatlık çipleri yok, injbar yerinde
+out.noChips=!d.getElementById('cm3-outs');
+// Vitrin tablosu aynen
+out.vitCards=q('.cm3v-c').length;out.tableKept=!!d.querySelector('#h-picks table');out.side=(d.querySelector('.picks .sec-head .cm3-side')||{}).textContent;
+// Merdiven Altı
 out.nearHidden=d.getElementById('h-near').hidden;out.paperHidden=d.querySelector('.paperbox').hidden;
-out.vitrinNotInMerdiven=!q('#cm3-yk .cm-yk-top b').some(x=>x.textContent==='Aday Iki');out.merdiven=q('#cm3-yk .cm3m:not(.w) .cm-yk-top b').map(x=>x.textContent);
-out.waiting=q('#cm3-yk .cm3m.w .cm-yk-top b').map(x=>x.textContent);
-out.merdivenBet=q('#cm3-yk .cm3m:not(.w) .cm-yk-bet').map(x=>x.textContent.replace(/\s+/g,' '));
-// 6B
-out.outs=q('.cm3o .cm3o-l b').map(x=>x.textContent);out.outsAll=!!d.querySelector('.cm3o-all');
-// 7A
-out.risers=q('.cm3r').length;out.riserBar=q('.cm3r-bar i.up').map(i=>i.style.width);
-// 8B
-out.unders=q('.cm3u-d').map(x=>x.textContent);out.underAdd=q('.cm3u-k').map(x=>x.dataset.add);
+out.vitrinNotInMerdiven=!q('#cm3-yk .cm3mr .cm3mr-t b').some(x=>x.textContent==='Aday Iki');
+out.merdiven=q('#cm3-yk .cm3mr:not(.w) .cm3mr-t b').map(x=>x.textContent);
+out.waiting=q('#cm3-yk .cm3mr.w .cm3mr-t b').map(x=>x.textContent);
+out.merdivenBet=q('#cm3-yk .cm3mr:not(.w) .cm3mr-bet').map(x=>x.textContent);
+out.gauge=q('#cm3-yk .cm3g2').length;out.why=q('#cm3-yk .cm3mr:not(.w) .cm3mr-w').map(x=>x.textContent);
+// Revir
+out.revir=q('.cm3rv-c .cm3rv-h b').map(x=>x.textContent);out.revirBen=q('.cm3rv-b b').map(x=>x.textContent);out.revirTitle=d.querySelector('#h-outs-wrap h3').firstChild.nodeValue;
+// Asansör / Bodrum
+out.drawers=['h-risers-wrap','h-unders-wrap'].map(id=>{const w=d.getElementById(id);return w.querySelector('h3').firstChild.nodeValue+'|'+w.classList.contains('closed')});
+out.risers=q('.cm3r').length;out.unders=q('.cm3u-d').map(x=>x.textContent);
+d.querySelector('#h-risers-wrap .mini-head').click();out.openAfterClick=!d.getElementById('h-risers-wrap').classList.contains('closed');
 // relabel
 out.karne=d.querySelector('#view-card h3').textContent;out.kstrip=d.getElementById('h-karne').textContent;
 // karne shadow
@@ -77,7 +77,7 @@ const doc=w.eval("tonightDoc('2026-11-21',null,NOW)");
 out.shadow=doc.shadow.map(s=>s.name+'|'+s.mk+'|'+s.n+'|'+s.odd+'|'+s.why);out.picksKept=doc.picks.length;
 out.shadowNoVitrin=!doc.shadow.some(s=>s.id===3);
 // tıklama
-q('#cm3-yk .cm3m')[0].click();out.goto=w.eval('GOTO');
+q('#cm3-yk .cm3mr')[0].click();out.goto=w.eval('GOTO');
 // boşken
 w.eval('ROWS.length=0;OTHERS.length=0;BETS.length=0;renderHome()');
 out.emptyHidden=d.getElementById('cm3-yk').hidden;

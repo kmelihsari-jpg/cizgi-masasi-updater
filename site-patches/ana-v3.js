@@ -1,16 +1,16 @@
-/* Çizgi Masası · ana-v3 — 21 Kasım 2026
-   Melih'in seçimleri: 1B sakatlık bandı (yeni OUT çipleri), 2A sade maç kartı (takım renkleri),
-   3C Vitrin'deki diğer bahisler kart sırası, 4A tek Merdiven Altı (Kâğıt üstünde ve "Oran düşük ama
-   değerli" kalkar, barem bekleyenler soluk kart), 6B Yeni OUT fırsat şeridi, 7A Yükselenler dakika çubuğu,
-   8B Günün alt önerileri fark kartları.
-   Karne: yeni dönemde Tribün (shadow) kaydı Kâğıt üstünde yerine Merdiven Altı'nın oranlı adaylarıdır
-   (tonightDoc sarmalayıcı; karne_automation.py başsız tarayıcıda aynı fonksiyonu çağırır).
+/* Çizgi Masası · ana-v3 "Masa" — 21 Kasım 2026
+   Melih'in onayladığı ana sayfa: Tabela (maçlar, kalkış tabelası), Gecenin vitrini aynen (diğer bahislerin
+   satırlarında "neden" açıklaması her zaman görünür), Merdiven Altı (Kâğıt üstünde ve "Oran düşük ama değerli"
+   buraya katıldı; basamak satırlar, model/iddaa çubuğu, barem bekleyenler katlanır), Revir raporu (yeni OUT'lar
+   takım takım, aynı takımın OUT'ları tek kartta), Asansör (yükselenler) ve Bodrum (alt öneriler) kapalı çekmece.
+   Karne: yeni dönemde Tribün (shadow) kaydı Merdiven Altı'nın SADECE oranlı adaylarıdır (tonightDoc sarmalayıcı;
+   karne_automation.py başsız tarayıcıda aynı fonksiyonu çağırır). Barem bekleyenler karneye yazılmaz.
    Vitrin (Kasa) seçimi, Vitrin kartı, Karne kayıt kuralları ve Barem Geçmişi değişmez. */
 (function(){
   if(window.__cmAnaV3)return;window.__cmAnaV3=1;
   var CFG={oMin:1.30,oMax:2.50,evMin:-.08,max:12,wait:8};
   var TILT=[-1,.8,-.6,.7,-.8,.5];
-  var LAST={sp:null,day:null,it:null};
+  var LAST={sp:null,day:null,it:null,oday:null,outs:null};
   function $(id){return document.getElementById(id)}
   function X(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
   function pc(x){return Math.round(x*100)}
@@ -39,7 +39,7 @@
       var sup=0;if(r.rk!=null&&r.rk<=10)sup++;if(h10.p>=.6)sup++;if(a10>line)sup++;if(!sup)continue;
       var raw=r.pr.over,p25=p25Of(raw,odd),ev=p25*(odd-1)-(1-p25);
       if(ev<CFG.evMin)continue;
-      var c={p:p,mk:r.mk,n:r.l.n,line:line,odd:odd,raw:raw,ev:ev,sup:sup,g:g,opp:r.opp,rk:r.rk,mu:r.mu,po:r.pos},o=best[p.id];
+      var c={p:p,mk:r.mk,n:r.l.n,line:line,odd:odd,raw:raw,ev:ev,sup:sup,g:g,opp:r.opp,rk:r.rk,mu:r.mu,po:r.pos,h10:h10,a10:a10,nl:l10.length},o=best[p.id];
       if(!o||c.ev>o.ev)best[p.id]=c;
     }
     var L=Object.keys(best).map(function(k){return best[k]});
@@ -57,7 +57,7 @@
       if(c.g&&c.g.ts<=now)return;
       try{if(noBet(c.inj||injOf(c.p.name)))return}catch(e){}
       var need=null;try{need=c.pr?assess(c.pr,'over',null,c.en||10).minOdds:null}catch(e){}
-      seen[c.p.id]=1;out.push({p:c.p,mk:c.mk,n:Math.floor(c.line)+1,g:c.g,opp:c.opp,model:c.model!=null?c.model:(c.pr?c.pr.over:null),need:need});
+      seen[c.p.id]=1;out.push({p:c.p,mk:c.mk,n:Math.floor(c.line)+1,line:Math.floor(c.line)+.5,g:c.g,opp:c.opp,rk:c.rk,h10:c.h10,a10:c.a10,po:c.po,model:c.model!=null?c.model:(c.pr?c.pr.over:null),need:need});
     });
     out.sort(function(a,b){return (b.model||0)-(a.model||0)});
     return out.slice(0,CFG.wait);
@@ -89,42 +89,47 @@
     };
   }
 
-  /* ---- 2A maç kartı ---- */
+  /* ---- Tabela: maçlar kalkış tabelası gibi ---- */
+  function outsOf(day){if(LAST.oday!==day){LAST.oday=day;try{LAST.outs=day?outBoost(day):[]}catch(e){LAST.outs=[]}}return LAST.outs||[]}
+  function F(t,c){return '<span class="cm3f'+(c?' '+c:'')+'">'+X(t)+'</span>'}
   if(typeof cmGameCard==='function'){
     cmGameCard=function(g,picks){
       var k=dayKey(g.ts),gp=null,top=null;try{gp=gamePace(g)}catch(e){}top=(picks||[]).find(function(c){return c.g===g});
-      function side(t,home){var rc={w:'',l:''},ri=null;try{rc=teamRecord(t)}catch(e){}try{ri=restInfo(t,k)}catch(e){}
-        return '<span class="cm3g-t'+(home?' r':'')+'"><i style="background:'+col(t)+';box-shadow:0 0 0 1.5px '+col(t,1)+'"></i><b>'+X(t)+'</b><small>'+rc.w+'-'+rc.l+'</small>'+(ri&&ri.b2b?'<em>B2B</em>':'')+'</span>'}
+      var outs=outsOf(k).filter(function(o){return o.team===g.home||o.team===g.away});
+      var b2b=[g.away,g.home].filter(function(t){try{return (restInfo(t,k)||{}).b2b}catch(e){return false}});
+      var dur=outs.length?F(outs.map(function(o){return shortName(o.m.name)}).join(', ')+' OUT','rd'):b2b.length?F(b2b.join(', ')+' B2B','ye'):F('—');
       var pr=top?(top.a&&top.a.w!=null?top.a.w:top.model):null;
-      var bot=top?'<span class="mu">Öne çıkan</span> <b>'+X(shortName(top.p.name))+' '+X(lbl(top.mk))+(top.il?' '+top.il.n+'+':'')+'</b>'+(pr!=null?' <span class="cm3g-p">%'+pc(pr)+'</span>':''):'<span class="mu">Öne çıkan bahis yok</span>';
+      var pk=top?'<span class="mu">'+X(shortName(top.p.name))+' '+X(lbl(top.mk))+(top.il?' '+top.il.n+'+':'')+'</span>'+(pr!=null?' <b class="cm3g-p">%'+pc(pr)+'</b>':''):'<span class="mu">öne çıkan yok</span>';
       var tag=gp?gp.tag:'';
-      return '<button class="gcard cm3g" data-home="'+X(g.home)+'" aria-label="'+X(g.away)+' @ '+X(g.home)+' '+X(tm(g.ts))+'">'+
-        '<span class="cm3g-s" aria-hidden="true"><i style="background:'+col(g.away)+'"></i><i style="background:'+col(g.home)+'"></i></span>'+
-        '<span class="cm3g-r1"><span class="cm3g-tm">'+X(tm(g.ts))+'</span><span class="cm3g-pc'+(tag==='hızlı'?' f':tag==='yavaş'?' s':'')+'">'+(gp?'tempo '+X(f1(gp.p))+' · '+X(tag):'')+'</span></span>'+
-        '<span class="cm3g-r2">'+side(g.away,0)+'<span class="cm3g-at">@</span>'+side(g.home,1)+'</span>'+
-        '<span class="cm3g-pk">'+bot+'</span></button>';
+      return '<button class="gcard cm3t" data-home="'+X(g.home)+'" aria-label="'+X(g.away)+' @ '+X(g.home)+' '+X(tm(g.ts))+'">'+
+        '<span>'+F(tm(g.ts),'or')+'</span>'+
+        '<span class="cm3t-m"><i style="background:'+col(g.away)+';box-shadow:0 0 0 1.5px '+col(g.away,1)+'"></i>'+F(g.away)+'<em>@</em>'+F(g.home)+'<i style="background:'+col(g.home)+';box-shadow:0 0 0 1.5px '+col(g.home,1)+'"></i></span>'+
+        '<span>'+(gp?F(String(tag).toLocaleUpperCase('tr-TR'),tag==='hızlı'?'gr':''):'')+'</span>'+
+        '<span>'+dur+'</span><span class="cm3t-p">'+pk+'</span><span class="mu cm3t-a">›</span></button>';
     };
   }
+  function tabelaHead(){var hg=$('h-games');if(!hg)return;hg.classList.add('cm3-board');
+    if(!hg.querySelector('.cm3t'))return;
+    if(!hg.querySelector('.cm3t-h')){var h=document.createElement('div');h.className='cm3t-h';h.innerHTML='<span>SAAT</span><span>MAÇ</span><span>TEMPO</span><span>DURUM</span><span>ÖNE ÇIKAN</span><span></span>';hg.insertBefore(h,hg.firstChild)}}
 
-  /* ---- 6B Yeni OUT fırsat şeridi ---- */
+  /* ---- Revir raporu: yeni OUT'lar takım takım ---- */
   if(typeof renderOuts==='function'){
     renderOuts=function(day){
       var wrap=$('h-outs-wrap'),el=$('h-outs');if(!wrap||!el)return;
-      var R=[];try{R=day?outBoost(day):[]}catch(e){}
-      var F=[];R.forEach(function(o){(o.rows||[]).forEach(function(r){var b=cmObBest(r);if(b)F.push({o:o,r:r,b:b,w:b.v*({PTS:1,REB:2.2,AST:2.6}[b.mk]||1)})})});
-      F.sort(function(a,b){return b.w-a.w});
+      var R=day?outsOf(day):[];
       wrap.hidden=!R.length;if(!R.length){el.innerHTML='';return}
-      function row(x){var il=null;try{il=lineFor(x.r.p.id,x.b.mk)}catch(e){}
-        return '<button type="button" class="cm3o" data-p="'+x.r.p.id+'" data-m="'+x.b.mk+'"><span class="cm3o-l"><small>'+X(shortName(x.o.m.name))+' OUT →</small><b>'+X(x.r.p.name)+' <em>'+X(lbl(x.b.mk))+'</em></b>'+
-          '<small>onsuz '+x.r.n+' maç: '+(x.b.v>=0?'+':'')+f1(x.b.v)+' '+X(lbl(x.b.mk))+' · '+(Math.round(x.r.dm)>=0?'+':'')+Math.round(x.r.dm)+' dk'+(x.r.inj&&['AVAILABLE','P'].indexOf(x.r.inj[0])<0?' · '+X(x.r.inj[0]):'')+'</small></span>'+
-          '<span class="cm3o-r"><b>'+(x.b.v>=0?'+':'')+f1(x.b.v)+'</b>'+(il?'<small>iddaa '+il.n+'+ · '+il.odd.toFixed(2)+'</small>':'')+'</span></button>'}
-      var top=F.slice(0,3),rest=F.slice(3),none=R.filter(function(o){return !(o.rows||[]).length});
-      var h=top.length?top.map(row).join(''):'<p class="note">Yeni OUT var ama onsuz oynanmış yeterli maç yok.</p>';
-      if(rest.length||none.length){
-        h+='<details class="cm3o-all"><summary>Tüm OUT\'lar ve faydalananlar ('+(F.length+none.length)+')</summary>'+rest.map(row).join('')+
-          (none.length?'<p class="note">'+none.map(function(o){return X(shortName(o.m.name))}).join(', ')+': onsuz oynanmış yeterli maç yok.</p>':'')+'</details>';
-      }
-      el.innerHTML='<div class="cm3o-w">'+h+'</div>';
+      var T={},order=[];
+      R.forEach(function(o){var t=T[o.team];if(!t){t=T[o.team]={team:o.team,opp:o.opp,g:o.g,outs:[],ben:{}};order.push(o.team)}
+        t.outs.push(o.m);
+        (o.rows||[]).forEach(function(r){var b=cmObBest(r);if(!b)return;var w=b.v*({PTS:1,REB:2.2,AST:2.6}[b.mk]||1),cur=t.ben[r.p.id];
+          if(!cur||w>cur.w)t.ben[r.p.id]={r:r,b:b,w:w}})});
+      var L=order.map(function(k){var t=T[k];t.list=Object.keys(t.ben).map(function(id){return t.ben[id]}).sort(function(a,b){return b.w-a.w});t.best=t.list.length?t.list[0].w:-1;return t});
+      L.sort(function(a,b){return b.best-a.best});
+      el.innerHTML='<div class="cm3rv">'+L.map(function(t){
+        var outs=t.outs.map(function(m){var a='';try{a=pav(m,'pav-s')}catch(e){}return '<div class="cm3rv-o">'+a+'<s>'+X(m.name)+'</s><em>OUT</em></div>'}).join('');
+        var ben=t.list.slice(0,3).map(function(x){var a='',il=null;try{a=pav(x.r.p,'pav-s')}catch(e){}try{il=lineFor(x.r.p.id,x.b.mk)}catch(e){}
+          return '<button type="button" class="cm3rv-b" data-p="'+x.r.p.id+'" data-m="'+x.b.mk+'">'+a+'<span><b>'+X(x.r.p.name)+'</b><small>'+x.r.n+' maç onsuz · '+(Math.round(x.r.dm)>=0?'+':'')+Math.round(x.r.dm)+' dk'+(il?' · iddaa '+il.n+'+ '+il.odd.toFixed(2):'')+'</small></span><em>'+X(lbl(x.b.mk))+' '+(x.b.v>=0?'+':'')+f1(x.b.v)+'</em></button>'}).join('')||'<p class="note">Onsuz oynanmış yeterli maç yok.</p>';
+        return '<div class="cm3rv-c" style="border-top-color:'+col(t.team)+'"><div class="cm3rv-h"><b>'+X(t.team)+'</b><span>'+X(t.opp)+' · '+X(tm(t.g.ts))+'</span></div><div class="cm3rv-os">'+outs+'</div><div class="cm3rv-l">Koltuğa oturanlar</div>'+ben+'</div>'}).join('')+'</div>';
       el.onclick=function(e){var b=e.target.closest('[data-p]');if(b)goPlayer(Number(b.dataset.p),b.dataset.m)};
     };
   }
@@ -159,41 +164,14 @@
     };
   }
 
-  /* ---- 1B Sakatlık bandı: yeni OUT çipleri, düğmeler altta ---- */
-  function injBand(day){
-    var bar=document.querySelector('#view-home .injbar'),ban=$('cm-live-source');if(!bar)return;
-    var row=$('cm3-outs');
-    if(!row){row=document.createElement('div');row.id='cm3-outs';row.className='cm3-outs';
-      row.addEventListener('click',function(e){var b=e.target.closest('[data-p]');if(b&&P[b.dataset.p])goPlayer(Number(b.dataset.p))})}
-    var host=ban||bar;
-    if(row.previousElementSibling!==host)host.insertAdjacentElement('afterend',row);
-    if(ban&&row.nextElementSibling!==bar)row.insertAdjacentElement('afterend',bar);
-    var R=[];try{R=day?outBoost(day):[]}catch(e){}
-    if(!R.length){row.hidden=true;row.innerHTML='';return}
-    row.hidden=false;
-    row.innerHTML='<span class="cm3-ol">Yeni OUT</span>'+R.slice(0,6).map(function(o){return '<button type="button" class="cm3-oc" data-p="'+o.m.id+'">'+X(shortName(o.m.name))+' <small>'+X(o.team)+'</small></button>'}).join('')+(R.length>6?'<span class="cm3-oc">+'+(R.length-6)+'</span>':'');
-  }
-
-  /* ---- 3C Vitrin'deki diğer bahisler + 4A Merdiven Altı ---- */
-  function vitrinOthers(){
-    var el=$('h-picks');if(!el)return;var IT=LAST.it||[];
-    if(IT.length<2)return;
-    var L=IT.slice(1).map(function(o){return o.c?{p:o.c.p,mk:o.c.mk,bet:o.c.il?o.c.il.n+'+':'~'+o.c.line,odd:o.c.il?o.c.il.odd:null,ev:o.c.il&&o.c.a?(o.c.ev!=null?o.c.ev:o.c.a.ev):null,model:o.c.model,g:o.c.g,opp:o.c.opp,line:o.c.line,lock:false}:
-      (o.x&&o.x.d?{p:o.x.p||{id:o.x.d.id,name:o.x.d.name,team:o.x.d.team},mk:o.x.d.mk,bet:o.x.d.n?o.x.d.n+'+':'~'+o.x.d.line,odd:o.x.d.odd,ev:o.x.d.ev,model:o.x.d.model,g:null,opp:o.x.d.opp,line:o.x.d.line,lock:true}:null)}).filter(Boolean);
-    el.innerHTML='<div class="cm3v-h">Vitrin\'deki diğer bahisler</div><div class="cm3v">'+L.map(function(c){
-      return '<div class="cm3v-c" data-p="'+c.p.id+'" data-m="'+X(c.mk)+'" role="button" tabindex="0"><span class="cm3v-t"><b>'+X(c.p.name)+'</b><span class="cm3v-o">'+(c.odd?c.odd.toFixed(2):'–')+'</span></span>'+
-        '<span class="cm3v-b">'+X(lbl(c.mk))+' '+X(c.bet)+'</span><span class="cm3v-f">'+(c.ev!=null?'<span class="'+(c.ev>=0?'up':'dn')+'">değer '+(c.ev>=0?'+':'')+Math.round(c.ev*100)+'%</span>':'<span></span>')+
-        (c.model!=null?'<span class="mu">model %'+pc(c.model)+'</span>':'')+'</span>'+(c.lock?'<small class="mu">maç başladı, kilitli</small>':
-        '<span class="cm3v-k" role="button" tabindex="0" data-add="'+c.p.id+'|'+X(c.mk)+'|'+X(c.line)+'|over|'+(c.odd||'')+'">+ Kupona ekle</span>')+'</div>'}).join('')+'</div>';
-    el.onclick=function(e){if(e.target.closest('[data-add]'))return;var b=e.target.closest('[data-p]');if(b&&P[b.dataset.p])goPlayer(Number(b.dataset.p),b.dataset.m)};
-  }
+  /* ---- 4A Merdiven Altı ---- */
   function merdiven(day){
     var near=$('h-near');if(near){near.hidden=true;near.innerHTML=''}
     var oh=$('h-oth-head'),ot=$('h-others');if(oh)oh.hidden=true;if(ot){ot.innerHTML='';var pb=ot.closest('.paperbox');if(pb)pb.hidden=true}
     var y=$('cm-yk');if(y){y.hidden=true;y.innerHTML=''}
     var b=$('cm3-yk');
     if(!b){var anchor=y||near||$('h-picks');if(!anchor||!anchor.parentNode)return;b=document.createElement('div');b.id='cm3-yk';anchor.parentNode.insertBefore(b,anchor.nextSibling)}
-    if(!b.__cm3){b.__cm3=1;b.addEventListener('click',function(e){if(e.target.closest('summary,[data-add]'))return;var t=e.target.closest('[data-p]');if(t&&P[t.dataset.p])goPlayer(Number(t.dataset.p),t.dataset.m)})}
+    if(!b.__cm3){b.__cm3=1;b.addEventListener('click',function(e){if(e.target.closest('summary,[data-add],.cm-yk-info'))return;var t=e.target.closest('[data-p]');if(t&&P[t.dataset.p])goPlayer(Number(t.dataset.p),t.dataset.m)})}
     var L=[],W=[],vit={};try{(LAST.it||[]).forEach(function(o){var id=o.c?o.c.p.id:(o.x&&o.x.d?o.x.d.id:null);if(id)vit[id]=1})}catch(e){}
     try{if(day)L=cand(day).filter(function(c){return !vit[c.p.id]})}catch(e){console.error('cm-v3',e)}
     var taken=Object.assign({},vit);L.forEach(function(c){taken[c.p.id]=1});
@@ -201,25 +179,36 @@
     if(!L.length&&!W.length){b.hidden=true;b.innerHTML='';return}
     var INFO='<details class="cm-yk-info"><summary>Bu liste nasıl seçildi, kartlar ne demek?</summary><div class="cm-yk-ib">'+
       '<p>Vitrin\'e girmeyen ama Vitrin\'in temel kapılarını geçen bahisler: oyuncunun en az 5 maçı ve maç başına 22+ dakikası var, sakatlık listesinde "oynamaz" görünmüyor, en az bir destek sinyali var (rakip bu istatistikte ilk 10, son 10 maçın %60\'ında geçmiş ya da son 10 ortalaması çizginin üstünde), iddaa oranı 1.30–2.50 ve beklenen getiri −%8\'den kötü değil. Oyuncu başına iddaa merdivenindeki en iyi basamak gösterilir.</p>'+
-      '<p><b>Çubuk</b>: yeşil kısım modelin tutma ihtimali. <b>Barem bekliyor</b> kartları modelin sevdiği ama iddaa\'nın henüz açmadığı bahisler; barem gelince normal karta döner.</p>'+
-      '<p>Karne bu listenin oranlı bahislerini maç öncesi kaydeder (kasa birimine katılmaz, ayrı defter).</p>'+
+      '<p><b>Barem bekliyor</b> satırları modelin sevdiği ama iddaa\'nın henüz açmadığı bahisler; barem gelince oranıyla üst satırlara geçer.</p>'+
+      '<p>Karne bu listenin sadece iddaa baremi olan bahislerini maç öncesi kaydeder; günün son kaydında hâlâ baremi olmayanlar karneye girmez (kasa birimine katılmaz, ayrı defter).</p>'+
       '<p class="cm-yk-warn">Bunlar öneri değil, izleme listesi. Oynamadan önce sakatlığı, kadroyu ve oranı kendin kontrol et.</p></div></details>';
-    var h='<div class="cm-yk-box"><div class="cm-yk-hd"><span class="cm-yk-lamp" aria-hidden="true"></span><h3>Merdiven Altı</h3><span class="cm-yk-tag">ruhsatsız · oynamadan önce düşün</span></div>'+
-      '<p class="note">Vitrin\'e giremeyen bahisler. İddaa marjı yüzünden çoğu modele göre sınırda ya da hafif eksidir.</p>'+INFO+'<div class="cm-yk-grid">';
-    L.forEach(function(c,i){
-      var pos=c.ev>=0;
-      h+='<button type="button" class="cm-yk-r cm3m" style="--tilt:'+TILT[i%6]+'deg" data-p="'+c.p.id+'" data-m="'+X(c.mk)+'">'+
-        '<span class="cm-yk-top"><b>'+X(c.p.name)+'</b><small>'+vs(c.p,c.g)+' '+X(c.opp)+' · '+X(tm(c.g.ts))+'</small></span>'+
-        '<span class="cm-yk-bet">'+X(lbl(c.mk))+' '+X(c.n)+'+ <small>@'+c.odd.toFixed(2)+'</small></span>'+
-        '<span class="cm3m-mi">model %'+pc(c.raw)+' · iddaa %'+pc(1/c.odd)+'</span><span class="cm3m-bar"><i style="width:'+pc(c.raw)+'%"></i></span>'+
-        '<span class="cm3m-ev '+(pos?'p':'n')+'">getiri '+sg(c.ev)+'%</span></button>';
+    var h='<div class="cm-yk-box"><div class="cm-yk-hd"><span class="cm-yk-lamp" aria-hidden="true"></span><h3>Merdiven Altı</h3><span class="cm3-stamp">RUHSATSIZ</span><span class="cm3-side">Vitrin\'e giremeyen, sınırdaki bahisler · ayrı defter · çubukta yeşil model, beyaz çizgi iddaa</span></div>'+
+      INFO+'<div class="cm3mr-l">';
+    function why(c){var w=[];
+      if(c.rk!=null&&c.rk<=10)w.push(X(c.opp)+(c.po?', '+X(c.po)+'\'ye':'')+' '+X(lbl(c.mk))+' vermede '+c.rk+'. sırada');
+      if(c.h10&&c.h10.n)w.push('son '+c.h10.n+' maçın '+(c.h10.h!=null?c.h10.h:Math.round(c.h10.p*c.h10.n))+'\'inde '+c.n+'+ yaptı');
+      else if(c.h10&&c.h10.p!=null)w.push('son 10 maçın %'+pc(c.h10.p)+'\'inde geçti');
+      if(c.a10!=null&&isFinite(c.a10))w.push('son 10 ort. '+f1(c.a10));
+      return w.join(' · ')}
+    function av(p){try{return pav(p,'pav-s')}catch(e){return ''}}
+    L.forEach(function(c,i){var pos=c.ev>=0,ip=pc(1/c.odd);
+      h+='<div class="cm3mr" style="--st:'+Math.min(i,4)+'" data-p="'+c.p.id+'" data-m="'+X(c.mk)+'" role="button" tabindex="0">'+av(c.p)+
+        '<div class="cm3mr-m"><div class="cm3mr-t"><b>'+X(c.p.name)+'</b><span class="cm3mr-bet">'+X(lbl(c.mk))+' '+X(c.n)+'+</span><small>'+vs(c.p,c.g)+' '+X(c.opp)+' · '+X(tm(c.g.ts))+'</small></div>'+
+        '<div class="cm3mr-w">'+why(c)+'</div></div>'+
+        '<div class="cm3mr-g"><span><small>model %'+pc(c.raw)+'</small><small>iddaa %'+ip+'</small></span><span class="cm3g2"><i style="width:'+pc(c.raw)+'%"></i><b style="left:'+ip+'%"></b></span></div>'+
+        '<div class="cm3mr-r"><span class="cm3mr-o">'+c.odd.toFixed(2)+'</span><span class="cm3m-ev '+(pos?'p':'n')+'">getiri '+sg(c.ev)+'%</span></div>'+
+        '<span class="cm3mr-k" role="button" tabindex="0" aria-label="Kupona ekle" data-add="'+c.p.id+'|'+X(c.mk)+'|'+X(c.line)+'|over|'+c.odd+'">+</span></div>';
     });
-    W.forEach(function(c,j){
-      h+='<button type="button" class="cm-yk-r cm3m w" style="--tilt:'+TILT[(L.length+j)%6]+'deg" data-p="'+c.p.id+'" data-m="'+X(c.mk)+'">'+
-        '<span class="cm-yk-top"><b>'+X(c.p.name)+'</b><small>'+vs(c.p,c.g)+' '+X(c.opp)+(c.g?' · '+X(tm(c.g.ts)):'')+'</small></span>'+
-        '<span class="cm-yk-bet">'+X(lbl(c.mk))+' '+X(c.n)+'+ <small>barem bekliyor</small></span>'+
-        '<span class="cm-yk-ch">'+(c.model!=null?'<span>model %'+pc(c.model)+'</span>':'')+(c.need&&isFinite(c.need)?'<span>en az '+c.need.toFixed(2)+'</span>':'')+'</span></button>';
-    });
+    if(W.length){
+      h+='<details class="cm3mr-wd"><summary>Barem bekleyen '+W.length+' bahis: '+W.slice(0,3).map(function(c){return X(shortName(c.p.name))+' '+X(lbl(c.mk))+' '+c.n+'+'}).join(', ')+(W.length>3?'…':'')+' ▾</summary>';
+      W.forEach(function(c){
+        h+='<div class="cm3mr w" data-p="'+c.p.id+'" data-m="'+X(c.mk)+'" role="button" tabindex="0">'+av(c.p)+
+          '<div class="cm3mr-m"><div class="cm3mr-t"><b>'+X(c.p.name)+'</b><span class="cm3mr-bet">'+X(lbl(c.mk))+' '+X(c.n)+'+</span><small>'+vs(c.p,c.g)+' '+X(c.opp)+(c.g?' · '+X(tm(c.g.ts)):'')+'</small></div>'+
+          '<div class="cm3mr-w">'+why(c)+'</div></div><div></div>'+
+          '<div class="cm3mr-r"><span class="cm3mr-o mu">barem yok</span><small>'+(c.model!=null?'model %'+pc(c.model):'')+(c.need&&isFinite(c.need)?' · en az '+c.need.toFixed(2):'')+'</small></div><span></span></div>';
+      });
+      h+='</details>';
+    }
     b.innerHTML=h+'</div></div>';b.hidden=false;
   }
 
@@ -233,15 +222,30 @@
   function watch(id){var r=$(id);if(!r||r.__cm3w)return;r.__cm3w=1;relabel(r);
     try{new MutationObserver(function(){relabel(r)}).observe(r,{childList:true,subtree:true,characterData:true})}catch(e){}}
 
+  /* ---- Asansör (yükselenler) ve Bodrum (alt öneriler): kapalı çekmeceler ---- */
+  function drawer(id,name,sumFn){
+    var w=$(id);if(!w)return;var hd=w.querySelector('.mini-head'),h3=hd&&hd.querySelector('h3');if(!h3)return;
+    w.classList.add('cm3-dr');if(!w.__cm3){w.__cm3=1;w.classList.add('closed');
+      hd.addEventListener('click',function(e){if(e.target.closest('.sd-i'))return;w.classList.toggle('closed')})}
+    var t=h3.firstChild;if(t&&t.nodeType===3)t.nodeValue=name;
+    var s=hd.querySelector('.cm3-dr-s');if(!s){s=document.createElement('span');s.className='cm3-dr-s';h3.appendChild(s)}
+    s.textContent=sumFn();
+  }
+  function drawers(day){
+    drawer('h-risers-wrap','Asansör',function(){var R=[];try{R=day?risers(day):[]}catch(e){}return 'yükselenler · '+R.slice(0,3).map(function(r){return shortName(r.p.name)+' '+(r.startUp?'İlk 5':Math.round(r.mp)+'→'+Math.round(r.m2)+' dk')}).join(', ')});
+    drawer('h-unders-wrap','Bodrum',function(){var U=[];try{U=day?underList(day):[]}catch(e){}return 'günün alt önerileri · '+U.slice(0,2).map(function(c){return shortName(c.p.name)+' '+lbl(c.mk)+' '+c.line+' alt'}).join(', ')+(U.length>2?' +'+(U.length-2):'')});
+    var oh=document.querySelector('#h-outs-wrap .mini-head h3');if(oh&&oh.firstChild&&oh.firstChild.nodeType===3)oh.firstChild.nodeValue='Revir raporu';
+    var ph=document.querySelector('#view-home .picks .sec-head');if(ph&&!ph.querySelector('.cm3-side')){var n=document.createElement('span');n.className='cm3-side';n.textContent='Vitrin · değerli bahisler · Kasa defteri';ph.appendChild(n)}
+  }
+
   function after(){
     var day=(typeof S!=='undefined'&&S.hDay)||null;
-    try{injBand(day)}catch(e){console.error('cm-v3 inj',e)}
-    try{vitrinOthers()}catch(e){console.error('cm-v3 vitrin',e)}
     try{merdiven(day)}catch(e){console.error('cm-v3 merdiven',e)}
+    try{tabelaHead()}catch(e){}
+    try{drawers(day)}catch(e){console.error('cm-v3 drawer',e)}
     try{watch('view-card');watch('h-karne');watch('h-chg')}catch(e){}
-    var hg=$('h-games');if(hg)hg.classList.add('cm3-games');
   }
-  if(typeof renderHome==='function'){var r0=renderHome;renderHome=function(){LAST.it=null;var r=r0.apply(this,arguments);after();return r}}
+  if(typeof renderHome==='function'){var r0=renderHome;renderHome=function(){LAST.it=null;LAST.oday=null;var r=r0.apply(this,arguments);after();return r}}
   window.cmAnaV3After=after;
   try{after()}catch(e){}
 })();
