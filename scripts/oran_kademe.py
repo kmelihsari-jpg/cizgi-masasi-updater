@@ -5,6 +5,9 @@ model.js'e idempotent yama (karne_returning.patch_text icinden cagrilir; site ve
   2.50 - 5.00  : 'surpriz' etiketi; assess 'go' + getiri >= %12 + DK/FD piyasa teyidi (model, piyasanin ana baremindeki olasiligina +-0.08 yakin) gerekir; gecede en fazla 1
   > 5.00       : Kasa'ya girmez
 Saglam bandi 1.40-1.75 (eski 1.50-1.75): ayri isaret CM-SAGLAM-BAND-V1, kademe yamasi uygulanmis modele de eklenir.
+Saglam merdiven (22 Kasim 2026, CM-SAGLAM-MERDIVEN-V1): ayni oyuncu+bahiste Saglam basamak varsa en dusuk (en garanti)
+Saglam basamak secilir; onun ustundeki Saglam/Deger basamaklar Kasa'ya ayri aday olarak girmez, secilen bahse c.lad
+("merdiven dizebilirsin") listesi olarak eklenir. Karne kayit sekli degismez (pickDoc lad'i yazmaz).
 """
 import argparse
 from pathlib import Path
@@ -57,8 +60,32 @@ def _patch_saglam(source):
     return source.replace(SAG_OLD, MARK2 + '\n' + SAG_NEW, 1)
 
 
+MARK3 = '/* CM-SAGLAM-MERDIVEN-V1 */'
+MER_FN = MARK3 + '''
+function cmSagMerdiven(cs){const grp=new Map(),out=[];for(const c of cs){const k=c.p.id+'|'+c.mk;if(!grp.has(k))grp.set(k,[]);grp.get(k).push(c)}
+  for(const g of grp.values()){const sg=g.filter(c=>c.tag==='saglam'&&!c.chk.length).sort((x,y)=>x.line-y.line||y.il.odd-x.il.odd);if(!sg.length){out.push(...g);continue}
+    const safe=sg[0],lad=[];for(const c of g){if(c===safe)continue;if(c.line>safe.line&&!c.chk.length){lad.push(c);continue}out.push(c)}
+    safe.lad=lad.sort((x,y)=>x.line-y.line).map(c=>({n:c.il.n,line:c.line,odd:c.il.odd,tag:c.tag,model:c.pr.over}));out.push(safe)}
+  return out}
+'''
+OLD_M1 = "for(const r of scanRows()){const c=kasaCand(r,day,now);if(!c)continue;if(c.tag==='surpriz')"
+NEW_M1 = "const cs=[];for(const r of scanRows()){const c=kasaCand(r,day,now);if(!c)continue;if(c.tag==='surpriz')"
+OLD_M2 = "continue}const m=c.chk.length?flag:best,o=m.get(c.p.id);if(!o||cmp(c,o)<0)m.set(c.p.id,c)}"
+NEW_M2 = "continue}cs.push(c)}for(const c of cmSagMerdiven(cs)){const m=c.chk.length?flag:best,o=m.get(c.p.id);if(!o||cmp(c,o)<0)m.set(c.p.id,c)}"
+
+
+def _patch_merdiven(source):
+    if MARK3 in source:
+        return source
+    for old in (OLD_M1, OLD_M2, 'function kasaAll(day,now)'):
+        if source.count(old) != 1:
+            raise RuntimeError('saglam merdiven: beklenen kod tam 1 kez bulunamadi: ' + old[:60])
+    source = source.replace(OLD_M1, NEW_M1, 1).replace(OLD_M2, NEW_M2, 1)
+    return source.replace('function kasaAll(day,now)', MER_FN + 'function kasaAll(day,now)', 1)
+
+
 def patch_model(source):
-    return _patch_saglam(_patch_kademe(source))
+    return _patch_merdiven(_patch_saglam(_patch_kademe(source)))
 
 
 if __name__ == '__main__':
@@ -70,4 +97,4 @@ if __name__ == '__main__':
     new = patch_model(old)
     if new != old:
         p.write_text(new, encoding='utf-8')
-    print('ORAN KADEME V1 + SAGLAM 1.40-1.75: uygulandi' if new != old else 'ORAN KADEME V1 + SAGLAM 1.40-1.75: zaten uygulanmis')
+    print('ORAN KADEME V1 + SAGLAM 1.40-1.75 + MERDIVEN: uygulandi' if new != old else 'ORAN KADEME V1 + SAGLAM 1.40-1.75 + MERDIVEN: zaten uygulanmis')

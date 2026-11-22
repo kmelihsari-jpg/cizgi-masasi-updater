@@ -30,5 +30,12 @@ const out=vm.runInContext(`(function(){
   // 5) Oyuncunun normal bahsi varsa surpriz eklenmez (oyuncu basina tek bahis)
   res.sameP=run([row(1,19.5,1.6,27),row(1,27.5,3.5,27)],agree);
   res.sag145=run([row(1,12.5,1.45,27)]);
+  // 6) Saglam merdiven: ayni bahiste birden fazla Saglam/Deger basamak -> en dusuk Saglam secilir, ustundekiler lad'a
+  const lr=[row(1,19.5,1.45,27),row(1,21.5,1.6,27),row(1,23.5,1.75,27),row(1,25.5,2.2,27)];
+  const kl=kasaAll(day,Date.now());
+  res.merAll=lr.map(r=>{const c=kasaCand(r,day,Date.now());return c?c.line+'|'+c.tag:null});
+  res.mer=run(lr);D={mkt:{},mktAt:new Date().toISOString(),dates:[]};scanRows=()=>lr;const mk=kasaAll(day,Date.now()).pass[0];res.merLad=(mk&&mk.lad||[]).map(x=>x.n+'|'+x.tag+'|'+x.odd);
+  // 7) Saglam yoksa (sadece deger basamaklari) eski davranis: en yuksek getiri
+  res.noSag=run([row(1,25.5,2.2,27),row(1,24.5,1.95,27)]);
   return res})()`,ctx);
 console.log(JSON.stringify(out));

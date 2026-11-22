@@ -12,7 +12,7 @@ def main():
     src = SRC.read_text(encoding='utf-8')
     once = ok.patch_model(src)
     assert ok.patch_model(once) == once, 'idempotent degil'
-    assert once.count(ok.MARK) == 1 and once.count(ok.MARK2) == 1
+    assert once.count(ok.MARK) == 1 and once.count(ok.MARK2) == 1 and once.count(ok.MARK3) == 1
     assert 'const SAG={lo:1.4,hi:1.75,' in once
     v1 = ok._patch_kademe(src)
     assert 'lo:1.5' in v1 and ok.MARK2 not in v1
@@ -40,6 +40,10 @@ def main():
     assert len(res['twoSur']['pass']) == 1, res['twoSur']
     assert len(res['sameP']['pass']) == 1 and res['sameP']['pass'][0].split('|')[1] != 'surpriz', res['sameP']
     assert len(res['sag145']['pass']) == 1 and res['sag145']['pass'][0].split('|')[1] == 'saglam', res['sag145']
+    # saglam merdiven: en dusuk Saglam basamak secilir, ustundekiler lad listesinde
+    assert res['mer']['pass'] == ['1|saglam|1.45'], res['mer']
+    assert res['merLad'] == ['22|saglam|1.6', '26|deger|2.2'], res['merLad']
+    assert res['noSag']['pass'] == ['1|deger|2.2'], res['noSag']
     print('OK test_oran_kademe', json.dumps(res))
 
 if __name__ == '__main__':
