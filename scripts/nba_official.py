@@ -168,12 +168,19 @@ def check_examples(players):
         ('Ben Saraf', 'On Assignment', 'Right Calf'),
         ('Nolan Traore', 'Right Calf', 'On Assignment')
     ]
+    # Ornekler eski bir rapordan; oyuncunun sakatligi zamanla degisebilir (orn. Traore calf -> hamstring).
+    # Karisikligin gercek isareti komsu satirin aciklamasinin bu oyuncuya gecmesidir (must_not), o durumda dur.
+    # Beklenen aciklama (must) artik yoksa bu sadece guncel bir degisikliktir: uyar, aktarimi durdurma.
     for name, must, must_not in cases:
         p = lookup.get(name)
         print('KONTROL:', json.dumps(p, ensure_ascii=False), flush=True)
-        if p and (must.lower() not in p['reason'].lower()
-                  or must_not.lower() in p['reason'].lower()):
+        if not p:
+            continue
+        reason = p['reason'].lower()
+        if must_not.lower() in reason:
             raise RuntimeError('Karisik aciklama: ' + name)
+        if must.lower() not in reason:
+            print(f'UYARI: {name} aciklamasi degismis ({must} yok), karisiklik isareti yok; devam.', flush=True)
     print('KONTROL:', json.dumps(lookup.get('Jarrett Allen'), ensure_ascii=False), flush=True)
 
 
