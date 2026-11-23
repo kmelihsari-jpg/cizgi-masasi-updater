@@ -93,6 +93,15 @@
   function lum(h){var m=/^#?([0-9a-f]{6})$/i.exec(String(h||''));if(!m)return 0;var n=parseInt(m[1],16);return (.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255))/255}
   function tag(t){var c=col(t);return '<span class="cm3n-t" style="background:'+c+';color:'+(lum(c)>.62?'#14181D':'#fff')+'">'+X(t)+'</span>'}
   /* M4 (24 Kasım): her maç geniş vitrin şeridi: solda saat+takımlar, ortada öne çıkan bahis ve haplar, sağda son 10 çubukları. */
+  /* Takım kodu yazısı: takım renginde; koyu renk siyah zeminde okunmasın diye ikinci renge ya da açılmış renge geçer. */
+  function tcol(t){
+    var c=col(t),c2=col(t,true);
+    if(lum(c)>=.45)return c;
+    if(lum(c2)>=.45)return c2;
+    var m=/^#?([0-9a-f]{6})$/i.exec(String(c||''));if(!m)return '#d0d0d6';
+    var n=parseInt(m[1],16),r=n>>16&255,g=n>>8&255,b=n&255,k=.6;
+    return 'rgb('+Math.round(r+(255-r)*k)+','+Math.round(g+(255-g)*k)+','+Math.round(b+(255-b)*k)+')';
+  }
   function bars10(pid,mk,n,h){
     var g=[];try{g=(byP[pid]||[]).slice(-10)}catch(e){}
     if(!g.length)return '';
@@ -106,7 +115,7 @@
       try{if(typeof cmEv==='function')ev=cmEv(g)}catch(e){}
       try{gp=gamePace(g)}catch(e){}
       function side(t){var rc=null,ri=null;try{rc=teamRecord(t)}catch(e){}try{ri=restInfo(t,k)}catch(e){}
-        return '<div class="cm4g-t">'+tag(t)+(rc?'<small>'+rc.w+'-'+rc.l+'</small>':'')+(ri&&ri.b2b?'<em>B2B</em>':'')+'</div>'}
+        return '<div class="cm4g-t"><b class="cm4g-c" style="color:'+tcol(t)+'">'+X(t)+'</b>'+(rc?'<small>'+rc.w+'-'+rc.l+'</small>':'')+(ri&&ri.b2b?'<em>B2B</em>':'')+'</div>'}
       var sub=[];
       try{if(ev&&ev.spread!=null&&ev.spread!==0)sub.push(X(ev.spread<0?g.home:g.away)+' -'+f1(Math.abs(ev.spread)))}catch(e){}
       if(gp&&gp.tag)sub.push(X(gp.tag)+(gp.p!=null?' '+f1(gp.p):''));

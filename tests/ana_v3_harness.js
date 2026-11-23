@@ -54,7 +54,7 @@ const d=w.document,q=s=>[...d.querySelectorAll(s)],out={};
 out.rh=w.eval('RH');
 // Tabela
 out.games=q('#h-games .gcard.cm4g').length;out.list=d.getElementById('h-games').classList.contains('cm4-list');
-out.tags=q('#h-games .cm3n-t').map(x=>x.textContent+'|'+x.style.background);out.rec=q('#h-games .cm4g-t small').map(x=>x.textContent);
+out.tags=q('#h-games .cm4g-c').map(x=>x.textContent+'|'+x.style.color);out.rec=q('#h-games .cm4g-t small').map(x=>x.textContent);
 out.b2b=q('#h-games .cm4g-t em').map(x=>x.textContent);out.home=q('#h-games .cm4g').map(x=>x.dataset.home);
 // sakatlık çipleri yok, injbar yerinde
 out.noChips=!d.getElementById('cm3-outs');
