@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-21",
   "startBalance": 100,
-  "generatedAt": "2026-11-23T15:15:50.783671+00:00",
+  "generatedAt": "2026-11-23T18:19:24.364673+00:00",
   "docs": [
     {
       "date": "2026-11-21",
@@ -1591,6 +1591,25 @@
           "est": false,
           "why": "merdiven",
           "need": null
+        },
+        {
+          "id": 1630183,
+          "name": "Jaden McDaniels",
+          "team": "MIN",
+          "opp": "BKN",
+          "pos": "SF",
+          "mk": "PTS",
+          "line": 17.5,
+          "n": 18,
+          "odd": 1.58,
+          "ev": 0.055,
+          "rk": 1,
+          "mu": 20.5,
+          "model": 0.713,
+          "est": false,
+          "tag": "saglam",
+          "pm": 0.668,
+          "capturedAt": "2026-11-23T18:19:24.364673+00:00"
         }
       ],
       "picks": [
@@ -1688,6 +1707,25 @@
           "tag": "saglam",
           "pm": 0.678,
           "capturedAt": "2026-11-23T14:16:11.626148+00:00"
+        },
+        {
+          "id": 1630183,
+          "name": "Jaden McDaniels",
+          "team": "MIN",
+          "opp": "BKN",
+          "pos": "SF",
+          "mk": "PTS",
+          "line": 17.5,
+          "n": 18,
+          "odd": 1.58,
+          "ev": 0.055,
+          "rk": 1,
+          "mu": 20.5,
+          "model": 0.713,
+          "est": false,
+          "tag": "saglam",
+          "pm": 0.668,
+          "capturedAt": "2026-11-23T18:19:24.364673+00:00"
         }
       ],
       "shadow": [
