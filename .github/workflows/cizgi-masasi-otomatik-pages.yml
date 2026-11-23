@@ -457,6 +457,31 @@ jobs:
           print('BAREM GECMISI V2 HAZIR:', len(lines), 'arsiv kaydi,', len(old['docs']), 'eski karne gunu')
           PY_BAREM_GECMISI
 
+      - name: Hizlandirma V1 (dayKey ve injOf onbellegi) yamasini ekle
+        # Bu yama basarisiz olursa site yine eski haliyle yayinlansin.
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_HIZLANDIRMA'
+          import shutil
+          from pathlib import Path
+          public = Path('public')
+          html_path = public / 'index.html'
+          patch = Path('site-patches/hizlandirma-v1.js')
+          if not patch.is_file() or not html_path.is_file():
+              raise RuntimeError('Hizlandirma: yama veya index.html yok; dokunulmadi')
+          html = html_path.read_text(encoding='utf-8')
+          marker = '<script src="baslat.js'
+          if 'hizlandirma-v1.js' not in html and marker not in html:
+              raise RuntimeError('Hizlandirma: baslat.js etiketi bulunamadi; dokunulmadi')
+          shutil.copyfile(patch, public / 'hizlandirma-v1.js')
+          if 'hizlandirma-v1.js' not in html:
+              html = html.replace(marker, '<script src="hizlandirma-v1.js?v=20261123a"></script>\n' + marker, 1)
+              html_path.write_text(html, encoding='utf-8')
+          print('HIZLANDIRMA V1 HAZIR')
+          PY_HIZLANDIRMA
+
       - name: Son guncellemeler ve veri zamanlarini siteye ekle
         shell: bash
         run: python3 scripts/site_update_status.py --site public --seed seed
