@@ -38,6 +38,8 @@ w.eval(`
  function cmObBest(r){var c=[['PTS',r.dp,1],['REB',r.dr,2.2],['AST',r.da,2.6]].filter(function(x){return x[1]>0});if(!c.length)return null;c.sort(function(a,b){return b[1]*b[2]-a[1]*a[2]});return {mk:c[0][0],v:c[0][1]}}
  function risers(){return [{p:P[6],g:G1,startUp:true,d:12,mp:10,m2:22,sp:{pts:4,reb:1,ast:0},s2:{pts:5,reb:2,ast:1},outs:[]}]}
  function underList(){return [{p:P[7],g:G1,opp:'MIL',mk:'AST',line:5.5,mu:3.9,a10:4.7,a5:4.4,rk:30,model:.77,ri:{b2b:true}}]}
+ var VIEW=null;function setView(v){VIEW=v}
+ window.CM_WOB={rows:function(t,k,both){return t==='PHI'?[{p:P[6],mk:'PTS',li:{txt:'20+',odd:1.8,line:19.5,src:'iddaa'},v:[22,18,25],h:2,n:3,pr:2/3},{p:P[7],mk:'REB',li:{txt:'6.5 üst',odd:null,line:6.5,src:'ort'},v:[7,8],h:2,n:2,pr:1}]:[]}};
  function cmGameCard(){return 'ESKI'} function renderOuts(){} function renderRisers(){} function renderUnders(){}
  function keepOrder(old,nw){return nw} function gTs(){return NOW+36e5} function pickDoc(day,b){return {date:day,picks:b.map(function(c){return {id:c.p.id}})}}
  function tonightDoc(day,old,now){var sp=pickSplit(day,now);return {date:day,picks:sp.bets.map(function(c){return {id:c.p.id,mk:c.mk}}),shadow:[{id:4,mk:'RA',why:'nobarem'}]}}
@@ -69,7 +71,8 @@ out.gates=q('#cm3-yk .cm4s .cm4s-w > div').length;out.addBtn=q('#cm3-yk .cm4s [d
 out.m4Names=q('#h-games .cm4g-n').map(x=>x.textContent);out.m4Bars=q('#h-games .cm4-bl span:last-child').map(x=>x.textContent);
 out.m4Haps=q('#h-games .cm4h').map(x=>x.textContent);
 // Revir
-out.revir=q('.cm3rv-c .cm3rv-h b').map(x=>x.textContent);out.revirBen=q('.cm3rv-b b').map(x=>x.textContent);out.revirTitle=d.querySelector('#h-outs-wrap h3').firstChild.nodeValue;
+out.revir=q('.cm5v .cm5v-hd s').map(x=>x.textContent);out.revirBen=q('.cm5v-t:not(.cm5v-wb) tbody b').map(x=>x.textContent);out.revirBar=q('.cm5v-wb tbody tr').map(x=>x.querySelector('b').textContent+'|'+x.children[2].textContent);out.revirCols=q('.cm5v-t:not(.cm5v-wb) tbody tr')[0].children.length;out.revirDk=q('.cm5v-t:not(.cm5v-wb) tbody tr td.up').length;
+q('.cm5v-go')[0].click();out.revirGo=w.eval('[S.team,S.woKey,S.cmWob,VIEW]');out.revirTitle=d.querySelector('#h-outs-wrap h3').firstChild.nodeValue;
 // Asansör / Bodrum
 out.drawers=['h-risers-wrap','h-unders-wrap'].map(id=>{const w=d.getElementById(id);return w.querySelector('h3').firstChild.nodeValue+'|'+w.classList.contains('closed')});
 out.risers=q('.cm3r').length;out.unders=q('.cm3u-d').map(x=>x.textContent);

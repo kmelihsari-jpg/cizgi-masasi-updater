@@ -509,6 +509,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
       box.addEventListener('click',go);box.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.target.closest('select'))go(e)});
       box.addEventListener('change',function(e){var s=e.target.closest('[data-cmwob]');if(!s)return;e.stopPropagation();S.cmWob=Number(s.value);renderTeam()})}
   }
+  window.CM_WOB={rows:wobRows};/* ana-v3 Revir raporu bu fonksiyonu kullanır (sadece okuma) */
   if(typeof renderTeam==='function'){var _rt=renderTeam;renderTeam=function(){var r=_rt.apply(this,arguments);wobRender();return r}}
 
   /* ---------- 3) Grafik: REB'de ribaund şansı (rc), AST'de potansiyel asist (pot) çerçevesi ----------
@@ -1413,9 +1414,9 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
 .cm3u-k{align-self:flex-start;margin-top:6px;font-size:12px;border:1px solid var(--line,#232327);border-radius:8px;padding:4px 9px;cursor:pointer}
 
 /* ---- 24 Kasım: M4 maç şeridi + S2 Merdiven Altı kartları (vitrin dili) ---- */
-#view-home #h-games.hgames.cm4-list{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important;overflow:visible!important;border:0!important;padding:0!important;grid-auto-flow:row!important;grid-auto-columns:auto!important;scroll-snap-type:none!important;width:100%!important;max-width:100%!important;min-width:0!important}
+#view-home #h-games.hgames.cm4-list{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(270px,1fr))!important;gap:10px!important;overflow:visible!important;border:0!important;padding:0!important;grid-auto-flow:row!important;grid-auto-columns:auto!important;scroll-snap-type:none!important;width:100%!important;max-width:100%!important;min-width:0!important}
 #view-home #h-games.hgames.cm4-list>.gcard.cm4g{min-width:0!important;max-width:100%!important;flex:none!important;scroll-snap-align:none!important;grid-column:auto!important;grid-row:auto!important}
-#view-home #h-games.hgames .gcard.cm4g{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr)!important;gap:14px!important;align-items:center!important;padding:12px 14px;background:var(--surface,#0D0D0F);border:1px solid var(--line,#232327);border-radius:14px;color:var(--ink,#F5F5F7);font:13px/1.3 Inter,sans-serif}
+#view-home #h-games.hgames .gcard.cm4g{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:11px!important;align-items:start!important;align-content:start!important;padding:14px;height:100%;background:var(--surface,#0D0D0F);border:1px solid var(--line,#232327);border-radius:14px;color:var(--ink,#F5F5F7);font:13px/1.3 Inter,sans-serif}
 #view-home #h-games.hgames .gcard.cm4g:hover{background:#111114}
 #view-home #h-games.hgames .gcard.cm4g:focus-visible{outline:2px solid var(--accent,#FF7A1A)}
 .cm4g-l,.cm4g-m,.cm4g-r{min-width:0;display:block}
@@ -1430,27 +1431,52 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
 .cm4-bars i{flex:1;border-radius:2px 2px 0 0;background:#3a3a42;min-height:3px}.cm4-bars i.h{background:var(--good,#34C46A)}.cm4-bars i.x{background:var(--bad,#F0524D)}
 .cm4-bars u{position:absolute;left:0;right:0;border-top:1px dashed rgba(255,255,255,.55);text-decoration:none;pointer-events:none}
 .cm4-bl{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted,#8E8E96);margin-top:3px}
-@media(max-width:620px){#view-home #h-games.hgames .gcard.cm4g{grid-template-columns:1fr 1fr!important;gap:10px!important}.cm4g-m{grid-column:1/3;order:3}.cm4g-r{order:2}}
+.cm4g-m,.cm4g-r{padding-top:11px;border-top:1px solid var(--line,#232327)}.cm4g-r:empty{display:none}
+@media(max-width:560px){#view-home #h-games.hgames.cm4-list{grid-template-columns:minmax(0,1fr)!important}}
 /* S2 */
-.cm4s-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;align-items:start}
-.cm4s{position:relative;background:var(--surface,#0D0D0F);border:1px solid var(--line,#232327);border-radius:14px;padding:13px 14px;cursor:pointer;min-width:0}
+.cm4s-g{display:flex;flex-direction:column;gap:8px}
+.cm4s{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,.9fr) auto;grid-template-areas:"k w b a" "hd w bl a";gap:4px 18px;align-items:center;background:var(--surface,#0D0D0F);border:1px solid var(--line,#232327);border-radius:12px;padding:11px 14px;cursor:pointer;min-width:0}
+.cm4s>.cm4-k{grid-area:k;margin:0;align-self:end}.cm4s>.cm4s-hd{grid-area:hd;margin:0;align-self:start}.cm4s>.cm4s-w{grid-area:w;margin:0}.cm4s>.cm4-bars{grid-area:b;align-self:end}.cm4s>.cm4-bl{grid-area:bl;align-self:start;margin:0}.cm4s>.cm4s-k{grid-area:a}
 .cm4s:hover{background:#111114}
-.cm4s-hd{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin:2px 0 8px}
-.cm4s-n{font:700 26px/1.05 "Barlow Condensed",sans-serif}
+.cm4s-hd{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}
+.cm4s-n{font:700 22px/1.05 "Barlow Condensed",sans-serif}
 .cm4s-bet{font:700 19px/1 "Barlow Condensed",sans-serif;color:var(--muted,#8E8E96)}
 .cm4s-o{margin-left:auto;font:700 17px "JetBrains Mono",ui-monospace,monospace}
-.cm4s-w{display:grid;gap:4px;font-size:12.5px;margin-bottom:6px}.cm4s-w>div{display:flex;gap:7px}
+.cm4s-w{display:grid;gap:3px;font-size:12.5px}.cm4s-w>div{display:flex;gap:7px}
 .cm4s-w .ok{color:var(--good,#34C46A)}.cm4s-w .no{color:var(--bad,#F0524D)}.cm4s-w .mid{color:var(--warn,#F2B53A)}
 .cm4s-w .mu{color:var(--muted,#8E8E96)}.cm4s-weak{color:var(--bad,#F0524D)}
-.cm3mr-k.cm4s-k{position:absolute;right:12px;top:10px;width:auto;height:auto;padding:3px 9px;font-size:12px}
+.cm3mr-k.cm4s-k{width:auto;height:auto;padding:5px 11px;font-size:12px;white-space:nowrap}
+@media(max-width:760px){.cm4s{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k a" "hd hd" "w w" "b b" "bl bl";gap:6px 10px}.cm4s>.cm4s-w{margin:2px 0}}
 @media(max-width:700px){.cm3mr-k.cm4s-k{display:grid}}
+
+/* ---- 24 Kasım: Revir raporu V1 ---- */
+.cm5v-w{display:flex;flex-direction:column;gap:10px}
+.cm5v{background:var(--surface,#0D0D0F);border:1px solid var(--line,#232327);border-top:3px solid #555;border-radius:12px;padding:12px 14px;min-width:0}
+.cm5v-hd{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;margin-bottom:8px}
+.cm5v-hd s{font:700 20px/1 "Barlow Condensed",sans-serif;color:var(--muted,#8E8E96)}
+.cm5v-hd em{font-style:normal;font-size:10px;font-weight:700;color:var(--bad,#F0524D);border:1px solid #5a2a28;border-radius:4px;padding:0 5px}
+.cm5v-hd span{font-size:11.5px;color:var(--muted,#8E8E96)}
+.cm5v-t{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+.cm5v-t th{font-weight:500;color:var(--muted,#8E8E96);font-size:11px;text-align:right;padding:4px 6px;border-bottom:1px solid var(--line,#232327)}
+.cm5v-t th:first-child{text-align:left}
+.cm5v-t td{padding:7px 6px;border-bottom:1px solid var(--line,#232327);text-align:right;font-variant-numeric:tabular-nums}
+.cm5v-t td:first-child{text-align:left}
+.cm5v-t tbody tr{cursor:pointer}.cm5v-t tbody tr:hover{background:#111114}
+.cm5v-t td b{margin-left:6px}.cm5v-t td .pav{vertical-align:middle}
+.cm5v-t td.up{color:var(--good,#34C46A);font-weight:600}.cm5v-t td.dn{color:var(--bad,#F0524D);font-weight:600}
+.cm5v-wb{margin-top:14px}.cm5v-wb td:first-child b{margin-left:0}
+.cm5v-mu{color:var(--muted,#8E8E96)}.cm5v-mu em{font-style:normal;font-size:10px;border:1px solid var(--line,#232327);border-radius:4px;padding:0 4px}
+.cm5v-h{font-weight:600;white-space:nowrap}.cm5v-h.g{color:var(--good,#34C46A)}.cm5v-h.a{color:var(--warn,#F2B53A)}.cm5v-h.r{color:var(--bad,#F0524D)}
+.cm5v-b{display:inline-flex;align-items:flex-end;gap:2px;height:20px}.cm5v-b i{width:5px;border-radius:1px;background:#3a3a42}.cm5v-b i.w{background:var(--good,#34C46A)}.cm5v-b i.l{background:var(--bad,#F0524D)}
+.cm5v-go{all:unset;box-sizing:border-box;cursor:pointer;margin-top:12px;font-size:12.5px;color:var(--accent,#FF7A1A);border:1px solid #5a3410;background:#1c1108;border-radius:8px;padding:6px 12px}
+.cm5v-go:hover{background:#2a1a0a}.cm5v-go:focus-visible{outline:2px solid var(--accent,#FF7A1A)}
+@media(max-width:560px){.cm5v-wb th:nth-child(4),.cm5v-wb td:nth-child(4){display:none}.cm5v-wb td:nth-child(2){font-size:11.5px}}
 </style>
 <script id="cm-ana-v3">
 /* Çizgi Masası · ana-v3 "Masa" — 21 Kasım 2026
    Melih'in onayladığı ana sayfa: Maçlar (M4: geniş vitrin şeridi; 24 Kasım), Gecenin vitrini aynen (diğer bahislerin
    satırlarında "neden" açıklaması her zaman görünür), Merdiven Altı (Kâğıt üstünde ve "Oran düşük ama değerli"
-   buraya katıldı; düz satırlar, model/iddaa çubuğu, barem bekleyenler katlanır), Revir raporu (yeni OUT'lar
-   takım takım, aynı takımın OUT'ları tek kartta), Yükselenler ve Günün alt önerileri kapalı çekmece.
+   buraya katıldı; düz satırlar, model/iddaa çubuğu, barem bekleyenler katlanır), Revir raporu (V1: her yeni OUT için kart, iki tablonun ilk 3 satırı, Takım sayfasına tek düğme), Yükselenler ve Günün alt önerileri kapalı çekmece.
    Karne: yeni dönemde Tribün (shadow) kaydı Merdiven Altı'nın SADECE oranlı adaylarıdır (tonightDoc sarmalayıcı;
    karne_automation.py başsız tarayıcıda aynı fonksiyonu çağırır). Barem bekleyenler karneye yazılmaz.
    Vitrin (Kasa) seçimi, Vitrin kartı, Karne kayıt kuralları ve Barem Geçmişi değişmez. */
@@ -1573,25 +1599,49 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
   }
   function tabelaHead(){var hg=$('h-games');if(hg&&hg.querySelector('.cm4g'))hg.classList.add('cm4-list')}
 
-  /* ---- Revir raporu: yeni OUT'lar takım takım ---- */
+  /* ---- Revir raporu (V1, 24 Kasım): her yeni OUT için bir kart; "Kim artıyor" ve "Yokken baremler" tablolarının ilk 3 satırı + Takım sayfasına tek düğme ---- */
+  function sgn(x){var v=Math.round(x*10)/10;return (v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(1)}
+  function dcl(x){return x>0.04?'up':x<-0.04?'dn':''}
+  function wobTop(o){
+    var out=[];
+    try{
+      if(window.CM_WOB&&window.CM_WOB.rows){
+        var rs=window.CM_WOB.rows(o.team,{m:o.m},false)||[];
+        for(var i=0;i<rs.length&&out.length<3;i++)if(rs[i].n>=3)out.push(rs[i]);
+      }
+    }catch(e){console.error('cm-v4 wob',e)}
+    return out;
+  }
+  function wobRowHtml(r){
+    var cls=r.pr>=.6?'g':r.pr>=.45?'a':'r',v=r.v.slice(-10),mx=Math.max(r.li.line*1.6,Math.max.apply(null,v),1);
+    return '<tr data-p="'+r.p.id+'" data-m="'+X(r.mk)+'" role="button" tabindex="0"><td><b>'+X(r.p.name)+'</b></td><td class="cm5v-mu">'+X(lbl(r.mk))+' '+X(r.li.txt)+(r.li.odd?' · '+r.li.odd.toFixed(2):'')+(r.li.src==='ort'?' <em>tahmini</em>':'')+'</td>'+
+      '<td class="cm5v-h '+cls+'">'+r.h+'/'+r.n+' · %'+pc(r.pr)+'</td><td><span class="cm5v-b">'+v.map(function(x){return '<i class="'+(x>r.li.line?'w':'l')+'" style="height:'+Math.max(3,Math.round(x/mx*20))+'px"></i>'}).join('')+'</span></td></tr>';
+  }
   if(typeof renderOuts==='function'){
     renderOuts=function(day){
       var wrap=$('h-outs-wrap'),el=$('h-outs');if(!wrap||!el)return;
       var R=day?outsOf(day):[];
-      wrap.hidden=!R.length;if(!R.length){el.innerHTML='';return}
-      var T={},order=[];
-      R.forEach(function(o){var t=T[o.team];if(!t){t=T[o.team]={team:o.team,opp:o.opp,g:o.g,outs:[],ben:{}};order.push(o.team)}
-        t.outs.push(o.m);
-        (o.rows||[]).forEach(function(r){var b=cmObBest(r);if(!b)return;var w=b.v*({PTS:1,REB:2.2,AST:2.6}[b.mk]||1),cur=t.ben[r.p.id];
-          if(!cur||w>cur.w)t.ben[r.p.id]={r:r,b:b,w:w}})});
-      var L=order.map(function(k){var t=T[k];t.list=Object.keys(t.ben).map(function(id){return t.ben[id]}).sort(function(a,b){return b.w-a.w});t.best=t.list.length?t.list[0].w:-1;return t});
-      L.sort(function(a,b){return b.best-a.best});
-      el.innerHTML='<div class="cm3rv">'+L.map(function(t){
-        var outs=t.outs.map(function(m){var a='';try{a=pav(m,'pav-s')}catch(e){}return '<div class="cm3rv-o">'+a+'<s>'+X(m.name)+'</s><em>OUT</em></div>'}).join('');
-        var ben=t.list.slice(0,3).map(function(x){var a='',il=null;try{a=pav(x.r.p,'pav-s')}catch(e){}try{il=lineFor(x.r.p.id,x.b.mk)}catch(e){}
-          return '<button type="button" class="cm3rv-b" data-p="'+x.r.p.id+'" data-m="'+x.b.mk+'">'+a+'<span><b>'+X(x.r.p.name)+'</b><small>'+x.r.n+' maç onsuz · '+(Math.round(x.r.dm)>=0?'+':'')+Math.round(x.r.dm)+' dk'+(il?' · iddaa '+il.n+'+ '+il.odd.toFixed(2):'')+'</small></span><em>'+X(lbl(x.b.mk))+' '+(x.b.v>=0?'+':'')+f1(x.b.v)+'</em></button>'}).join('')||'<p class="note">Onsuz oynanmış yeterli maç yok.</p>';
-        return '<div class="cm3rv-c" style="border-top-color:'+col(t.team)+'"><div class="cm3rv-h"><b>'+X(t.team)+'</b><span>'+X(t.opp)+' · '+X(tm(t.g.ts))+'</span></div><div class="cm3rv-os">'+outs+'</div><div class="cm3rv-l">Koltuğa oturanlar</div>'+ben+'</div>'}).join('')+'</div>';
-      el.onclick=function(e){var b=e.target.closest('[data-p]');if(b)goPlayer(Number(b.dataset.p),b.dataset.m)};
+      var C=[];
+      R.forEach(function(o){
+        var ben=[];
+        (o.rows||[]).forEach(function(r){var bb=cmObBest(r);if(!bb)return;ben.push({r:r,b:bb,w:bb.v*({PTS:1,REB:2.2,AST:2.6}[bb.mk]||1)})});
+        if(!ben.length)return;
+        ben.sort(function(a,b){return b.w-a.w});
+        C.push({o:o,ben:ben.slice(0,3),best:ben[0].w,n:Math.max.apply(null,ben.map(function(x){return x.r.n||0}))});
+      });
+      wrap.hidden=!C.length;if(!C.length){el.innerHTML='';return}
+      C.sort(function(a,b){return b.best-a.best});
+      el.innerHTML='<div class="cm5v-w">'+C.map(function(c){
+        var o=c.o,a='';try{a=pav(o.m,'pav-s')}catch(e){}
+        var t1='<table class="cm5v-t"><thead><tr><th>Kim artıyor</th><th>Dk</th><th>PTS</th><th>REB</th><th>AST</th></tr></thead><tbody>'+c.ben.map(function(x){var r=x.r,pa='';try{pa=pav(r.p,'pav-s')}catch(e){}
+          return '<tr data-p="'+r.p.id+'" data-m="'+X(x.b.mk)+'" role="button" tabindex="0"><td>'+pa+'<b>'+X(r.p.name)+'</b></td><td class="'+dcl(r.dm)+'">'+sgn(r.dm)+'</td><td class="'+dcl(r.dp)+'">'+sgn(r.dp)+'</td><td class="'+dcl(r.dr)+'">'+sgn(r.dr)+'</td><td class="'+dcl(r.da)+'">'+sgn(r.da)+'</td></tr>'}).join('')+'</tbody></table>';
+        var W=wobTop(o),t2=W.length?'<table class="cm5v-t cm5v-wb"><thead><tr><th>Yokken baremler</th><th>Bahis</th><th>Onsuz hit</th><th></th></tr></thead><tbody>'+W.map(wobRowHtml).join('')+'</tbody></table>':'';
+        return '<div class="cm5v" style="border-top-color:'+col(o.team)+'"><div class="cm5v-hd">'+a+'<s>'+X(o.m.name)+'</s><em>OUT</em><span>'+X(o.team)+' '+(o.g&&o.g.home===o.team?'vs':'@')+' '+X(o.opp)+' · '+X(tm(o.g.ts))+' · onsuz '+c.n+' maç</span></div>'+
+          t1+t2+'<button type="button" class="cm5v-go" data-team="'+X(o.team)+'" data-wk="'+o.m.id+'">Tam tabloları gör ›</button></div>'}).join('')+'</div>';
+      el.onclick=function(e){
+        var g=e.target.closest('.cm5v-go');
+        if(g){S.team=g.dataset.team;S.woKey=Number(g.dataset.wk);S.cmWob=Number(g.dataset.wk);S.woBoth=false;setView('team');try{window.scrollTo(0,0)}catch(x){}return}
+        var b=e.target.closest('[data-p]');if(b)goPlayer(Number(b.dataset.p),b.dataset.m)};
     };
   }
 

@@ -1,8 +1,7 @@
 /* Çizgi Masası · ana-v3 "Masa" — 21 Kasım 2026
    Melih'in onayladığı ana sayfa: Maçlar (M4: geniş vitrin şeridi; 24 Kasım), Gecenin vitrini aynen (diğer bahislerin
    satırlarında "neden" açıklaması her zaman görünür), Merdiven Altı (Kâğıt üstünde ve "Oran düşük ama değerli"
-   buraya katıldı; düz satırlar, model/iddaa çubuğu, barem bekleyenler katlanır), Revir raporu (yeni OUT'lar
-   takım takım, aynı takımın OUT'ları tek kartta), Yükselenler ve Günün alt önerileri kapalı çekmece.
+   buraya katıldı; düz satırlar, model/iddaa çubuğu, barem bekleyenler katlanır), Revir raporu (V1: her yeni OUT için kart, iki tablonun ilk 3 satırı, Takım sayfasına tek düğme), Yükselenler ve Günün alt önerileri kapalı çekmece.
    Karne: yeni dönemde Tribün (shadow) kaydı Merdiven Altı'nın SADECE oranlı adaylarıdır (tonightDoc sarmalayıcı;
    karne_automation.py başsız tarayıcıda aynı fonksiyonu çağırır). Barem bekleyenler karneye yazılmaz.
    Vitrin (Kasa) seçimi, Vitrin kartı, Karne kayıt kuralları ve Barem Geçmişi değişmez. */
@@ -125,25 +124,49 @@
   }
   function tabelaHead(){var hg=$('h-games');if(hg&&hg.querySelector('.cm4g'))hg.classList.add('cm4-list')}
 
-  /* ---- Revir raporu: yeni OUT'lar takım takım ---- */
+  /* ---- Revir raporu (V1, 24 Kasım): her yeni OUT için bir kart; "Kim artıyor" ve "Yokken baremler" tablolarının ilk 3 satırı + Takım sayfasına tek düğme ---- */
+  function sgn(x){var v=Math.round(x*10)/10;return (v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(1)}
+  function dcl(x){return x>0.04?'up':x<-0.04?'dn':''}
+  function wobTop(o){
+    var out=[];
+    try{
+      if(window.CM_WOB&&window.CM_WOB.rows){
+        var rs=window.CM_WOB.rows(o.team,{m:o.m},false)||[];
+        for(var i=0;i<rs.length&&out.length<3;i++)if(rs[i].n>=3)out.push(rs[i]);
+      }
+    }catch(e){console.error('cm-v4 wob',e)}
+    return out;
+  }
+  function wobRowHtml(r){
+    var cls=r.pr>=.6?'g':r.pr>=.45?'a':'r',v=r.v.slice(-10),mx=Math.max(r.li.line*1.6,Math.max.apply(null,v),1);
+    return '<tr data-p="'+r.p.id+'" data-m="'+X(r.mk)+'" role="button" tabindex="0"><td><b>'+X(r.p.name)+'</b></td><td class="cm5v-mu">'+X(lbl(r.mk))+' '+X(r.li.txt)+(r.li.odd?' · '+r.li.odd.toFixed(2):'')+(r.li.src==='ort'?' <em>tahmini</em>':'')+'</td>'+
+      '<td class="cm5v-h '+cls+'">'+r.h+'/'+r.n+' · %'+pc(r.pr)+'</td><td><span class="cm5v-b">'+v.map(function(x){return '<i class="'+(x>r.li.line?'w':'l')+'" style="height:'+Math.max(3,Math.round(x/mx*20))+'px"></i>'}).join('')+'</span></td></tr>';
+  }
   if(typeof renderOuts==='function'){
     renderOuts=function(day){
       var wrap=$('h-outs-wrap'),el=$('h-outs');if(!wrap||!el)return;
       var R=day?outsOf(day):[];
-      wrap.hidden=!R.length;if(!R.length){el.innerHTML='';return}
-      var T={},order=[];
-      R.forEach(function(o){var t=T[o.team];if(!t){t=T[o.team]={team:o.team,opp:o.opp,g:o.g,outs:[],ben:{}};order.push(o.team)}
-        t.outs.push(o.m);
-        (o.rows||[]).forEach(function(r){var b=cmObBest(r);if(!b)return;var w=b.v*({PTS:1,REB:2.2,AST:2.6}[b.mk]||1),cur=t.ben[r.p.id];
-          if(!cur||w>cur.w)t.ben[r.p.id]={r:r,b:b,w:w}})});
-      var L=order.map(function(k){var t=T[k];t.list=Object.keys(t.ben).map(function(id){return t.ben[id]}).sort(function(a,b){return b.w-a.w});t.best=t.list.length?t.list[0].w:-1;return t});
-      L.sort(function(a,b){return b.best-a.best});
-      el.innerHTML='<div class="cm3rv">'+L.map(function(t){
-        var outs=t.outs.map(function(m){var a='';try{a=pav(m,'pav-s')}catch(e){}return '<div class="cm3rv-o">'+a+'<s>'+X(m.name)+'</s><em>OUT</em></div>'}).join('');
-        var ben=t.list.slice(0,3).map(function(x){var a='',il=null;try{a=pav(x.r.p,'pav-s')}catch(e){}try{il=lineFor(x.r.p.id,x.b.mk)}catch(e){}
-          return '<button type="button" class="cm3rv-b" data-p="'+x.r.p.id+'" data-m="'+x.b.mk+'">'+a+'<span><b>'+X(x.r.p.name)+'</b><small>'+x.r.n+' maç onsuz · '+(Math.round(x.r.dm)>=0?'+':'')+Math.round(x.r.dm)+' dk'+(il?' · iddaa '+il.n+'+ '+il.odd.toFixed(2):'')+'</small></span><em>'+X(lbl(x.b.mk))+' '+(x.b.v>=0?'+':'')+f1(x.b.v)+'</em></button>'}).join('')||'<p class="note">Onsuz oynanmış yeterli maç yok.</p>';
-        return '<div class="cm3rv-c" style="border-top-color:'+col(t.team)+'"><div class="cm3rv-h"><b>'+X(t.team)+'</b><span>'+X(t.opp)+' · '+X(tm(t.g.ts))+'</span></div><div class="cm3rv-os">'+outs+'</div><div class="cm3rv-l">Koltuğa oturanlar</div>'+ben+'</div>'}).join('')+'</div>';
-      el.onclick=function(e){var b=e.target.closest('[data-p]');if(b)goPlayer(Number(b.dataset.p),b.dataset.m)};
+      var C=[];
+      R.forEach(function(o){
+        var ben=[];
+        (o.rows||[]).forEach(function(r){var bb=cmObBest(r);if(!bb)return;ben.push({r:r,b:bb,w:bb.v*({PTS:1,REB:2.2,AST:2.6}[bb.mk]||1)})});
+        if(!ben.length)return;
+        ben.sort(function(a,b){return b.w-a.w});
+        C.push({o:o,ben:ben.slice(0,3),best:ben[0].w,n:Math.max.apply(null,ben.map(function(x){return x.r.n||0}))});
+      });
+      wrap.hidden=!C.length;if(!C.length){el.innerHTML='';return}
+      C.sort(function(a,b){return b.best-a.best});
+      el.innerHTML='<div class="cm5v-w">'+C.map(function(c){
+        var o=c.o,a='';try{a=pav(o.m,'pav-s')}catch(e){}
+        var t1='<table class="cm5v-t"><thead><tr><th>Kim artıyor</th><th>Dk</th><th>PTS</th><th>REB</th><th>AST</th></tr></thead><tbody>'+c.ben.map(function(x){var r=x.r,pa='';try{pa=pav(r.p,'pav-s')}catch(e){}
+          return '<tr data-p="'+r.p.id+'" data-m="'+X(x.b.mk)+'" role="button" tabindex="0"><td>'+pa+'<b>'+X(r.p.name)+'</b></td><td class="'+dcl(r.dm)+'">'+sgn(r.dm)+'</td><td class="'+dcl(r.dp)+'">'+sgn(r.dp)+'</td><td class="'+dcl(r.dr)+'">'+sgn(r.dr)+'</td><td class="'+dcl(r.da)+'">'+sgn(r.da)+'</td></tr>'}).join('')+'</tbody></table>';
+        var W=wobTop(o),t2=W.length?'<table class="cm5v-t cm5v-wb"><thead><tr><th>Yokken baremler</th><th>Bahis</th><th>Onsuz hit</th><th></th></tr></thead><tbody>'+W.map(wobRowHtml).join('')+'</tbody></table>':'';
+        return '<div class="cm5v" style="border-top-color:'+col(o.team)+'"><div class="cm5v-hd">'+a+'<s>'+X(o.m.name)+'</s><em>OUT</em><span>'+X(o.team)+' '+(o.g&&o.g.home===o.team?'vs':'@')+' '+X(o.opp)+' · '+X(tm(o.g.ts))+' · onsuz '+c.n+' maç</span></div>'+
+          t1+t2+'<button type="button" class="cm5v-go" data-team="'+X(o.team)+'" data-wk="'+o.m.id+'">Tam tabloları gör ›</button></div>'}).join('')+'</div>';
+      el.onclick=function(e){
+        var g=e.target.closest('.cm5v-go');
+        if(g){S.team=g.dataset.team;S.woKey=Number(g.dataset.wk);S.cmWob=Number(g.dataset.wk);S.woBoth=false;setView('team');try{window.scrollTo(0,0)}catch(x){}return}
+        var b=e.target.closest('[data-p]');if(b)goPlayer(Number(b.dataset.p),b.dataset.m)};
     };
   }
 

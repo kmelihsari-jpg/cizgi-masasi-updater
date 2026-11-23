@@ -111,6 +111,7 @@
       box.addEventListener('click',go);box.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.target.closest('select'))go(e)});
       box.addEventListener('change',function(e){var s=e.target.closest('[data-cmwob]');if(!s)return;e.stopPropagation();S.cmWob=Number(s.value);renderTeam()})}
   }
+  window.CM_WOB={rows:wobRows};/* ana-v3 Revir raporu bu fonksiyonu kullanır (sadece okuma) */
   if(typeof renderTeam==='function'){var _rt=renderTeam;renderTeam=function(){var r=_rt.apply(this,arguments);wobRender();return r}}
 
   /* ---------- 3) Grafik: REB'de ribaund şansı (rc), AST'de potansiyel asist (pot) çerçevesi ----------
