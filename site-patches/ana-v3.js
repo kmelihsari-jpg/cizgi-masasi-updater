@@ -1,5 +1,5 @@
 /* Çizgi Masası · ana-v3 "Masa" — 21 Kasım 2026
-   Melih'in onayladığı ana sayfa: Maçlar (N2: iki sütun liste, renkli takım etiketi, derece, önerilen bahis), Gecenin vitrini aynen (diğer bahislerin
+   Melih'in onayladığı ana sayfa: Maçlar (M4: geniş vitrin şeridi; 24 Kasım), Gecenin vitrini aynen (diğer bahislerin
    satırlarında "neden" açıklaması her zaman görünür), Merdiven Altı (Kâğıt üstünde ve "Oran düşük ama değerli"
    buraya katıldı; düz satırlar, model/iddaa çubuğu, barem bekleyenler katlanır), Revir raporu (yeni OUT'lar
    takım takım, aynı takımın OUT'ları tek kartta), Yükselenler ve Günün alt önerileri kapalı çekmece.
@@ -93,18 +93,37 @@
   function outsOf(day){if(LAST.oday!==day){LAST.oday=day;try{LAST.outs=day?outBoost(day):[]}catch(e){LAST.outs=[]}}return LAST.outs||[]}
   function lum(h){var m=/^#?([0-9a-f]{6})$/i.exec(String(h||''));if(!m)return 0;var n=parseInt(m[1],16);return (.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255))/255}
   function tag(t){var c=col(t);return '<span class="cm3n-t" style="background:'+c+';color:'+(lum(c)>.62?'#14181D':'#fff')+'">'+X(t)+'</span>'}
+  /* M4 (24 Kasım): her maç geniş vitrin şeridi: solda saat+takımlar, ortada öne çıkan bahis ve haplar, sağda son 10 çubukları. */
+  function bars10(pid,mk,n,h){
+    var g=[];try{g=(byP[pid]||[]).slice(-10)}catch(e){}
+    if(!g.length)return '';
+    var v=g.map(function(x){try{return +val(x,mk)||0}catch(e){return 0}}),mx=Math.max.apply(null,v.concat([n]))*1.1||1,hit=0;
+    var bs=v.map(function(x){var ok=x>=n;if(ok)hit++;return '<i class="'+(ok?'h':'x')+'" style="height:'+Math.max(4,Math.round(x/mx*100))+'%" title="'+x+'"></i>'}).join('');
+    return '<div class="cm4-bars" style="height:'+h+'px">'+bs+'<u style="bottom:'+((n-.5)/mx*100).toFixed(0)+'%"></u></div><div class="cm4-bl"><span>son '+v.length+'</span><span>'+hit+'/'+v.length+'</span></div>';
+  }
   if(typeof cmGameCard==='function'){
     cmGameCard=function(g,picks){
-      var k=dayKey(g.ts),top=(picks||[]).find(function(c){return c.g===g});
+      var k=dayKey(g.ts),top=(picks||[]).find(function(c){return c.g===g}),ev=null,gp=null;
+      try{if(typeof cmEv==='function')ev=cmEv(g)}catch(e){}
+      try{gp=gamePace(g)}catch(e){}
       function side(t){var rc=null,ri=null;try{rc=teamRecord(t)}catch(e){}try{ri=restInfo(t,k)}catch(e){}
-        return tag(t)+(rc?'<small>'+rc.w+'-'+rc.l+'</small>':'')+(ri&&ri.b2b?'<em>B2B</em>':'')}
-      var pr=top?(top.a&&top.a.w!=null?top.a.w:top.model):null;
-      var pk=top?'<span class="mu">Öne çıkan</span> <b>'+X(shortName(top.p.name))+' '+X(lbl(top.mk))+(top.il?' '+top.il.n+'+':'')+'</b>'+(pr!=null?' <b class="cm3g-p">%'+pc(pr)+'</b>':''):'<span class="mu">öne çıkan bahis yok</span>';
-      return '<button class="gcard cm3n" data-home="'+X(g.home)+'" aria-label="'+X(g.away)+' @ '+X(g.home)+' '+X(tm(g.ts))+'">'+
-        '<span class="cm3n-h">'+X(tm(g.ts))+'</span><span class="cm3n-m">'+side(g.away)+'<i>@</i>'+side(g.home)+'</span><span class="cm3n-p">'+pk+'</span></button>';
+        return '<div class="cm4g-t">'+tag(t)+(rc?'<small>'+rc.w+'-'+rc.l+'</small>':'')+(ri&&ri.b2b?'<em>B2B</em>':'')+'</div>'}
+      var sub=[];
+      try{if(ev&&ev.spread!=null&&ev.spread!==0)sub.push(X(ev.spread<0?g.home:g.away)+' -'+f1(Math.abs(ev.spread)))}catch(e){}
+      if(gp&&gp.tag)sub.push(X(gp.tag)+(gp.p!=null?' '+f1(gp.p):''));
+      var mid,rgt='';
+      if(top){
+        var pr=top.a&&top.a.w!=null?top.a.w:top.model,nn=top.il?top.il.n:(top.line!=null?Math.floor(top.line)+1:null);
+        mid='<div class="cm4g-n">'+X(shortName(top.p.name))+' <small>'+X(lbl(top.mk))+(nn!=null?' '+nn+'+':'')+'</small></div><div class="cm4g-h">'+
+          (pr!=null?'<span class="cm4h s">model %'+pc(pr)+'</span>':'')+(top.il&&top.il.odd?'<span class="cm4h">iddaa '+top.il.odd.toFixed(2)+'</span>':'')+'</div>';
+        if(nn!=null)rgt=bars10(top.p.id,top.mk,nn,40);
+      }else mid='<div class="cm4g-n mu">öne çıkan bahis yok</div>';
+      return '<button class="gcard cm4g" data-home="'+X(g.home)+'" aria-label="'+X(g.away)+' @ '+X(g.home)+' '+X(tm(g.ts))+'">'+
+        '<span class="cm4g-l"><span class="cm4-k">'+X(tm(g.ts))+(sub.length?' · '+sub.join(' · '):'')+'</span>'+side(g.away)+side(g.home)+'</span>'+
+        '<span class="cm4g-m">'+mid+'</span><span class="cm4g-r">'+rgt+'</span></button>';
     };
   }
-  function tabelaHead(){var hg=$('h-games');if(hg&&hg.querySelector('.cm3n'))hg.classList.add('cm3-list')}
+  function tabelaHead(){var hg=$('h-games');if(hg&&hg.querySelector('.cm4g'))hg.classList.add('cm4-list')}
 
   /* ---- Revir raporu: yeni OUT'lar takım takım ---- */
   if(typeof renderOuts==='function'){
@@ -173,10 +192,11 @@
     if(!L.length&&!W.length){b.hidden=true;b.innerHTML='';return}
     var INFO='<details class="cm-yk-info"><summary>Bu liste nasıl seçildi, kartlar ne demek?</summary><div class="cm-yk-ib">'+
       '<p>Vitrin\'e girmeyen ama Vitrin\'in temel kapılarını geçen bahisler: oyuncunun en az 5 maçı ve maç başına 22+ dakikası var, sakatlık listesinde "oynamaz" görünmüyor, en az bir destek sinyali var (rakip bu istatistikte ilk 10, son 10 maçın %60\'ında geçmiş ya da son 10 ortalaması çizginin üstünde), iddaa oranı 1.30–2.50 ve beklenen getiri −%8\'den kötü değil. Oyuncu başına iddaa merdivenindeki en iyi basamak gösterilir.</p>'+
+      '<p><b>Eşleşme</b>: rakibin o istatistiği o pozisyona verme sırası. 1–10 güçlü, 11–20 orta, 21–30 zayıf (zayıf = rakip az veriyor, bahis zor). Çubuklar son 10 maç, kesik çizgi barem; yeşil çizgiyi geçen maç.</p>'+
       '<p><b>Barem bekliyor</b> satırları modelin sevdiği ama iddaa\'nın henüz açmadığı bahisler; barem gelince oranıyla üst satırlara geçer.</p>'+
       '<p>Karne bu listenin sadece iddaa baremi olan bahislerini maç öncesi kaydeder; günün son kaydında hâlâ baremi olmayanlar karneye girmez (kasa birimine katılmaz, ayrı defter).</p>'+
       '<p class="cm-yk-warn">Bunlar öneri değil, izleme listesi. Oynamadan önce sakatlığı, kadroyu ve oranı kendin kontrol et.</p></div></details>';
-    var h='<div class="cm-yk-box"><div class="cm-yk-hd"><span class="cm-yk-lamp" aria-hidden="true"></span><h3>Merdiven Altı</h3><span class="cm3-stamp">RUHSATSIZ</span><span class="cm3-side">Vitrin\'e giremeyen, sınırdaki bahisler · ayrı defter · çubukta yeşil model, beyaz çizgi iddaa</span></div>'+
+    var h='<div class="cm-yk-box"><div class="cm-yk-hd"><span class="cm-yk-lamp" aria-hidden="true"></span><h3>Merdiven Altı</h3><span class="cm3-stamp">RUHSATSIZ</span><span class="cm3-side">Vitrin\'e giremeyen, sınırdaki bahisler · ayrı defter · ✓/✗ şartlar, çubuklar son 10 maç</span></div>'+
       INFO+'<div class="cm3mr-l">';
     function why(c){var w=[];
       if(c.rk!=null&&c.rk<=10)w.push(X(c.opp)+(c.po?', '+X(c.po)+'\'ye':'')+' '+X(lbl(c.mk))+' vermede '+c.rk+'. sırada');
@@ -185,14 +205,28 @@
       if(c.a10!=null&&isFinite(c.a10))w.push('son 10 ort. '+f1(c.a10));
       return w.join(' · ')}
     function av(p){try{return pav(p,'pav-s')}catch(e){return ''}}
-    L.forEach(function(c,i){var pos=c.ev>=0,ip=pc(1/c.odd);
-      h+='<div class="cm3mr" data-p="'+c.p.id+'" data-m="'+X(c.mk)+'" role="button" tabindex="0">'+av(c.p)+
-        '<div class="cm3mr-m"><div class="cm3mr-t"><b>'+X(c.p.name)+'</b><span class="cm3mr-bet">'+X(lbl(c.mk))+' '+X(c.n)+'+</span><small>'+vs(c.p,c.g)+' '+X(c.opp)+' · '+X(tm(c.g.ts))+'</small></div>'+
-        '<div class="cm3mr-w">'+why(c)+'</div></div>'+
-        '<div class="cm3mr-g"><span><small>model %'+pc(c.raw)+'</small><small>iddaa %'+ip+'</small></span><span class="cm3g2"><i style="width:'+pc(c.raw)+'%"></i><b style="left:'+ip+'%"></b></span></div>'+
-        '<div class="cm3mr-r"><span class="cm3mr-o">'+c.odd.toFixed(2)+'</span><span class="cm3m-ev '+(pos?'p':'n')+'">getiri '+sg(c.ev)+'%</span></div>'+
-        '<span class="cm3mr-k" role="button" tabindex="0" aria-label="Kupona ekle" data-add="'+c.p.id+'|'+X(c.mk)+'|'+X(c.line)+'|over|'+c.odd+'">+</span></div>';
+    /* S2: şart listesi. Eşleşme = rakibin bu istatistiği o pozisyona verme sırası (1 = en çok veren, oyuncuya iyi). */
+    function gates(c){
+      var ip=pc(1/c.odd),L=[];
+      L.push([c.ev>=0?'ok':'no',c.ev>=0?'✓':'✗',(c.ev>=0?'Değer var':'Değer yok')+' <span class="mu">· model %'+pc(c.raw)+', iddaa %'+ip+' · getiri '+sg(c.ev)+'%</span>']);
+      if(c.rk==null)L.push(['mid','•','Eşleşme verisi yok']);
+      else{
+        var t=c.rk<=10?['ok','✓','Eşleşme güçlü']:c.rk<=20?['mid','~','Eşleşme orta']:['no','✗','<b class="cm4s-weak">Eşleşme zayıf</b>'];
+        L.push([t[0],t[1],t[2]+' <span class="mu">· '+X(c.opp)+(c.po?', '+X(c.po)+'\'ye':'')+' '+X(lbl(c.mk))+' vermede #'+c.rk+'</span>']);
+      }
+      var hp=c.h10&&c.h10.p!=null?c.h10.p:null,hn=c.h10&&c.h10.n?c.h10.n:null,hh=c.h10&&c.h10.h!=null?c.h10.h:(hp!=null&&hn?Math.round(hp*hn):null);
+      if(hp!=null)L.push([hp>=.6?'ok':'no',hp>=.6?'✓':'✗','Form <span class="mu">· son '+(hn||10)+' maçın '+(hh!=null?hh:Math.round(hp*10))+'\'inde '+c.n+'+'+(c.a10!=null&&isFinite(c.a10)?' · ort. '+f1(c.a10):'')+'</span>']);
+      return '<div class="cm4s-w">'+L.map(function(r){return '<div><span class="'+r[0]+'">'+r[1]+'</span><span>'+r[2]+'</span></div>'}).join('')+'</div>';
+    }
+    if(L.length)h+='<div class="cm4s-g">';
+    L.forEach(function(c,i){
+      h+='<div class="cm4s" data-p="'+c.p.id+'" data-m="'+X(c.mk)+'" role="button" tabindex="0">'+
+        '<div class="cm4-k">'+vs(c.p,c.g)+' '+X(c.opp)+' · '+X(tm(c.g.ts))+'</div>'+
+        '<div class="cm4s-hd">'+av(c.p)+'<b class="cm4s-n">'+X(c.p.name)+'</b><span class="cm4s-bet">'+X(lbl(c.mk))+' '+X(c.n)+'+</span><span class="cm4s-o">'+c.odd.toFixed(2)+'</span></div>'+
+        gates(c)+bars10(c.p.id,c.mk,c.n,44)+
+        '<span class="cm3mr-k cm4s-k" role="button" tabindex="0" aria-label="Kupona ekle" data-add="'+c.p.id+'|'+X(c.mk)+'|'+X(c.line)+'|over|'+c.odd+'">+ Kupon</span></div>';
     });
+    if(L.length)h+='</div>';
     if(W.length){
       h+='<details class="cm3mr-wd"><summary>Barem bekleyen '+W.length+' bahis: '+W.slice(0,3).map(function(c){return X(shortName(c.p.name))+' '+X(lbl(c.mk))+' '+c.n+'+'}).join(', ')+(W.length>3?'…':'')+' ▾</summary>';
       W.forEach(function(c){

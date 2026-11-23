@@ -51,20 +51,23 @@ w.eval('renderHome()');
 const d=w.document,q=s=>[...d.querySelectorAll(s)],out={};
 out.rh=w.eval('RH');
 // Tabela
-out.games=q('#h-games .gcard.cm3n').length;out.list=d.getElementById('h-games').classList.contains('cm3-list');
-out.tags=q('#h-games .cm3n-t').map(x=>x.textContent+'|'+x.style.background);out.rec=q('#h-games .cm3n-m small').map(x=>x.textContent);
-out.b2b=q('#h-games .cm3n-m em').map(x=>x.textContent);out.home=q('#h-games .cm3n').map(x=>x.dataset.home);
+out.games=q('#h-games .gcard.cm4g').length;out.list=d.getElementById('h-games').classList.contains('cm4-list');
+out.tags=q('#h-games .cm3n-t').map(x=>x.textContent+'|'+x.style.background);out.rec=q('#h-games .cm4g-t small').map(x=>x.textContent);
+out.b2b=q('#h-games .cm4g-t em').map(x=>x.textContent);out.home=q('#h-games .cm4g').map(x=>x.dataset.home);
 // sakatlık çipleri yok, injbar yerinde
 out.noChips=!d.getElementById('cm3-outs');
 // Vitrin tablosu aynen
 out.vitCards=q('.cm3v-c').length;out.tableKept=!!d.querySelector('#h-picks table');out.side=(d.querySelector('.picks .sec-head .cm3-side')||{}).textContent;
 // Merdiven Altı
 out.nearHidden=d.getElementById('h-near').hidden;out.paperHidden=d.querySelector('.paperbox').hidden;
-out.vitrinNotInMerdiven=!q('#cm3-yk .cm3mr .cm3mr-t b').some(x=>x.textContent==='Aday Iki');
-out.merdiven=q('#cm3-yk .cm3mr:not(.w) .cm3mr-t b').map(x=>x.textContent);
+out.vitrinNotInMerdiven=!q('#cm3-yk .cm4s .cm4s-n').some(x=>x.textContent==='Aday Iki');
+out.merdiven=q('#cm3-yk .cm4s .cm4s-n').map(x=>x.textContent);
 out.waiting=q('#cm3-yk .cm3mr.w .cm3mr-t b').map(x=>x.textContent);
-out.merdivenBet=q('#cm3-yk .cm3mr:not(.w) .cm3mr-bet').map(x=>x.textContent);
-out.gauge=q('#cm3-yk .cm3g2').length;out.why=q('#cm3-yk .cm3mr:not(.w) .cm3mr-w').map(x=>x.textContent);
+out.merdivenBet=q('#cm3-yk .cm4s .cm4s-bet').map(x=>x.textContent);
+out.gauge=q('#cm3-yk .cm4s .cm4-bars').length;out.why=q('#cm3-yk .cm4s .cm4s-w').map(x=>x.textContent);
+out.gates=q('#cm3-yk .cm4s .cm4s-w > div').length;out.addBtn=q('#cm3-yk .cm4s [data-add]').length;
+out.m4Names=q('#h-games .cm4g-n').map(x=>x.textContent);out.m4Bars=q('#h-games .cm4-bl span:last-child').map(x=>x.textContent);
+out.m4Haps=q('#h-games .cm4h').map(x=>x.textContent);
 // Revir
 out.revir=q('.cm3rv-c .cm3rv-h b').map(x=>x.textContent);out.revirBen=q('.cm3rv-b b').map(x=>x.textContent);out.revirTitle=d.querySelector('#h-outs-wrap h3').firstChild.nodeValue;
 // Asansör / Bodrum
@@ -78,7 +81,11 @@ const doc=w.eval("tonightDoc('2026-11-21',null,NOW)");
 out.shadow=doc.shadow.map(s=>s.name+'|'+s.mk+'|'+s.n+'|'+s.odd+'|'+s.why);out.picksKept=doc.picks.length;
 out.shadowNoVitrin=!doc.shadow.some(s=>s.id===3);
 // tıklama
-q('#cm3-yk .cm3mr')[0].click();out.goto=w.eval('GOTO');
+q('#cm3-yk .cm4s')[0].click();out.goto=w.eval('GOTO');
+// eslesme zayif: rakip siralamasi 27 olunca kirmizi satir
+w.eval('ROWS.forEach(function(r){r.rk=27});renderHome()');out.weak=q('#cm3-yk .cm4s .cm4s-weak').map(x=>x.textContent);out.weakTxt=(q('#cm3-yk .cm4s .cm4s-w')[0]||{}).textContent;
+w.eval('ROWS.forEach(function(r){r.rk=15});renderHome()');out.mid=(q('#cm3-yk .cm4s .cm4s-w')[0]||{}).textContent;
+w.eval('ROWS.forEach(function(r){r.rk=3});renderHome()');
 // boşken
 w.eval('ROWS.length=0;OTHERS.length=0;BETS.length=0;renderHome()');
 out.emptyHidden=d.getElementById('cm3-yk').hidden;

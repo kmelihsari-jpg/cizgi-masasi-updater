@@ -30,10 +30,10 @@ class Blok(unittest.TestCase):
         self.assertIn('<!--CM_YAKIN_V1_BITIR-->', html, 'yakin bloğu silinmemeli')
 
     def test_mobil_mac_listesi_yatay_kaymaz(self):
-        rule = next(l for l in CSS.splitlines() if l.startswith('#view-home #h-games.hgames.cm3-list{'))
+        rule = next(l for l in CSS.splitlines() if l.startswith('#view-home #h-games.hgames.cm4-list{'))
         for k in ('grid-auto-flow:row!important', 'grid-auto-columns:auto!important', 'min-width:0!important'):
             self.assertIn(k, rule)
-        self.assertIn('#view-home #h-games.hgames.cm3-list>.gcard.cm3n{min-width:0!important', CSS)
+        self.assertIn('#view-home #h-games.hgames.cm4-list>.gcard.cm4g{min-width:0!important', CSS)
 
     def test_no_writes_and_vitrin_rules_untouched(self):
         for bad in ('store.set', 'localStorage', 'fetch(', 'XMLHttpRequest', 'sendBeacon', 'saveTonight', 'kasaCand=', 'kasaAll=', 'heroCard=', 'noBet='):
@@ -102,7 +102,10 @@ class Dom(unittest.TestCase):
         self.assertIn('Kasa defteri', d['side'])
         self.assertTrue(d['nearHidden']); self.assertTrue(d['paperHidden']); self.assertTrue(d['vitrinNotInMerdiven'])
         self.assertEqual(d['merdiven'], ['Aday Bir']); self.assertEqual(d['waiting'], ['Bekleyen Dort'])
-        self.assertEqual(d['merdivenBet'], ['REB 7+']); self.assertEqual(d['gauge'], 1); self.assertIn('sırada', d['why'][0])
+        self.assertEqual(d['merdivenBet'], ['REB 7+']); self.assertEqual(d['gauge'], 1); self.assertIn('Eşleşme güçlü', d['why'][0])
+        self.assertEqual(d['gates'], 3); self.assertEqual(d['addBtn'], 1)
+        self.assertEqual(d['weak'], ['Eşleşme zayıf']); self.assertIn('#27', d['weakTxt']); self.assertIn('Eşleşme orta', d['mid'])
+        self.assertEqual(d['m4Names'], ['öne çıkan bahis yok', 'Uc AST 6+']); self.assertEqual(d['m4Bars'], ['10/10']); self.assertIn('model %75', d['m4Haps'][0])
         self.assertEqual(d['revir'], ['PHI']); self.assertEqual(d['revirBen'], ['Fayda Alti', 'Fayda Yedi']); self.assertEqual(d['revirTitle'], 'Revir raporu')
         self.assertEqual(d['drawers'], ['Yükselenler|true', 'Günün alt önerileri|true']); self.assertTrue(d['openAfterClick'])
         self.assertEqual(d['risers'], 1); self.assertEqual(d['unders'], ['−1.6'])
