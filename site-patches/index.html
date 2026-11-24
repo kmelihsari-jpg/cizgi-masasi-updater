@@ -1570,7 +1570,26 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
   function lum(h){var m=/^#?([0-9a-f]{6})$/i.exec(String(h||''));if(!m)return 0;var n=parseInt(m[1],16);return (.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255))/255}
   function tag(t){var c=col(t);return '<span class="cm3n-t" style="background:'+c+';color:'+(lum(c)>.62?'#14181D':'#fff')+'">'+X(t)+'</span>'}
   /* M4 (24 Kasım): her maç geniş vitrin şeridi: solda saat+takımlar, ortada öne çıkan bahis ve haplar, sağda son 10 çubukları. */
-  /* Takım kodu yazısı: takım renginde; koyu renk siyah zeminde okunmasın diye ikinci renge ya da açılmış renge geçer. */
+  /* Takım kodu yazısı (24 Kasım): siyah zeminde okunur, her takım kendi markasına yakın BİRİNCİL renkle gösterilir; aynı maçtaki iki takımın rengi
+     birbirine yakınsa (ör. iki mavi, iki kırmızı) ikinci renge geçilir. TC/TC2 yalnız tabloda olmayan kod için yedektir. */
+  /*TXT_BASLA*/
+  var TXT={ATL:['#FF4E50','#C8E000'],BOS:['#2FCB6E','#FFFFFF'],BKN:['#F2F2F2','#9CA3AF'],CHA:['#1FC8D6','#A78BFA'],CHI:['#FF2E2E','#FFFFFF'],
+    CLE:['#E85A7C','#FDBB30'],DAL:['#4DA3FF','#C7CED6'],DEN:['#FFC72C','#6EA8FF'],DET:['#FF4D5A','#5B8CFF'],GSW:['#3E8BFF','#FFD23F'],
+    HOU:['#FF3B5C','#C8CED3'],IND:['#FFC72C','#4C8DFF'],LAC:['#FF5470','#4AA0FF'],LAL:['#9D6BE8','#FDB927'],MEM:['#7C9BD6','#FFD23F'],
+    MIA:['#F0476A','#FFB04A'],MIL:['#3CC36A','#F3E6C8'],MIN:['#3AA6E0','#7BD389'],NOP:['#D8B66A','#4DA3FF'],NYK:['#FF8A2B','#4C8DFF'],
+    OKC:['#35B0FF','#FF8A2B'],ORL:['#4C8DFF','#E5E7EB'],PHI:['#3B82F6','#FF4D6A'],PHX:['#FF7A2B','#A77BF0'],POR:['#FF4040','#D9DEE3'],
+    SAC:['#A56AE8','#E5E7EB'],SAS:['#C8D0D6','#FFFFFF'],TOR:['#EC4569','#C5CAD1'],UTA:['#A78BFA','#FFD23F'],WAS:['#5C80E0','#FF3B5C']};
+  function rgbOf(h){var m=/^#?([0-9a-f]{6})$/i.exec(String(h||''));if(!m)return null;var n=parseInt(m[1],16);return [n>>16&255,n>>8&255,n&255]}
+  function cdist(a,b){var x=rgbOf(a),y=rgbOf(b);if(!x||!y)return 999;var dr=x[0]-y[0],dg=x[1]-y[1],db=x[2]-y[2];return Math.sqrt(2*dr*dr+4*dg*dg+3*db*db)}
+  var TXT_MIN=120;
+  function pairColors(a,h){
+    var A=TXT[a],H=TXT[h];
+    if(!A||!H)return [tcol(a),tcol(h)];
+    var combos=[[A[0],H[0]],[A[0],H[1]],[A[1],H[0]],[A[1],H[1]]],best=combos[0],bd=-1;
+    for(var i=0;i<combos.length;i++){var d=cdist(combos[i][0],combos[i][1]);if(d>=TXT_MIN)return combos[i];if(d>bd){bd=d;best=combos[i]}}
+    return best;
+  }
+  /*TXT_BITIR*/
   function tcol(t){
     var c=col(t),c2=col(t,true);
     if(lum(c)>=.45)return c;
@@ -1591,8 +1610,9 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
       var k=dayKey(g.ts),top=(picks||[]).find(function(c){return c.g===g}),ev=null,gp=null;
       try{if(typeof cmEv==='function')ev=cmEv(g)}catch(e){}
       try{gp=gamePace(g)}catch(e){}
-      function side(t){var rc=null,ri=null;try{rc=teamRecord(t)}catch(e){}try{ri=restInfo(t,k)}catch(e){}
-        return '<div class="cm4g-t"><b class="cm4g-c" style="color:'+tcol(t)+'">'+X(t)+'</b>'+(rc?'<small>'+rc.w+'-'+rc.l+'</small>':'')+(ri&&ri.b2b?'<em>B2B</em>':'')+'</div>'}
+      var pc2=pairColors(g.away,g.home);
+      function side(t,tc){var rc=null,ri=null;try{rc=teamRecord(t)}catch(e){}try{ri=restInfo(t,k)}catch(e){}
+        return '<div class="cm4g-t"><b class="cm4g-c" style="color:'+tc+'">'+X(t)+'</b>'+(rc?'<small>'+rc.w+'-'+rc.l+'</small>':'')+(ri&&ri.b2b?'<em>B2B</em>':'')+'</div>'}
       var sub=[];
       try{if(ev&&ev.spread!=null&&ev.spread!==0)sub.push(X(ev.spread<0?g.home:g.away)+' -'+f1(Math.abs(ev.spread)))}catch(e){}
       if(gp&&gp.tag)sub.push(X(gp.tag)+(gp.p!=null?' '+f1(gp.p):''));
@@ -1604,7 +1624,7 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
         if(nn!=null)rgt=bars10(top.p.id,top.mk,nn,40);
       }else mid='<div class="cm4g-n mu">öne çıkan bahis yok</div>';
       return '<button class="gcard cm4g" data-home="'+X(g.home)+'" aria-label="'+X(g.away)+' @ '+X(g.home)+' '+X(tm(g.ts))+'">'+
-        '<span class="cm4g-l"><span class="cm4-k">'+X(tm(g.ts))+(sub.length?' · '+sub.join(' · '):'')+'</span>'+side(g.away)+side(g.home)+'</span>'+
+        '<span class="cm4g-l"><span class="cm4-k">'+X(tm(g.ts))+(sub.length?' · '+sub.join(' · '):'')+'</span>'+side(g.away,pc2[0])+side(g.home,pc2[1])+'</span>'+
         '<span class="cm4g-m">'+mid+'</span><span class="cm4g-r">'+rgt+'</span></button>';
     };
   }
