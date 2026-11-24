@@ -183,7 +183,8 @@ const hh = (t) => { const { saat, dk } = saatIstanbul(t); return hhmm(saat, dk);
 export function cdnZamani(t) { return hh(t) === '10:35'; }
 export function referansZamani(t) { return hh(t) === '10:50'; }
 export function settleZamani(t) { return hh(t) === '11:05'; }
-export function yayinZamani(t) { return hh(t) === '11:35' || hh(t) === '20:05'; }
+export const YAYIN_SAATLERI = ['11:35', '16:35', '18:35', '20:35', '22:35', '00:35', '02:35'];
+export function yayinZamani(t) { return YAYIN_SAATLERI.includes(hh(t)); }
 // Yayin workflow'u: fark_varsa=true -> seed dosyalari canliyla ayniysa deploy ETMEZ (scripts/yayin_gerekli.py).
 const YAYIN = ['cizgi-masasi-otomatik-pages.yml', { yayinla: 'true', fark_varsa: 'true' }];
 

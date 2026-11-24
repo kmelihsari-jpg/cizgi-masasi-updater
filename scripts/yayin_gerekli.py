@@ -5,8 +5,10 @@ Yalniz workflow_run olaylarinda ve yalniz iki kaynakta yayini atlayabilir:
   - Iddaa Barem Senkronu: baslamamis maclarin barem/oran satirlari canli sitedekiyle ayniysa ve canli
     barem okumasi TAZELE_SAAT'ten yeniyse atla. (Site 6 saatten eski baremi "eskidi" sayar; 4 saatte bir
     degisiklik olmasa da yayinlanir.)
-Sabit yayin noktalari (fark_varsa=true, Worker 11:35 ve 20:05'te tetikler): seed/data.json, dvp.json, teamrankings.json,
-periods.json, rotation.json ve karne.json (docs) canli dosyalardan FARKLIysa yayinla, hepsi ayniysa atla.
+Sabit yayin noktalari (fark_varsa=true; Worker 11:35 ve 16:35-02:35 arasi 2 saatte bir :35'te tetikler): seed/data.json,
+dvp.json, teamrankings.json, periods.json, rotation.json, karne.json (docs) ve iddaa-lines.json (baslamamis mac satirlari +
+4 saat eskime kurali) canli dosyalardan FARKLIysa yayinla, hepsi ayniysa atla. Iddaa ve karne workflow'lari artik kendi
+basina yayin tetiklemez; veriyi toplarlar, yayin sabit noktada tek seferde olur.
 Diger her durumda (push, elle, herhangi bir hata/eksik veri) YAYINLA.
 Siki mod: hesaptaki Pages deploy sayisi (CF_TOPLAM, cf_deploy_sayac.py) SIKI_ESIK'e ulasinca iddaa'nin 4 saatlik
 tazeleme yayini kalkar; iddaa yalniz barem/oran degisince yayinlar (kalan pay Valensia'ya ve onemli guncellemelere).
@@ -25,7 +27,7 @@ TAZELE_SAAT = 4
 SIKI_ESIK = 470
 KARNE = 'Cizgi Masasi - Karne Otomasyonu'
 # Sabit yayin noktasinda canliyla karsilastirilan dosyalar (iddaa kendi kuralina sahip).
-FARK_DOSYALARI = ('data.json', 'dvp.json', 'teamrankings.json', 'periods.json', 'rotation.json', 'karne.json')
+FARK_DOSYALARI = ('data.json', 'dvp.json', 'teamrankings.json', 'periods.json', 'rotation.json', 'karne.json', 'iddaa-lines.json')
 IDDAA = 'Cizgi Masasi - Iddaa NBA Barem Senkronizasyonu'
 
 
@@ -43,13 +45,35 @@ def baslamamis(doc, now_unix):
     return out
 
 
-def fark_dosyalari(seed, canli):
+def iddaa_fark(seed, canli, now, siki=False):
+    """Iddaa dosyasi icin yayin nedeni (str) ya da None."""
+    if canli.get('stale'):
+        return 'canli barem eskimis (stale)'
+    yas = (now * 1000 - int(canli.get('ts', 0))) / 3600000
+    if not siki and (yas < 0 or yas >= TAZELE_SAAT):
+        return f'canli barem okumasi {yas:.1f} saatlik'
+    s, c = baslamamis(seed, int(now)), baslamamis(canli, int(now))
+    if s != c:
+        return f'barem/oran degisti (+{len(s - c)} / -{len(c - s)})'
+    return None
+
+
+def fark_dosyalari(seed, canli, now=None, siki=False):
     """seed ve canli sozlukleri ({ad: json}) karsilastir; farkli (ya da okunamayan) dosya adlari. karne.json yalniz docs ile."""
+    now = time.time() if now is None else now
     farkli = []
     for ad in FARK_DOSYALARI:
         a, b = seed.get(ad), canli.get(ad)
         if a is None or b is None:
             farkli.append(ad + ' (okunamadi)')
+            continue
+        if ad == 'iddaa-lines.json':
+            try:
+                neden = iddaa_fark(a, b, now, siki)
+            except Exception as e:  # noqa: BLE001 - emin degilsen yayinla
+                neden = f'hata: {e}'
+            if neden:
+                farkli.append(ad + ' (' + neden + ')')
             continue
         if ad == 'karne.json':
             a, b = (a.get('docs') if isinstance(a, dict) else a), (b.get('docs') if isinstance(b, dict) else b)
@@ -65,7 +89,8 @@ def karar(olay, kaynak, seed_iddaa=None, canli_iddaa=None, seed_karne=None, canl
     if olay == 'workflow_dispatch' and fark_modu:
         if not isinstance(seed_dosyalar, dict) or not isinstance(canli_dosyalar, dict):
             return True, 'fark_varsa: dosyalar okunamadi'
-        farkli = fark_dosyalari(seed_dosyalar, canli_dosyalar)
+        siki = cf_toplam is not None and cf_toplam >= SIKI_ESIK
+        farkli = fark_dosyalari(seed_dosyalar, canli_dosyalar, now, siki)
         if farkli:
             return True, 'fark_varsa: canliyla farkli -> ' + ', '.join(farkli)
         return False, 'fark_varsa: seed dosyalari canliyla ayni, yayin yok'

@@ -27,9 +27,9 @@ Karne settle artik GitHub cron'unda DEGIL, Worker'da (24 Kasim 2026).
 ## Sabah zinciri ve sabit yayin noktalari (Istanbul, 24 Kasim 2026)
 GitHub cron'u ~1 saat gecikebildigi icin (karne settle CDN'den once kosuyordu) GitHub'da hicbir `schedule` kalmadi; hepsi Worker'dan `workflow_dispatch`:
 - 10:35 `nba-cdn-guvenli-uygula.yml` (box score -> data.json) | 10:50 `referans-veri-guncelle.yml` (kaynak=both) | 11:05 `karne-otomatik.yml` (mode=settle)
-- 11:35 ve 20:05 `cizgi-masasi-otomatik-pages.yml` (yayinla=true, fark_varsa=true): seed dosyalari canliyla ayniysa deploy ETMEZ.
+- Yayin noktalari `cizgi-masasi-otomatik-pages.yml` (yayinla=true, fark_varsa=true): 11:35, 16:35, 18:35, 20:35, 22:35, 00:35, 02:35 (gunde 7). Seed dosyalari (iddaa baremi dahil) canliyla ayniysa deploy ETMEZ.
 - 19:30: Melih'in PC'si `tracking_1930_aktar.ps1` ile tracking + periods.json'u tek commit'te yollar (eski 20:10 gorevi kapatildi).
-CDN, tracking, periyot ve referans veri workflow'lari artik kendi basina yayin tetiklemez; yalniz iddaa ve karne tetikler.
+Hicbir veri workflow'u (iddaa, karne, CDN, tracking, periyot, referans) kendi basina yayin tetiklemez; hepsi veriyi seed'e yazar, siteye yukaridaki sabit noktada TEK deploy ile gider. Sakatlik D1'e yazilir, deploy gerektirmez.
 Elle test (`?k=TEST_KEY&is=`): `cdn`, `referans`, `settle`, `yayin`, `iddaa`, `karne`. Bu degisiklik Worker'a Cloudflare panelinden elle (Edit code -> Deploy) yuklenir.
 
 ## Parmak izi (VARSAYILAN KAPALI)

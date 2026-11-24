@@ -84,19 +84,21 @@ class YayinKarari(unittest.TestCase):
         # Agir build job'u karardan sonra gelir; karar job'unda build/indirme adimi olmamali.
         self.assertLess(pages.index('  karar:'), pages.index('  siteyi-hazirla:'))
         self.assertNotIn('wrangler', pages[pages.index('  karar:'):pages.index('  siteyi-hazirla:')])
-        # Yalniz iddaa ve karne kendi basina yayin tetikler; CDN/tracking/periyot sabit yayin noktalarindan gider.
-        wr = pages[pages.index('  workflow_run:'):pages.index('permissions:')]
-        self.assertIn(IDDAA, wr); self.assertIn(KARNE, wr)
-        for ad in ('NBA CDN', 'Tracking', 'Periyot', 'Gunluk Oyuncu'):
-            self.assertNotIn(ad, wr)
+        # Hicbir workflow kendi basina yayin tetiklemez; yayin yalniz Worker'in sabit noktalarindan (dispatch) ve push ile.
+        self.assertNotIn('workflow_run', pages)
         self.assertIn('scripts/cf_deploy_sayac.py', pages)
         self.assertIn('CF_TOPLAM: ${{ steps.kota.outputs.cf_toplam }}', pages)
         self.assertIn('issues: write', pages)
         self.assertNotIn('--kota', pages)
 
 
+FN = 1795200000
+IDD = {'ts': FN * 1000 - 3600000, 'rows': ['a|b|c|2.0|%d' % (FN + 5000)]}
+
+
 def _dosyalar(**degisen):
     d = {ad: {'ad': ad, 'v': 1} for ad in FARK_DOSYALARI}
+    d['iddaa-lines.json'] = IDD
     d['karne.json'] = {'docs': [{'date': '2026-11-24', 'picks': [1]}], 'generatedAt': 'x'}
     d.update(degisen)
     return d
@@ -104,26 +106,26 @@ def _dosyalar(**degisen):
 
 class SabitYayinNoktasi(unittest.TestCase):
     def test_fark_yok_atla(self):
-        y, neden = karar('workflow_dispatch', '', fark_modu=True, seed_dosyalar=_dosyalar(), canli_dosyalar=_dosyalar())
+        y, neden = karar('workflow_dispatch', '', now=FN, fark_modu=True, seed_dosyalar=_dosyalar(), canli_dosyalar=_dosyalar())
         self.assertFalse(y, neden)
 
     def test_karne_generatedat_farki_sayilmaz(self):
         s = _dosyalar(**{'karne.json': {'docs': [{'date': '2026-11-24', 'picks': [1]}], 'generatedAt': 'baska'}})
-        self.assertFalse(karar('workflow_dispatch', '', fark_modu=True, seed_dosyalar=s, canli_dosyalar=_dosyalar())[0])
+        self.assertFalse(karar('workflow_dispatch', '', now=FN, fark_modu=True, seed_dosyalar=s, canli_dosyalar=_dosyalar())[0])
 
     def test_data_farkli_yayinla(self):
         s = _dosyalar(**{'data.json': {'ad': 'data.json', 'v': 2}})
-        y, neden = karar('workflow_dispatch', '', fark_modu=True, seed_dosyalar=s, canli_dosyalar=_dosyalar())
+        y, neden = karar('workflow_dispatch', '', now=FN, fark_modu=True, seed_dosyalar=s, canli_dosyalar=_dosyalar())
         self.assertTrue(y)
         self.assertIn('data.json', neden)
 
     def test_karne_docs_farkli_yayinla(self):
         s = _dosyalar(**{'karne.json': {'docs': [{'date': '2026-11-24', 'picks': [1, 2]}]}})
-        self.assertTrue(karar('workflow_dispatch', '', fark_modu=True, seed_dosyalar=s, canli_dosyalar=_dosyalar())[0])
+        self.assertTrue(karar('workflow_dispatch', '', now=FN, fark_modu=True, seed_dosyalar=s, canli_dosyalar=_dosyalar())[0])
 
     def test_okunamayan_dosya_yayinla(self):
         c = _dosyalar(); c['periods.json'] = None
-        self.assertTrue(karar('workflow_dispatch', '', fark_modu=True, seed_dosyalar=_dosyalar(), canli_dosyalar=c)[0])
+        self.assertTrue(karar('workflow_dispatch', '', now=FN, fark_modu=True, seed_dosyalar=_dosyalar(), canli_dosyalar=c)[0])
         self.assertTrue(karar('workflow_dispatch', '', fark_modu=True)[0])
 
     def test_fark_modu_kapaliysa_elle_her_zaman(self):
@@ -131,6 +133,22 @@ class SabitYayinNoktasi(unittest.TestCase):
 
     def test_fark_modu_yalniz_dispatch(self):
         self.assertTrue(karar('push', '', fark_modu=True, seed_dosyalar=_dosyalar(), canli_dosyalar=_dosyalar())[0])
+
+    def test_iddaa_oran_degisti_yayinla(self):
+        s = _dosyalar(**{'iddaa-lines.json': {'ts': IDD['ts'], 'rows': ['a|b|c|2.1|%d' % (FN + 5000)]}})
+        y, neden = karar('workflow_dispatch', '', now=FN, fark_modu=True, seed_dosyalar=s, canli_dosyalar=_dosyalar())
+        self.assertTrue(y); self.assertIn('iddaa', neden)
+
+    def test_iddaa_baslamis_mac_farki_sayilmaz(self):
+        eski = 'x|y|z|1.5|%d' % (FN - 100)
+        s = _dosyalar(**{'iddaa-lines.json': {'ts': IDD['ts'], 'rows': IDD['rows'] + [eski]}})
+        self.assertFalse(karar('workflow_dispatch', '', now=FN, fark_modu=True, seed_dosyalar=s, canli_dosyalar=_dosyalar())[0])
+
+    def test_iddaa_4_saat_eskidi_yayinla_siki_modda_degil(self):
+        eski = {'ts': FN * 1000 - 5 * 3600000, 'rows': IDD['rows']}
+        c = _dosyalar(**{'iddaa-lines.json': eski})
+        self.assertTrue(karar('workflow_dispatch', '', now=FN, fark_modu=True, seed_dosyalar=c, canli_dosyalar=c)[0])
+        self.assertFalse(karar('workflow_dispatch', '', now=FN, cf_toplam=480, fark_modu=True, seed_dosyalar=c, canli_dosyalar=c)[0])
 
 
 if __name__ == '__main__':

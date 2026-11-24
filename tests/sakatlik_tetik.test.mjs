@@ -150,7 +150,7 @@ console.log(`PASS: 10 senaryo; parmak izi ortalama CPU ~${ms.toFixed(1)} ms/PDF`
   assert.deepEqual(sec(cdnZamani), ['10:35']);
   assert.deepEqual(sec(referansZamani), ['10:50']);
   assert.deepEqual(sec(settleZamani), ['11:5']);
-  assert.deepEqual(sec(yayinZamani), ['11:35', '20:5']);
+  assert.deepEqual(sec(yayinZamani), ['0:35', '2:35', '11:35', '16:35', '18:35', '20:35', '22:35']);
   // Siralama: CDN < settle < yayin (settle box score'lardan sonra, yayin hepsinden sonra)
   assert.ok(ist2(10, 35) < ist2(11, 5) && ist2(11, 5) < ist2(11, 35));
 
@@ -168,10 +168,12 @@ console.log(`PASS: 10 senaryo; parmak izi ortalama CPU ~${ms.toFixed(1)} ms/PDF`
   assert.deepEqual(cagrilar[0][1], { mode: 'settle' });
   assert.deepEqual(await kos(11, 35), ['cizgi-masasi-otomatik-pages.yml']);
   assert.deepEqual(cagrilar[0][1], { yayinla: 'true', fark_varsa: 'true' });
-  const ak = await kos(20, 5);
-  assert.ok(ak.includes('cizgi-masasi-otomatik-pages.yml') && ak.includes('iddaa-lines-sync.yml'));
+  const ak = await kos(20, 5);   // veri toplama saati: yayin yok
+  assert.ok(!ak.includes('cizgi-masasi-otomatik-pages.yml') && ak.includes('iddaa-lines-sync.yml'));
+  for (const [h, m] of [[16, 35], [18, 35], [20, 35], [22, 35], [0, 35], [2, 35]]) assert.ok((await kos(h, m)).includes('cizgi-masasi-otomatik-pages.yml'), h + ':' + m);
+  assert.ok(!(await kos(17, 35)).includes('cizgi-masasi-otomatik-pages.yml'));
   assert.deepEqual(await kos(12, 5), []);   // baska saatlerde sabah zinciri tetiklenmez
   assert.deepEqual(await kos(12, 35), []);
   globalThis.setTimeout = st2;
-  console.log('PASS: sabah zinciri 10:35/10:50/11:05/11:35 ve aksam yayini 20:05');
+  console.log('PASS: sabah zinciri 10:35/10:50/11:05/11:35 ve 2 saatlik yayin noktalari');
 }
