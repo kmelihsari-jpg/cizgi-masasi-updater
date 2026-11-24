@@ -1,6 +1,6 @@
 import json, pathlib, sys, unittest
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))
-from yayin_gerekli import karar, KARNE, IDDAA
+from yayin_gerekli import karar, KARNE, IDDAA, FARK_DOSYALARI
 
 NOW = 1795200000.0
 GELECEK = int(NOW) + 7200
@@ -78,11 +78,59 @@ class YayinKarari(unittest.TestCase):
         self.assertIn(IDDAA, adlar)
         pages = (wf / 'cizgi-masasi-otomatik-pages.yml').read_text(encoding='utf-8')
         self.assertIn('scripts/yayin_gerekli.py', pages)
-        self.assertIn("steps.gerek.outputs.yayinla != 'false'", pages)
+        self.assertIn("needs.karar.outputs.yayinla != 'false'", pages)
+        self.assertIn('yayinla: ${{ steps.gerek.outputs.yayinla }}', pages)
+        self.assertIn('FARK_VARSA: ${{ inputs.fark_varsa }}', pages)
+        # Agir build job'u karardan sonra gelir; karar job'unda build/indirme adimi olmamali.
+        self.assertLess(pages.index('  karar:'), pages.index('  siteyi-hazirla:'))
+        self.assertNotIn('wrangler', pages[pages.index('  karar:'):pages.index('  siteyi-hazirla:')])
+        # Yalniz iddaa ve karne kendi basina yayin tetikler; CDN/tracking/periyot sabit yayin noktalarindan gider.
+        wr = pages[pages.index('  workflow_run:'):pages.index('permissions:')]
+        self.assertIn(IDDAA, wr); self.assertIn(KARNE, wr)
+        for ad in ('NBA CDN', 'Tracking', 'Periyot', 'Gunluk Oyuncu'):
+            self.assertNotIn(ad, wr)
         self.assertIn('scripts/cf_deploy_sayac.py', pages)
         self.assertIn('CF_TOPLAM: ${{ steps.kota.outputs.cf_toplam }}', pages)
         self.assertIn('issues: write', pages)
         self.assertNotIn('--kota', pages)
+
+
+def _dosyalar(**degisen):
+    d = {ad: {'ad': ad, 'v': 1} for ad in FARK_DOSYALARI}
+    d['karne.json'] = {'docs': [{'date': '2026-11-24', 'picks': [1]}], 'generatedAt': 'x'}
+    d.update(degisen)
+    return d
+
+
+class SabitYayinNoktasi(unittest.TestCase):
+    def test_fark_yok_atla(self):
+        y, neden = karar('workflow_dispatch', '', fark_modu=True, seed_dosyalar=_dosyalar(), canli_dosyalar=_dosyalar())
+        self.assertFalse(y, neden)
+
+    def test_karne_generatedat_farki_sayilmaz(self):
+        s = _dosyalar(**{'karne.json': {'docs': [{'date': '2026-11-24', 'picks': [1]}], 'generatedAt': 'baska'}})
+        self.assertFalse(karar('workflow_dispatch', '', fark_modu=True, seed_dosyalar=s, canli_dosyalar=_dosyalar())[0])
+
+    def test_data_farkli_yayinla(self):
+        s = _dosyalar(**{'data.json': {'ad': 'data.json', 'v': 2}})
+        y, neden = karar('workflow_dispatch', '', fark_modu=True, seed_dosyalar=s, canli_dosyalar=_dosyalar())
+        self.assertTrue(y)
+        self.assertIn('data.json', neden)
+
+    def test_karne_docs_farkli_yayinla(self):
+        s = _dosyalar(**{'karne.json': {'docs': [{'date': '2026-11-24', 'picks': [1, 2]}]}})
+        self.assertTrue(karar('workflow_dispatch', '', fark_modu=True, seed_dosyalar=s, canli_dosyalar=_dosyalar())[0])
+
+    def test_okunamayan_dosya_yayinla(self):
+        c = _dosyalar(); c['periods.json'] = None
+        self.assertTrue(karar('workflow_dispatch', '', fark_modu=True, seed_dosyalar=_dosyalar(), canli_dosyalar=c)[0])
+        self.assertTrue(karar('workflow_dispatch', '', fark_modu=True)[0])
+
+    def test_fark_modu_kapaliysa_elle_her_zaman(self):
+        self.assertTrue(karar('workflow_dispatch', '', seed_dosyalar=_dosyalar(), canli_dosyalar=_dosyalar())[0])
+
+    def test_fark_modu_yalniz_dispatch(self):
+        self.assertTrue(karar('push', '', fark_modu=True, seed_dosyalar=_dosyalar(), canli_dosyalar=_dosyalar())[0])
 
 
 if __name__ == '__main__':

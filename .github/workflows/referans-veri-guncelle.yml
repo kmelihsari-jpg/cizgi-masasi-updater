@@ -14,9 +14,7 @@ on:
           - rotation
           - both
 
-  schedule:
-    # Her gun 08:20 Turkiye saati (DVP + TeamRankings + Rotasyon)
-    - cron: '20 5 * * *'
+  # Zamanlama Cloudflare Worker'da (cizgi-sakatlik-tetik): Istanbul 10:50'de workflow_dispatch, kaynak=both (24 Kasim 2026).
 
 permissions:
   contents: write
@@ -41,7 +39,7 @@ jobs:
 
       - name: Kaynak verileri oku
         env:
-          KAYNAK: ${{ github.event_name == 'schedule' && 'both' || inputs.kaynak }}
+          KAYNAK: ${{ inputs.kaynak || 'both' }}
         shell: bash
         run: |
           set -uo pipefail

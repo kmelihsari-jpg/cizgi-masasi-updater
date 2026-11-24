@@ -5,7 +5,9 @@ Yalniz workflow_run olaylarinda ve yalniz iki kaynakta yayini atlayabilir:
   - Iddaa Barem Senkronu: baslamamis maclarin barem/oran satirlari canli sitedekiyle ayniysa ve canli
     barem okumasi TAZELE_SAAT'ten yeniyse atla. (Site 6 saatten eski baremi "eskidi" sayar; 4 saatte bir
     degisiklik olmasa da yayinlanir.)
-Diger her durumda (push, elle, diger workflow'lar, herhangi bir hata/eksik veri) YAYINLA.
+Sabit yayin noktalari (fark_varsa=true, Worker 11:35 ve 20:05'te tetikler): seed/data.json, dvp.json, teamrankings.json,
+periods.json, rotation.json ve karne.json (docs) canli dosyalardan FARKLIysa yayinla, hepsi ayniysa atla.
+Diger her durumda (push, elle, herhangi bir hata/eksik veri) YAYINLA.
 Siki mod: hesaptaki Pages deploy sayisi (CF_TOPLAM, cf_deploy_sayac.py) SIKI_ESIK'e ulasinca iddaa'nin 4 saatlik
 tazeleme yayini kalkar; iddaa yalniz barem/oran degisince yayinlar (kalan pay Valensia'ya ve onemli guncellemelere).
 
@@ -22,6 +24,8 @@ SITE = 'https://cizgi-masasi.pages.dev/'
 TAZELE_SAAT = 4
 SIKI_ESIK = 470
 KARNE = 'Cizgi Masasi - Karne Otomasyonu'
+# Sabit yayin noktasinda canliyla karsilastirilan dosyalar (iddaa kendi kuralina sahip).
+FARK_DOSYALARI = ('data.json', 'dvp.json', 'teamrankings.json', 'periods.json', 'rotation.json', 'karne.json')
 IDDAA = 'Cizgi Masasi - Iddaa NBA Barem Senkronizasyonu'
 
 
@@ -39,9 +43,32 @@ def baslamamis(doc, now_unix):
     return out
 
 
-def karar(olay, kaynak, seed_iddaa=None, canli_iddaa=None, seed_karne=None, canli_karne=None, now=None, cf_toplam=None):
+def fark_dosyalari(seed, canli):
+    """seed ve canli sozlukleri ({ad: json}) karsilastir; farkli (ya da okunamayan) dosya adlari. karne.json yalniz docs ile."""
+    farkli = []
+    for ad in FARK_DOSYALARI:
+        a, b = seed.get(ad), canli.get(ad)
+        if a is None or b is None:
+            farkli.append(ad + ' (okunamadi)')
+            continue
+        if ad == 'karne.json':
+            a, b = (a.get('docs') if isinstance(a, dict) else a), (b.get('docs') if isinstance(b, dict) else b)
+        if json.dumps(a, sort_keys=True, ensure_ascii=False) != json.dumps(b, sort_keys=True, ensure_ascii=False):
+            farkli.append(ad)
+    return farkli
+
+
+def karar(olay, kaynak, seed_iddaa=None, canli_iddaa=None, seed_karne=None, canli_karne=None, now=None, cf_toplam=None,
+          fark_modu=False, seed_dosyalar=None, canli_dosyalar=None):
     """(yayinla: bool, neden: str). Emin olunamayan her durumda yayinla."""
     now = time.time() if now is None else now
+    if olay == 'workflow_dispatch' and fark_modu:
+        if not isinstance(seed_dosyalar, dict) or not isinstance(canli_dosyalar, dict):
+            return True, 'fark_varsa: dosyalar okunamadi'
+        farkli = fark_dosyalari(seed_dosyalar, canli_dosyalar)
+        if farkli:
+            return True, 'fark_varsa: canliyla farkli -> ' + ', '.join(farkli)
+        return False, 'fark_varsa: seed dosyalari canliyla ayni, yayin yok'
     if olay != 'workflow_run':
         return True, f'olay={olay}: her zaman yayinla'
     try:
@@ -98,6 +125,13 @@ def main():
             veri['canli_' + anahtar] = canli_json(dosya)
         except Exception as e:  # noqa: BLE001
             print('UYARI: veri okunamadi, yayinlanacak:', e)
+    if olay == 'workflow_dispatch' and os.environ.get('FARK_VARSA', '').lower() == 'true':
+        veri['fark_modu'] = True
+        try:
+            veri['seed_dosyalar'] = {ad: seed_json(ad) for ad in FARK_DOSYALARI}
+            veri['canli_dosyalar'] = {ad: canli_json(ad) for ad in FARK_DOSYALARI}
+        except Exception as e:  # noqa: BLE001
+            print('UYARI: fark icin dosyalar okunamadi, yayinlanacak:', e)
     try:
         veri['cf_toplam'] = int(os.environ['CF_TOPLAM']) if os.environ.get('CF_TOPLAM') else None
     except ValueError:

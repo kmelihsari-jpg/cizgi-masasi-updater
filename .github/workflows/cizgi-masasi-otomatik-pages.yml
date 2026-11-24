@@ -8,6 +8,11 @@ on:
         required: true
         type: boolean
         default: false
+      fark_varsa:
+        description: 'Zamanlanmis sabit yayin noktasi: seed dosyalari canlidan farkliysa yayinla (elle calistirirken bos birak)'
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -18,13 +23,11 @@ on:
       - 'scripts/vitrin_sakatlik_kur.py'
       - 'seed/confirmed-active.json'
   workflow_run:
+    # CDN, tracking, periyot/rotasyon ve referans veri artik kendi basina yayin tetiklemez:
+    # Worker sabit yayin noktalarinda (11:35 ve 20:05) fark_varsa=true ile bu workflow'u calistirir.
     workflows:
-      - 'Cizgi Masasi - Gunluk Oyuncu Istatistikleri'
-      - 'Cizgi Masasi - NBA CDN Guvenli Uygula'
-      - 'Cizgi Masasi - Yerel Tracking Verisini Birlestir'
       - 'Cizgi Masasi - Iddaa NBA Barem Senkronizasyonu'
       - 'Cizgi Masasi - Karne Otomasyonu'
-      - 'Cizgi Masasi - Periyot ve Rotasyon Verileri'
     types:
       - completed
     branches:
@@ -39,10 +42,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  siteyi-hazirla:
+  # Hafif karar job'u: yayin gerekmiyorsa agir build job'u hic baslamaz (indirme, yamalar, artifact yok).
+  karar:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
+    outputs:
+      yayinla: ${{ steps.gerek.outputs.yayinla }}
     steps:
       - name: GitHub verilerini al
         uses: actions/checkout@v4
@@ -66,7 +72,19 @@ jobs:
           OLAY: ${{ github.event_name }}
           KAYNAK: ${{ github.event.workflow_run.name }}
           CF_TOPLAM: ${{ steps.kota.outputs.cf_toplam }}
+          FARK_VARSA: ${{ inputs.fark_varsa }}
         run: python3 scripts/yayin_gerekli.py
+
+  siteyi-hazirla:
+    needs: karar
+    if: needs.karar.outputs.yayinla != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: GitHub verilerini al
+        uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Mevcut siteyi koruyarak yayin paketini hazirla
         shell: bash
@@ -495,7 +513,7 @@ jobs:
           if-no-files-found: error
 
       - name: Cloudflare Pages'e yayinla
-        if: steps.gerek.outputs.yayinla != 'false' && (github.event_name == 'workflow_run' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.yayinla == true))
+        if: (github.event_name == 'workflow_run' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.yayinla == true))
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

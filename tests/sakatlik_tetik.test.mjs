@@ -1,7 +1,7 @@
 // worker/sakatlik-tetik.js karar mantigi testi. Ag yok, GitHub Actions yok: fetch ve KV taklit edilir.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import worker, { sakatlikKarari, parmakIzi, sakatlikSlotu, iddaaZamani, karneZamani, SAKATLIK_SLOTLARI } from '../worker/sakatlik-tetik.js';
+import worker, { sakatlikKarari, parmakIzi, sakatlikSlotu, iddaaZamani, karneZamani, cdnZamani, referansZamani, settleZamani, yayinZamani, SAKATLIK_SLOTLARI } from '../worker/sakatlik-tetik.js';
 
 const fx = (n) => readFileSync(new URL('./fixtures/' + n, import.meta.url));
 const PDF = {
@@ -139,4 +139,39 @@ console.log(`PASS: 10 senaryo; parmak izi ortalama CPU ~${ms.toFixed(1)} ms/PDF`
   for (const [a, b, dks] of PLAN) for (let h = a; h < b; h++) for (const m of dks) plandan.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
   assert.deepEqual(plandan.sort(), [...SAKATLIK_SLOTLARI].sort());
   console.log('PASS: site PLAN = Worker slotlari (' + plandan.length + ')');
+}
+
+// 14) Sabah zinciri ve sabit yayin noktalari (24 Kasim 2026)
+{
+  const ist2 = (h, m) => Date.UTC(2026, 10, 24, h - 3, m);
+  const tum = [];
+  for (let h = 0; h < 24; h++) for (const m of [5, 20, 35, 50]) tum.push([h, m]);
+  const sec = (fn) => tum.filter(([h, m]) => fn(ist2(h, m))).map(([h, m]) => h + ':' + m);
+  assert.deepEqual(sec(cdnZamani), ['10:35']);
+  assert.deepEqual(sec(referansZamani), ['10:50']);
+  assert.deepEqual(sec(settleZamani), ['11:5']);
+  assert.deepEqual(sec(yayinZamani), ['11:35', '20:5']);
+  // Siralama: CDN < settle < yayin (settle box score'lardan sonra, yayin hepsinden sonra)
+  assert.ok(ist2(10, 35) < ist2(11, 5) && ist2(11, 5) < ist2(11, 35));
+
+  const cagrilar = [];
+  const bekleyen = [];
+  const ctx2 = { waitUntil(p) { bekleyen.push(p); } };
+  globalThis.fetch = async (url, init) => { cagrilar.push([String(url).split('/workflows/')[1].split('/')[0], JSON.parse(init.body).inputs]); return new Response(null, { status: 204 }); };
+  const env = { GITHUB_TOKEN: 'x' };
+  const st2 = globalThis.setTimeout; globalThis.setTimeout = (f) => st2(f, 0); // karne snapshot'in 10 dk beklemesini atla
+  const kos = async (h, m) => { cagrilar.length = 0; bekleyen.length = 0; await worker.scheduled({ scheduledTime: ist2(h, m) }, env, ctx2); await Promise.all(bekleyen); return cagrilar.map((c) => c[0]); };
+  assert.deepEqual(await kos(10, 35), ['nba-cdn-guvenli-uygula.yml']);
+  assert.deepEqual(await kos(10, 50), ['referans-veri-guncelle.yml']);
+  assert.deepEqual(cagrilar[0][1], { kaynak: 'both' });
+  assert.deepEqual(await kos(11, 5), ['karne-otomatik.yml']);
+  assert.deepEqual(cagrilar[0][1], { mode: 'settle' });
+  assert.deepEqual(await kos(11, 35), ['cizgi-masasi-otomatik-pages.yml']);
+  assert.deepEqual(cagrilar[0][1], { yayinla: 'true', fark_varsa: 'true' });
+  const ak = await kos(20, 5);
+  assert.ok(ak.includes('cizgi-masasi-otomatik-pages.yml') && ak.includes('iddaa-lines-sync.yml'));
+  assert.deepEqual(await kos(12, 5), []);   // baska saatlerde sabah zinciri tetiklenmez
+  assert.deepEqual(await kos(12, 35), []);
+  globalThis.setTimeout = st2;
+  console.log('PASS: sabah zinciri 10:35/10:50/11:05/11:35 ve aksam yayini 20:05');
 }

@@ -1,10 +1,9 @@
 name: Cizgi Masasi - NBA CDN Guvenli Uygula
 
 on:
+  # Zamanlama Cloudflare Worker'da (cizgi-sakatlik-tetik): Istanbul 10:35'te workflow_dispatch (24 Kasim 2026).
+  # GitHub cron'u ~1 saat gecikebildigi icin siralama (CDN -> karne settle) bozuluyordu.
   workflow_dispatch:
-  schedule:
-    # 12:35 Turkiye saati = 09:35 UTC; her gun
-    - cron: '35 9 * * *'
 
 permissions:
   contents: write

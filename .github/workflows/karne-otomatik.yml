@@ -9,10 +9,9 @@ on:
         default: snapshot
         type: choice
         options: [snapshot, settle]
-  schedule:
-    # Aksam snapshot'lari (16:15'ten 00:15'e saatte 1, 20 Kasim 2026) artik Cloudflare Worker'da (cizgi-sakatlik-tetik): iddaa'dan 10 dk sonra workflow_dispatch (mode=snapshot).
-    # Turkiye saati 12:15, dunden kalan maclarin sonuclari
-    - cron: '15 9 * * *'
+  # Zamanlama Cloudflare Worker'da (cizgi-sakatlik-tetik), GitHub cron'u yok (24 Kasim 2026):
+  #  - snapshot: 16:15'ten 00:15'e saatte 1 (iddaa'dan 10 dk sonra)
+  #  - settle: Istanbul 11:05 (NBA CDN 10:35'te box score'lari ekledikten sonra)
 
 permissions:
   contents: write
@@ -42,8 +41,6 @@ jobs:
         run: |
           if [ "$EVENT_NAME" = 'workflow_dispatch' ]; then
             MODE="$INPUT_MODE"
-          elif [ "$CRON" = '15 9 * * *' ]; then
-            MODE='settle'
           else
             MODE='snapshot'
           fi

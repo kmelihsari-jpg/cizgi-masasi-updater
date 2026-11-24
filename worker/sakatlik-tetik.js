@@ -175,8 +175,24 @@ export function iddaaZamani(t) { const { saat, dk } = saatIstanbul(t); return (s
 // Karne snapshot: her iddaa'dan 10 dk sonra, 16:15'ten 00:15'e (son snapshot 00:15)
 export function karneZamani(t) { const { saat, dk } = saatIstanbul(t); return (saat >= 16 || saat === 0) && dk < 10; }
 
+// Sabah zinciri (Istanbul, 24 Kasim 2026). GitHub cron'u ~1 saat gecikebildigi icin hepsi buradan tetiklenir.
+// Sira onemli: karne settle, box score'lar (CDN) data.json'a eklendikten SONRA calismali.
+//   10:35 NBA CDN box score -> 10:50 DVP/TeamRankings/rotasyon -> 11:05 karne settle -> 11:35 tek yayin (fark varsa)
+// Aksam: 19:30'da senin PC'n tracking + periyot'u tek commit'te yollar, 20:05'te yayin (fark varsa).
+const hh = (t) => { const { saat, dk } = saatIstanbul(t); return hhmm(saat, dk); };
+export function cdnZamani(t) { return hh(t) === '10:35'; }
+export function referansZamani(t) { return hh(t) === '10:50'; }
+export function settleZamani(t) { return hh(t) === '11:05'; }
+export function yayinZamani(t) { return hh(t) === '11:35' || hh(t) === '20:05'; }
+// Yayin workflow'u: fark_varsa=true -> seed dosyalari canliyla ayniysa deploy ETMEZ (scripts/yayin_gerekli.py).
+const YAYIN = ['cizgi-masasi-otomatik-pages.yml', { yayinla: 'true', fark_varsa: 'true' }];
+
 export default {
   async scheduled(event, env, ctx) {
+    if (cdnZamani(event.scheduledTime)) ctx.waitUntil(tetikle(env, 'nba-cdn-guvenli-uygula.yml'));
+    if (referansZamani(event.scheduledTime)) ctx.waitUntil(tetikle(env, 'referans-veri-guncelle.yml', { kaynak: 'both' }));
+    if (settleZamani(event.scheduledTime)) ctx.waitUntil(tetikle(env, 'karne-otomatik.yml', { mode: 'settle' }));
+    if (yayinZamani(event.scheduledTime)) ctx.waitUntil(tetikle(env, ...YAYIN));
     if (sakatlikSlotu(event.scheduledTime)) ctx.waitUntil(sakatlikIsle(env, false));
     if (iddaaZamani(event.scheduledTime)) ctx.waitUntil(tetikle(env, 'iddaa-lines-sync.yml'));
     if (karneZamani(event.scheduledTime)) {
@@ -190,7 +206,7 @@ export default {
   //   (varsayilan)  &is=sakatlik  -> kararla birlikte gercek tetikleme (degisim yoksa atlar)
   //                 &is=kontrol   -> yalniz karari soyler, GitHub'a dokunmaz
   //                 &is=zorla     -> kosulsuz tetikler (eski davranis)
-  //                 &is=iddaa | karne -> GERCEK run baslatir
+  //                 &is=iddaa | karne | settle | cdn | referans | yayin -> GERCEK run baslatir
   async fetch(req, env) {
     const u = new globalThis.URL(req.url);
     if (!env.TEST_KEY || u.searchParams.get('k') !== env.TEST_KEY) return new Response('yok', { status: 404 });
@@ -201,6 +217,10 @@ export default {
       zorla: ['nba-official-sync.yml'],
       iddaa: ['iddaa-lines-sync.yml'],
       karne: ['karne-otomatik.yml', { mode: 'snapshot' }],
+      settle: ['karne-otomatik.yml', { mode: 'settle' }],
+      cdn: ['nba-cdn-guvenli-uygula.yml'],
+      referans: ['referans-veri-guncelle.yml', { kaynak: 'both' }],
+      yayin: YAYIN,
     };
     if (!MAP[j]) return new Response('bilinmeyen is: ' + j, { status: 400 });
     return new Response(j + ': ' + (await tetikle(env, ...MAP[j])));
