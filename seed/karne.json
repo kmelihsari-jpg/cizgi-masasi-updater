@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-21",
   "startBalance": 100,
-  "generatedAt": "2026-11-24T18:16:43.080401+00:00",
+  "generatedAt": "2026-11-24T21:16:02.740394+00:00",
   "docs": [
     {
       "date": "2026-11-21",
@@ -2376,6 +2376,24 @@
           "rk": 8,
           "mu": 7.3,
           "model": 0.589,
+          "est": false,
+          "why": "merdiven",
+          "need": null
+        },
+        {
+          "id": 1642258,
+          "name": "Zaccharie Risacher",
+          "team": "DAL",
+          "opp": "DEN",
+          "pos": "PF",
+          "mk": "REB",
+          "line": 3.5,
+          "n": 4,
+          "odd": 1.44,
+          "ev": -0.072,
+          "rk": 28,
+          "mu": 4.5,
+          "model": 0.665,
           "est": false,
           "why": "merdiven",
           "need": null
