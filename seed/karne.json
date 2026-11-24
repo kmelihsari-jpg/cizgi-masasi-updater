@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-21",
   "startBalance": 100,
-  "generatedAt": "2026-11-24T16:16:32.703215+00:00",
+  "generatedAt": "2026-11-24T18:16:43.080401+00:00",
   "docs": [
     {
       "date": "2026-11-21",
@@ -2358,6 +2358,24 @@
           "rk": 7,
           "mu": 1.4,
           "model": 0.381,
+          "est": false,
+          "why": "merdiven",
+          "need": null
+        },
+        {
+          "id": 1643407,
+          "name": "AJ Dybantsa",
+          "team": "WAS",
+          "opp": "BOS",
+          "pos": "SF",
+          "mk": "REB",
+          "line": 6.5,
+          "n": 7,
+          "odd": 1.62,
+          "ev": -0.075,
+          "rk": 8,
+          "mu": 7.3,
+          "model": 0.589,
           "est": false,
           "why": "merdiven",
           "need": null
