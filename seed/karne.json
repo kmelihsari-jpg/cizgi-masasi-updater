@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-21",
   "startBalance": 100,
-  "generatedAt": "2026-11-24T13:16:05.064080+00:00",
+  "generatedAt": "2026-11-24T14:16:38.094757+00:00",
   "docs": [
     {
       "date": "2026-11-21",
@@ -2250,6 +2250,24 @@
           "rk": 4,
           "mu": 29.1,
           "model": 0.608,
+          "est": false,
+          "why": "merdiven",
+          "need": null
+        },
+        {
+          "id": 1630595,
+          "name": "Cade Cunningham",
+          "team": "DET",
+          "opp": "ORL",
+          "pos": "PG",
+          "mk": "AST",
+          "line": 8.5,
+          "n": 9,
+          "odd": 1.59,
+          "ev": -0.08,
+          "rk": 3,
+          "mu": 9.4,
+          "model": 0.596,
           "est": false,
           "why": "merdiven",
           "need": null
