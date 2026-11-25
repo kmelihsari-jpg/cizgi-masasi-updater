@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-21",
   "startBalance": 100,
-  "generatedAt": "2026-11-25T14:16:23.613284+00:00",
+  "generatedAt": "2026-11-25T15:16:36.076431+00:00",
   "docs": [
     {
       "date": "2026-11-21",
@@ -2733,6 +2733,42 @@
           "rk": 3,
           "mu": 2.3,
           "model": 0.401,
+          "est": false,
+          "why": "merdiven",
+          "need": null
+        },
+        {
+          "id": 1631321,
+          "name": "Sidy Cissoko",
+          "team": "POR",
+          "opp": "SAS",
+          "pos": "SG",
+          "mk": "3PM",
+          "line": 1.5,
+          "n": 2,
+          "odd": 2,
+          "ev": 0.014,
+          "rk": 19,
+          "mu": 1.8,
+          "model": 0.536,
+          "est": false,
+          "why": "merdiven",
+          "need": null
+        },
+        {
+          "id": 1628970,
+          "name": "Miles Bridges",
+          "team": "PHX",
+          "opp": "HOU",
+          "pos": "PF",
+          "mk": "REB",
+          "line": 6.5,
+          "n": 7,
+          "odd": 1.8,
+          "ev": -0.052,
+          "rk": 18,
+          "mu": 7,
+          "model": 0.547,
           "est": false,
           "why": "merdiven",
           "need": null
