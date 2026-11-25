@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-21",
   "startBalance": 100,
-  "generatedAt": "2026-11-25T15:16:36.076431+00:00",
+  "generatedAt": "2026-11-25T17:16:03.268891+00:00",
   "docs": [
     {
       "date": "2026-11-21",
@@ -2497,6 +2497,25 @@
           "est": false,
           "why": "merdiven",
           "need": null
+        },
+        {
+          "id": 1642285,
+          "name": "Cam Spencer",
+          "team": "MEM",
+          "opp": "LAC",
+          "pos": "PG",
+          "mk": "PTS",
+          "line": 9.5,
+          "n": 10,
+          "odd": 1.5,
+          "ev": 0.05,
+          "rk": 7,
+          "mu": 13.9,
+          "model": 0.746,
+          "est": false,
+          "tag": "saglam",
+          "pm": 0.7,
+          "capturedAt": "2026-11-25T17:16:03.268891+00:00"
         }
       ],
       "picks": [
@@ -2518,6 +2537,25 @@
           "tag": "saglam",
           "pm": 0.674,
           "capturedAt": "2026-11-25T13:16:03.057105+00:00"
+        },
+        {
+          "id": 1642285,
+          "name": "Cam Spencer",
+          "team": "MEM",
+          "opp": "LAC",
+          "pos": "PG",
+          "mk": "PTS",
+          "line": 9.5,
+          "n": 10,
+          "odd": 1.5,
+          "ev": 0.05,
+          "rk": 7,
+          "mu": 13.9,
+          "model": 0.746,
+          "est": false,
+          "tag": "saglam",
+          "pm": 0.7,
+          "capturedAt": "2026-11-25T17:16:03.268891+00:00"
         }
       ],
       "shadow": [
@@ -2769,6 +2807,24 @@
           "rk": 18,
           "mu": 7,
           "model": 0.547,
+          "est": false,
+          "why": "merdiven",
+          "need": null
+        },
+        {
+          "id": 1631321,
+          "name": "Sidy Cissoko",
+          "team": "POR",
+          "opp": "SAS",
+          "pos": "SG",
+          "mk": "REB",
+          "line": 3.5,
+          "n": 4,
+          "odd": 1.93,
+          "ev": 0.061,
+          "rk": 4,
+          "mu": 4.1,
+          "model": 0.588,
           "est": false,
           "why": "merdiven",
           "need": null
