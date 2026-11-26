@@ -151,5 +151,25 @@ class SabitYayinNoktasi(unittest.TestCase):
         self.assertFalse(karar('workflow_dispatch', '', now=FN, cf_toplam=480, fark_modu=True, seed_dosyalar=c, canli_dosyalar=c)[0])
 
 
+class MacsizGun(unittest.TestCase):
+    def test_macsiz_gunde_4_saat_tazeleme_yok(self):
+        bos = {'ts': FN * 1000 - 5 * 3600000, 'rows': ['a|b|c|2.0|%d' % (FN - 600)]}  # tek satir, mac baslamis
+        c = _dosyalar(**{'iddaa-lines.json': bos})
+        y, neden = karar('workflow_dispatch', '', now=FN, fark_modu=True, seed_dosyalar=c, canli_dosyalar=c)
+        self.assertFalse(y, neden)
+        y, neden = karar('workflow_run', IDDAA, seed_iddaa=bos, canli_iddaa=bos, now=FN)
+        self.assertFalse(y, neden)
+
+    def test_macsiz_gunde_bile_stale_yayinla(self):
+        bos = {'ts': FN * 1000 - 5 * 3600000, 'rows': [], 'stale': True}
+        c = _dosyalar(**{'iddaa-lines.json': bos})
+        self.assertTrue(karar('workflow_dispatch', '', now=FN, fark_modu=True, seed_dosyalar=c, canli_dosyalar=c)[0])
+
+    def test_yeni_mac_satiri_gelince_yayinla(self):
+        canli = {'ts': FN * 1000 - 5 * 3600000, 'rows': []}
+        seed = {'ts': FN * 1000 - 600000, 'rows': ['a|b|c|2.0|%d' % (FN + 5000)]}
+        self.assertTrue(karar('workflow_run', IDDAA, seed_iddaa=seed, canli_iddaa=canli, now=FN)[0])
+
+
 if __name__ == '__main__':
     unittest.main()

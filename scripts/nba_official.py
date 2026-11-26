@@ -140,6 +140,10 @@ def parse_pdf(content):
                 elif name or status:
                     raise RuntimeError(f'Sayfa {number}: beklenmeyen hucre: {name} | {status}')
             print(f'Sayfa {number}: yeni oyuncu={len(players)-count_before}, cizgi={len(edges)}', flush=True)
+    if not players:
+        # Hic oyuncu satiri yok: mac gunu olmayan (ya da rapor henuz doldurulmamis) bos rapor. Tum hucreler
+        # taninmis olarak gecti (beklenmeyen hucre hata verirdi); D1'e yazma, hata da verme.
+        return players, sorted(missing)
     if len(players) < 10:
         raise RuntimeError('Supheli dusuk oyuncu sayisi')
     seen = set()
@@ -197,6 +201,11 @@ def main():
     if not r.content.startswith(b'%PDF-'):
         raise RuntimeError('Gelen dosya PDF degil')
     players, missing = parse_pdf(r.content)
+    if not players:
+        print('::warning::NBA raporunda oyuncu satiri yok (mac yok / bos rapor); D1 degismedi, atlandi.', flush=True)
+        print('Rapor vermeyen takimlar:', len(missing), flush=True)
+        print('ATLANDI - BOS RAPOR, VERITABANINA YAZILMADI', flush=True)
+        return
     check_examples(players)
     print('Oyuncular:', len(players), flush=True)
     print('Durumlar:', dict(Counter(p['status'] for p in players)), flush=True)

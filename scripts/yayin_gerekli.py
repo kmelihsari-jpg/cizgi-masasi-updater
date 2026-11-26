@@ -50,9 +50,10 @@ def iddaa_fark(seed, canli, now, siki=False):
     if canli.get('stale'):
         return 'canli barem eskimis (stale)'
     yas = (now * 1000 - int(canli.get('ts', 0))) / 3600000
-    if not siki and (yas < 0 or yas >= TAZELE_SAAT):
-        return f'canli barem okumasi {yas:.1f} saatlik'
     s, c = baslamamis(seed, int(now)), baslamamis(canli, int(now))
+    maccsiz = not s and not c  # baslamamis mac satiri yok: eskiyecek barem de yok, tazeleme yayini bos olur
+    if not siki and not maccsiz and (yas < 0 or yas >= TAZELE_SAAT):
+        return f'canli barem okumasi {yas:.1f} saatlik'
     if s != c:
         return f'barem/oran degisti (+{len(s - c)} / -{len(c - s)})'
     return None
@@ -112,10 +113,10 @@ def karar(olay, kaynak, seed_iddaa=None, canli_iddaa=None, seed_karne=None, canl
                 return True, 'canli barem eskimis (stale)'
             yas = (now * 1000 - int(canli_iddaa.get('ts', 0))) / 3600000
             siki = cf_toplam is not None and cf_toplam >= SIKI_ESIK
-            if not siki and (yas < 0 or yas >= TAZELE_SAAT):
-                return True, f'canli barem okumasi {yas:.1f} saatlik (esik {TAZELE_SAAT})'
             s = baslamamis(seed_iddaa, int(now))
             c = baslamamis(canli_iddaa, int(now))
+            if not siki and not (not s and not c) and (yas < 0 or yas >= TAZELE_SAAT):
+                return True, f'canli barem okumasi {yas:.1f} saatlik (esik {TAZELE_SAAT})'
             if s != c:
                 return True, f'barem/oran degisti (+{len(s - c)} / -{len(c - s)} satir)'
             if siki:
