@@ -93,9 +93,10 @@ def patch_text(source,rows):
     return patch_datachk(_patch_returns(source,rows))
 
 def patch_site(source,rows):
-    """patch_text + oran kademesi (oran_kademe.py). Site yayini ve headless Karne bunu kullanir."""
+    """patch_text + oran kademesi (oran_kademe.py) + Vitrin V2 (vitrin_v2.py). Site yayini ve headless Karne bunu kullanir."""
     from oran_kademe import patch_model
-    return patch_model(patch_text(source,rows))
+    from vitrin_v2 import patch_model as vitrin_v2
+    return vitrin_v2(patch_model(patch_text(source,rows)))
 
 
 def patch_file(model,confirmation):

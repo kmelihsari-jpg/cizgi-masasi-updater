@@ -61,6 +61,7 @@ jobs:
           set -euo pipefail
           test -f seed/karne.json || exit 0
           git add seed/karne.json
+          if [ -f seed/sakatlik-snap.json ]; then git add seed/sakatlik-snap.json; fi
           if git diff --cached --quiet; then
             echo 'Karne degismedi'; exit 0
           fi

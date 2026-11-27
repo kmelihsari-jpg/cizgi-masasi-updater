@@ -64,6 +64,84 @@ def worker_sakatlik_taze(max_hours=3):
     except Exception as exc:
         return False, 'Worker okunamadi: ' + str(exc)[:120]
 
+# --- Sakatlik firsati (27 Kasim 2026): sunucu tarafi. Onceki saatin sakatlik goruntusuyle karsilastirip yeni OUT'a gore
+# model.js injOppItems'ten bahis uretir, doc.injPicks'e ekler (Kasa/Vitrin sayacina degil, ayri defter). Eskiden bunu yalnizca
+# acik bir tarayici uretiyordu; Karne injPicks hep bos kaliyordu.
+SNAP_MAX_H=20      # onceki goruntu bundan eskiyse olay uretme (haber bayat olur / veri bosluğu)
+SNAP_MIN_PLAYERS=80  # bundan az oyuncu okunduysa goruntuyu kaydetme (veri sorunu)
+INJ_MAX_EVENTS=12  # tek seferde bundan fazla yeni OUT = liste sifirlanmis/bozulmus say, olay uretme
+INJ_PER_PLAYER=2
+INJ_JS = """(arg) => {
+  const now=Date.now(),snap={},evs=[];
+  for(const id of Object.keys(P)){const p=P[id];if(!p||!byP[p.id])continue;const all=byP[p.id];if(all.length<5||mpg(p.id)<20)continue;
+    const i=injOf(p.name),st=(i&&i[0])?String(i[0]):'';snap[p.id]=st;
+    if(st==='OUT'&&arg&&arg.prev&&arg.prev[p.id]!=='OUT')evs.push({id:p.id,name:p.name,team:p.team,from:arg.prev[p.id]||''})}
+  const inj=[];
+  if(arg&&arg.prev&&evs.length&&evs.length<=12){for(const ev of evs){const news={id:ev.id,name:ev.name,from:ev.from,to:'OUT',at:now};
+    let items=[];try{items=injOppItems(ev,now,news)}catch(e){items=[]}
+    for(const c of items)inj.push(Object.assign({},c,{_day:dayKey(c.gt)}))}}
+  return {snap,evCount:evs.length,hadPrev:!!(arg&&arg.prev),inj}}"""
+
+def load_prev_snap(path,now):
+    """(ham dosya, kullanilabilir onceki goruntu | None)."""
+    raw=load(path,None);prev=None
+    if isinstance(raw,dict) and isinstance(raw.get('snap'),dict):
+        try:
+            h=(now*1000-int(raw.get('ts',0)))/3600000
+            if 0<=h<=SNAP_MAX_H:prev=raw['snap']
+        except (TypeError,ValueError):pass
+    return raw,prev
+
+def add_inj_picks(inj_res,old_by_day,docs,stamp,odds_updated,data_updated,now):
+    """Yeni OUT'tan dogan sakatlik firsatlarini doc.injPicks'e ekler (kayitlar sadece eklenir). Eklenen sayisini doner."""
+    if not inj_res or not inj_res.get('inj'):return 0
+    by_day={}
+    for c in inj_res['inj']:
+        try:
+            day=c['_day'];pid=int(c['id']);odd=float(c['odd']);n=int(c['n']);line=float(c['line']);gt=float(c['gt'])/1000
+            if not(c['mk'] in VALID and pid>0 and 1<odd<100 and n>0 and abs(line-(n-.5))<.0001 and now+60<gt<=now+16*3600):continue
+            if c.get('tag')!='inj' or not c.get('team') or not c.get('opp'):continue
+        except (KeyError,TypeError,ValueError):continue
+        by_day.setdefault(day,[]).append(c)
+    added=0
+    for day,items in sorted(by_day.items()):
+        doc=old_by_day.get(day)
+        if doc and any(k in doc for k in ('early','searly','iearly')):continue
+        base=(doc.get('picks',[])+doc.get('injPicks',[])) if doc else []
+        kasa={(int(p['id']),p['mk']) for p in (doc.get('picks',[]) if doc else [])}
+        have={(int(p['id']),p['mk']) for p in (doc.get('injPicks',[]) if doc else [])}
+        per={}
+        for p in (doc.get('injPicks',[]) if doc else []):per[int(p['id'])]=per.get(int(p['id']),0)+1
+        mac=game_counts(base);new=[]
+        for c in sorted(items,key=lambda x:-float(x.get('ev') or 0)):
+            pid=int(c['id']);key=(pid,c['mk'])
+            if key in kasa or key in have:continue
+            if per.get(pid,0)>=INJ_PER_PLAYER:continue
+            gk=game_key(c)
+            if mac.get(gk,0)>=MAC_MAX:continue
+            item={k:v for k,v in c.items() if k!='_day'};item['capturedAt']=stamp
+            new.append(item);have.add(key);per[pid]=per.get(pid,0)+1;mac[gk]=mac.get(gk,0)+1
+        if not new:continue
+        if not doc:
+            doc=dict(date=day,saved=stamp,first=[{'id':c['id'],'mk':c['mk'],'name':c['name'],'team':c['team']} for c in new],
+                     picks=[],shadow=[],injPicks=[],dataUpdated=data_updated,oddsUpdated=odds_updated,source='github-actions-headless',locked=True)
+            docs.append(doc);old_by_day[day]=doc
+        doc.setdefault('injPicks',[]).extend(new);added+=len(new)
+        print('INJ',day,'sakatlik firsati eklendi:',[(c['name'],c['mk'],c['line'],c['odd']) for c in new])
+    return added
+
+def save_snap(path,prev_raw,inj_res,now,stamp):
+    """Sakatlik goruntusunu (id -> durum) yazar; icerik degismediyse ve 3 saatten yeniyse dosyaya dokunmaz."""
+    if not inj_res or not isinstance(inj_res.get('snap'),dict) or len(inj_res['snap'])<SNAP_MIN_PLAYERS:
+        print('SAKATLIK GORUNTUSU: yeterli oyuncu okunmadi, kaydedilmedi');return False
+    snap=inj_res['snap']
+    if isinstance(prev_raw,dict) and prev_raw.get('snap')==snap:
+        try:
+            if 0<=(now*1000-int(prev_raw.get('ts',0)))/3600000<3:return False
+        except (TypeError,ValueError):pass
+    dump(path,{'ts':int(now*1000),'updated':stamp,'snap':snap})
+    print('SAKATLIK GORUNTUSU: kaydedildi (%d oyuncu, %d yeni OUT)'%(len(snap),inj_res.get('evCount',0)));return True
+
 def snapshot(args):
     from playwright.sync_api import sync_playwright, TimeoutError as BrowserTimeout
     raw=load(args.output, {'docs':[]}); docs=as_docs(raw)
@@ -89,6 +167,9 @@ def snapshot(args):
     # Site and headless model must use the exact same confirmed-return safeguards.
     from karne_returning import patch_site, records
     confirmed=records(args.confirmed)
+    snap_path=pathlib.Path(getattr(args,'sakatlik_snap','seed/sakatlik-snap.json'))
+    prev_raw,prev_snap=load_prev_snap(snap_path,now)
+    inj_res=None
     with sync_playwright() as p:
         browser=p.chromium.launch(headless=True,args=['--no-sandbox'],**({'executable_path':os.environ['CM_CHROMIUM']} if os.environ.get('CM_CHROMIUM') else {}))
         page=browser.new_page(locale='tr-TR',timezone_id='Europe/Istanbul',service_workers='block')
@@ -137,6 +218,7 @@ def snapshot(args):
               }
               return {out,updated:D.updated,oddsAt:IDDRAW.ts};
             }''')
+            inj_res=page.evaluate(INJ_JS,{'prev':prev_snap})
         except BrowserTimeout as exc:
             raise RuntimeError('Sayfa/model/sakatlik (CMREMOTE) hazir degil; yeni Karne yazilmadi') from exc
         finally:browser.close()
@@ -188,6 +270,9 @@ def snapshot(args):
         docs.append(saved);old_by_day[day]=saved
         print('FROZEN',day,'kasa=',len(picks),'tribun=',len(shadow))
         out.append(day)
+    inj_n=add_inj_picks(inj_res,old_by_day,docs,stamp,odds.get('updated'),result.get('updated'),now)
+    if inj_n:out.append('inj')
+    save_snap(snap_path,prev_raw,inj_res,now,stamp)
     if not out:print('NO CHANGE: yeni gece/kayit yok');return False
     docs=sorted((d for d in docs if d.get('date','')>=START),key=lambda x:x['date'])
     dump(args.output,{'startDate':START,'startBalance':100,'generatedAt':stamp,'docs':docs})
@@ -229,7 +314,7 @@ def settle(args):
     return changed
 
 def main():
-    a=argparse.ArgumentParser();a.add_argument('mode',choices=['snapshot','settle']);a.add_argument('--data',default='seed/data.json');a.add_argument('--odds',default='seed/iddaa-lines.json');a.add_argument('--output',default='seed/karne.json');a.add_argument('--site',default='https://cizgi-masasi.pages.dev/');a.add_argument('--confirmed',default='seed/confirmed-active.json');args=a.parse_args()
+    a=argparse.ArgumentParser();a.add_argument('mode',choices=['snapshot','settle']);a.add_argument('--data',default='seed/data.json');a.add_argument('--odds',default='seed/iddaa-lines.json');a.add_argument('--output',default='seed/karne.json');a.add_argument('--site',default='https://cizgi-masasi.pages.dev/');a.add_argument('--confirmed',default='seed/confirmed-active.json');a.add_argument('--sakatlik-snap',default='seed/sakatlik-snap.json');args=a.parse_args()
     return snapshot(args) if args.mode=='snapshot' else settle(args)
 if __name__=='__main__':
     try:main()
