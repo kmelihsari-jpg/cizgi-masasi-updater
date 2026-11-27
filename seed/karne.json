@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-21",
   "startBalance": 100,
-  "generatedAt": "2026-11-27T17:16:19.370568+00:00",
+  "generatedAt": "2026-11-27T18:16:03.951006+00:00",
   "docs": [
     {
       "date": "2026-11-21",
@@ -3331,6 +3331,24 @@
           "rk": 22,
           "mu": 2,
           "model": 0.594,
+          "est": false,
+          "why": "merdiven",
+          "need": null
+        },
+        {
+          "id": 1630567,
+          "name": "Scottie Barnes",
+          "team": "TOR",
+          "opp": "BKN",
+          "pos": "SF",
+          "mk": "STL",
+          "line": 1.5,
+          "n": 2,
+          "odd": 1.72,
+          "ev": 0.067,
+          "rk": 1,
+          "mu": 2.3,
+          "model": 0.664,
           "est": false,
           "why": "merdiven",
           "need": null
