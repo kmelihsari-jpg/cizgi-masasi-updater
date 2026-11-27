@@ -30,5 +30,14 @@ const out=vm.runInContext(`(function(){
   // 5) Farkli market: 2 PTS + 1 REB -> hepsi girer
   player(10,26);const rr=row(10,3.5,1.6,6.5,'REB');
   res.mkMix=run([row(7,19.5,1.6,27),row(8,19.5,1.6,27.2),rr]);
+  // 6) Donus kapisi: ayni takimda 25+ dk'lik bir oyuncu son 2+ maci kacirmis ve OUT/D degil -> takim arkadasi Vitrin'e girmez
+  player(50,26);P[50].name='Star';
+  missedStreak=p=>p.id===50?3:0;injOf=n=>n==='Star'?['AVAILABLE']:null;
+  res.donusAvail=run([row(2,19.5,1.6,27)]);
+  injOf=n=>n==='Star'?['Q']:null;res.donusQ=run([row(2,19.5,1.6,27)]);
+  injOf=n=>n==='Star'?['OUT']:null;res.donusOut=run([row(2,19.5,1.6,27)]);   // hala OUT: model adj zaten isliyor, kapi yok
+  injOf=n=>n==='Star'?['D']:null;res.donusD=run([row(2,19.5,1.6,27)]);
+  missedStreak=p=>p.id===50?1:0;injOf=n=>n==='Star'?['AVAILABLE']:null;res.donusTek=run([row(2,19.5,1.6,27)]);   // tek mac kacirdi: kapi yok
+  missedStreak=p=>0;injOf=()=>null;delete P[50];delete byP[50];res.donusYok=run([row(2,19.5,1.6,27)]);
   return res})()`,ctx);
 console.log(JSON.stringify(out));

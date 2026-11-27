@@ -12,6 +12,10 @@ site yayini ve headless Karne ayni modeli kullanir).
 3) AST/STL: tum yollarda ham model olasiligi >= %65 gerekir (tamamen yasak degil, daha yuksek esik).
 4) Market cesitliligi: Vitrin'de ayni gecede ayni marketten en fazla 2 bahis; fazlasi Merdiven Alti'na
    ('limit' sebebiyle, capMk=true) duser.
+5) Donus kapisi (cmDonus, ayri isaret CM-VITRIN-V2-DONUS): ayni takimda sezon ortalamasi >= 25 dk olan bir oyuncu son 2+ takim macini
+   kacirmis (missedStreak >= 2) ve durumu OUT/D degilse (AVAILABLE/Q/kayitsiz: bu gece donebilir) takim arkadaslari Vitrin'e girmez:
+   son maclardaki dakika/sayi onsuz oynanan maclardan sisiyor, model bunu sadece su an OUT olanlar icin duzeltiyor
+   (Grimes: Reaves 5 mac yoktu, bu gece donuyor). Merdiven Alti'nda gorunmeye devam eder.
 Karne kayit sekli degismez (tag alani 'secim' de alabilir; etiketsiz eski kayitlar 'deger' sayilir).
 """
 import argparse
@@ -43,7 +47,28 @@ EDITS = [
 ]
 
 
+MARK_D = '/* CM-VITRIN-V2-DONUS */'
+DONUS_FN = MARK_D + '''
+function cmDonus(p){for(const m of Object.values(P)){if(m.id===p.id||m.team!==p.team)continue;const mg=byP[m.id];if(!mg||mg.length<8||mpg(m.id)<25)continue;const i=injOf(m.name);if(i&&(i[0]==='OUT'||i[0]==='D'))continue;if(missedStreak(m)>=2)return true}return false}
+'''
+DONUS_OLD = "mpg(p.id)<22||cmRol(all))return null;"
+DONUS_NEW = "mpg(p.id)<22||cmRol(all)||cmDonus(p))return null;"
+
+
+def _patch_donus(source):
+    if MARK_D in source:
+        return source
+    if MARK not in source or source.count(DONUS_OLD) != 1:
+        raise RuntimeError('Vitrin V2 donus kapisi: beklenen kod tam 1 kez bulunamadi')
+    source = source.replace(DONUS_OLD, DONUS_NEW, 1)
+    return source.replace('function kasaCand(r,day,now)', DONUS_FN + 'function kasaCand(r,day,now)', 1)
+
+
 def patch_model(source):
+    return _patch_donus(_patch_v2(source))
+
+
+def _patch_v2(source):
     if MARK in source:
         return source
     if 'function kasaCand(r,day,now)' not in source or 'CM-ORAN-KADEME-V1' not in source or 'CM-SAGLAM-MERDIVEN-V1' not in source:

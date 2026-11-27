@@ -14,6 +14,11 @@ def main():
     assert chained.count(v2.MARK) == 1 and 'CM-ORAN-KADEME-V1' in chained and 'CM-SAGLAM-MERDIVEN-V1' in chained
     assert kr.patch_site(chained, []) == chained, 'patch_site tekrar uygulaninca degisiyor'
     assert v2.patch_model(chained) == chained
+    import oran_kademe as ok
+    canli = v2._patch_v2(ok.patch_model(kr.patch_text(src, [])))       # 27 Kasim 23:24 yayinindan sonraki canli model
+    assert v2.MARK_D not in canli
+    yeni = v2.patch_model(canli)
+    assert yeni.count(v2.MARK_D) == 1 and yeni == chained and v2.patch_model(yeni) == yeni, 'canli modele donus kapisi eklenemedi'
     # oran kademesi olmadan uygulanmaz (yanlis sirada sessizce yarim yama olmasin)
     try:
         v2.patch_model(src); raise SystemExit('oran kademesi yokken yama uygulandi')
@@ -41,6 +46,9 @@ def main():
     assert res['astLo'][1] is False and res['astHi'][1] is True, (res['astLo'], res['astHi'])
     assert len(res['mkCap']['pass']) == 2 and res['mkCap']['cap'] == ['7|PTS|true'], res['mkCap']
     assert len(res['mkMix']['pass']) == 3 and res['mkMix']['cap'] == [], res['mkMix']
+    assert res['donusAvail']['pass'] == [] and res['donusQ']['pass'] == [], (res['donusAvail'], res['donusQ'])   # donuyor / Q: elenir
+    assert res['donusOut']['pass'] == ['2|PTS|saglam'] and res['donusD']['pass'] == ['2|PTS|saglam'], (res['donusOut'], res['donusD'])
+    assert res['donusTek']['pass'] == ['2|PTS|saglam'] and res['donusYok']['pass'] == ['2|PTS|saglam']
     print('OK: vitrin_v2')
 
 if __name__ == '__main__':
