@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-21",
   "startBalance": 100,
-  "generatedAt": "2026-11-27T19:15:56.687467+00:00",
+  "generatedAt": "2026-11-27T20:16:00.308574+00:00",
   "docs": [
     {
       "date": "2026-11-21",
@@ -3095,6 +3095,25 @@
           "est": false,
           "why": "merdiven",
           "need": null
+        },
+        {
+          "id": 1629656,
+          "name": "Quentin Grimes",
+          "team": "LAL",
+          "opp": "SAS",
+          "pos": "SG",
+          "mk": "AST",
+          "line": 2.5,
+          "n": 3,
+          "odd": 1.54,
+          "ev": 0.085,
+          "rk": 19,
+          "mu": 4.3,
+          "model": 0.758,
+          "est": false,
+          "tag": "saglam",
+          "pm": 0.705,
+          "capturedAt": "2026-11-27T20:16:00.308574+00:00"
         }
       ],
       "picks": [
@@ -3116,6 +3135,25 @@
           "tag": "saglam",
           "pm": 0.692,
           "capturedAt": "2026-11-27T17:16:19.370568+00:00"
+        },
+        {
+          "id": 1629656,
+          "name": "Quentin Grimes",
+          "team": "LAL",
+          "opp": "SAS",
+          "pos": "SG",
+          "mk": "AST",
+          "line": 2.5,
+          "n": 3,
+          "odd": 1.54,
+          "ev": 0.085,
+          "rk": 19,
+          "mu": 4.3,
+          "model": 0.758,
+          "est": false,
+          "tag": "saglam",
+          "pm": 0.705,
+          "capturedAt": "2026-11-27T20:16:00.308574+00:00"
         }
       ],
       "shadow": [
