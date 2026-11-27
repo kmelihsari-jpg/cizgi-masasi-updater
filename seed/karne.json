@@ -1,7 +1,7 @@
 {
   "startDate": "2026-11-21",
   "startBalance": 100,
-  "generatedAt": "2026-11-27T18:16:03.951006+00:00",
+  "generatedAt": "2026-11-27T19:15:56.687467+00:00",
   "docs": [
     {
       "date": "2026-11-21",
@@ -3349,6 +3349,42 @@
           "rk": 1,
           "mu": 2.3,
           "model": 0.664,
+          "est": false,
+          "why": "merdiven",
+          "need": null
+        },
+        {
+          "id": 1629656,
+          "name": "Quentin Grimes",
+          "team": "LAL",
+          "opp": "SAS",
+          "pos": "SG",
+          "mk": "REB",
+          "line": 3.5,
+          "n": 4,
+          "odd": 1.8,
+          "ev": 0.108,
+          "rk": 4,
+          "mu": 4.7,
+          "model": 0.665,
+          "est": false,
+          "why": "merdiven",
+          "need": null
+        },
+        {
+          "id": 1630183,
+          "name": "Jaden McDaniels",
+          "team": "MIN",
+          "opp": "MEM",
+          "pos": "SF",
+          "mk": "REB",
+          "line": 5.5,
+          "n": 6,
+          "odd": 1.58,
+          "ev": 0.006,
+          "rk": 22,
+          "mu": 6.8,
+          "model": 0.672,
           "est": false,
           "why": "merdiven",
           "need": null
