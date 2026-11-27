@@ -39,5 +39,22 @@ const out=vm.runInContext(`(function(){
   injOf=n=>n==='Star'?['D']:null;res.donusD=run([row(2,19.5,1.6,27)]);
   missedStreak=p=>p.id===50?1:0;injOf=n=>n==='Star'?['AVAILABLE']:null;res.donusTek=run([row(2,19.5,1.6,27)]);   // tek mac kacirdi: kapi yok
   missedStreak=p=>0;injOf=()=>null;delete P[50];delete byP[50];res.donusYok=run([row(2,19.5,1.6,27)]);
+  // 7) Yildiz OUT on kabulu: 'o yokken' ornegi yok (n=0) -> cikanin payina gore sinirli artis; ornek varsa (n>0) dokunmaz
+  Object.keys(P).forEach(k=>{delete P[k];delete byP[k]});
+  const gm=(pts,ast)=>Array.from({length:10},()=>({pts,reb:5,ast,stl:1,blk:1,fg3m:2,min:32,start:true}));
+  P[60]={id:60,name:'Guard',team:'AAA'};byP[60]=gm(20,8);          // OUT olan: 8 asist
+  [61,62,63,64].forEach(i=>{P[i]={id:i,name:'M'+i,team:'AAA'};byP[i]=gm(15,3)});
+  const base=()=>({mu:5,phi:1.5}), mkAdj=(n,f)=>({f,n,outs:[P[60]]});
+  adjE=(e,p,mk)=>{e.mu*=1.07;e.adj=mkAdj(NN,1.07);return e};
+  var NN=0;const e0=cmAdjE(base(),P[61],'AST');
+  NN=5;const e1=cmAdjE(base(),P[61],'AST');
+  res.prior={f0:+e0.adj.f.toFixed(3),pr0:!!e0.adj.pr,mu0:+e0.mu.toFixed(3),f1:e1.adj.f,pr1:!!e1.adj.pr};
+  const eAst=cmPrior(P[60],'AST'),ePts=cmPrior(P[60],'PTS');
+  res.priorCap=[+eAst.toFixed(3),+ePts.toFixed(3),cmPrior({id:99,team:'ZZZ'},'AST')];
+  // 8) cmDonusAd: donen oyuncunun adi
+  P[70]={id:70,name:'Reaves',team:'AAA'};byP[70]=Array.from({length:10},()=>({pts:20,reb:3,ast:5,stl:1,blk:0,fg3m:2,min:34,start:true}));
+  missedStreak=p=>p.id===70?5:0;injOf=n=>n==='Reaves'?['AVAILABLE']:null;
+  res.donusAd=[cmDonusAd(P[61]),cmDonusAd(P[70])];
+  injOf=n=>n==='Reaves'?['OUT']:null;res.donusAdOut=cmDonusAd(P[61]);
   return res})()`,ctx);
 console.log(JSON.stringify(out));

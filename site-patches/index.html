@@ -1748,6 +1748,7 @@ details#cm-live-source #cm-inj-plan{margin:8px 0 0}
       }
       var hp=c.h10&&c.h10.p!=null?c.h10.p:null,hn=c.h10&&c.h10.n?c.h10.n:null,hh=c.h10&&c.h10.h!=null?c.h10.h:(hp!=null&&hn?Math.round(hp*hn):null);
       if(hp!=null)L.push([hp>=.6?'ok':'no',hp>=.6?'✓':'✗','Form <span class="mu">· son '+(hn||10)+' maçın '+(hh!=null?hh:Math.round(hp*10))+'\'inde '+c.n+'+'+(c.a10!=null&&isFinite(c.a10)?' · ort. '+f1(c.a10):'')+'</span>']);
+      try{var dn=typeof cmDonusAd==='function'?cmDonusAd(c.p):null;if(dn)L.push(['mid','!','<b>'+X(shortName(dn))+' dönüyor olabilir</b> <span class="mu">· son maçlardaki payı o yokken şişmiş olabilir, Vitrin\'e almıyoruz</span>'])}catch(e){}
       return '<div class="cm4s-w">'+L.map(function(r){return '<div><span class="'+r[0]+'">'+r[1]+'</span><span>'+r[2]+'</span></div>'}).join('')+'</div>';
     }
     if(L.length)h+='<div class="cm4s-g">';

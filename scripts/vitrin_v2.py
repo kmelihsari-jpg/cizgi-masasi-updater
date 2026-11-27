@@ -16,6 +16,8 @@ site yayini ve headless Karne ayni modeli kullanir).
    kacirmis (missedStreak >= 2) ve durumu OUT/D degilse (AVAILABLE/Q/kayitsiz: bu gece donebilir) takim arkadaslari Vitrin'e girmez:
    son maclardaki dakika/sayi onsuz oynanan maclardan sisiyor, model bunu sadece su an OUT olanlar icin duzeltiyor
    (Grimes: Reaves 5 mac yoktu, bu gece donuyor). Merdiven Alti'nda gorunmeye devam eder.
+6) Yildiz OUT on kabulu (CM-VITRIN-V2-PRIOR): 'o yokken' ornegi yoksa (adj.n=0) cikanin o marketteki payi / takimin ilk 8 oyuncusunun payi
+   kadar (x0.4, en cok +%12) artis; sakatlik firsati bu durumda n<3 kapisini gecer (EV >= .08 sarti ayni). cmDonusAd: Merdiven Alti uyarisi.
 Karne kayit sekli degismez (tag alani 'secim' de alabilir; etiketsiz eski kayitlar 'deger' sayilir).
 """
 import argparse
@@ -64,8 +66,50 @@ def _patch_donus(source):
     return source.replace('function kasaCand(r,day,now)', DONUS_FN + 'function kasaCand(r,day,now)', 1)
 
 
+MARK_A = '/* CM-VITRIN-V2-DONUSAD */'
+DONUSAD_FN = MARK_A + '''
+function cmDonusAd(p){for(const m of Object.values(P)){if(m.id===p.id||m.team!==p.team)continue;const mg=byP[m.id];if(!mg||mg.length<8||mpg(m.id)<25)continue;const i=injOf(m.name);if(i&&(i[0]==='OUT'||i[0]==='D'))continue;if(missedStreak(m)>=2)return m.name}return null}
+'''
+
+
+def _patch_donusad(source):
+    """Merdiven Alti kartinda 'X donuyor' uyarisi icin donen oyuncunun adini veren yardimci (cmDonus ile ayni kural)."""
+    if MARK_A in source:
+        return source
+    if source.count('function cmDonus(p){') != 1:
+        raise RuntimeError('Vitrin V2 donus adi: cmDonus bulunamadi')
+    return source.replace('function cmDonus(p){', DONUSAD_FN + 'function cmDonus(p){', 1)
+
+
+MARK_P = '/* CM-VITRIN-V2-PRIOR */'
+PRIOR_FN = MARK_P + '''
+function cmPrior(m,mk){const tm=Object.values(P).filter(q=>q.team===m.team&&q.id!==m.id&&byP[q.id]&&byP[q.id].length>=5).sort((a,b)=>mpg(b.id)-mpg(a.id)).slice(0,8);const av=q=>{const g=byP[q.id]||[];return g.length?sum(g,x=>val(x,mk))/g.length:0};const O=av(m),R=sum(tm,av);return O>0&&R>0?Math.min(1.12,1+.4*O/R):1}
+function cmAdjE(e,p,mk){e=adjE(e,p,mk);const a=e.adj;if(a&&a.n===0&&a.outs&&a.outs.length){let f=1;for(const m of a.outs)f*=Math.max(1+.07*Math.min(mpg(m.id),36)/30,cmPrior(m,mk));f=Math.max(.85,Math.min(1.3,f));if(f>a.f+.005){e.mu*=f/a.f;e.adj=Object.assign({},a,{f,pr:true})}}return e}
+'''
+PRIOR_EDITS = [
+    ("adjE(e,P[S.pid],mk)", "cmAdjE(e,P[S.pid],mk)"),
+    ("const e=adjE(expect(all,sample,mk,{opp,pos,dvp:DVP,avgs:AVG,lgConv}),p,mk);const pr=lineProbs(",
+     "const e=cmAdjE(expect(all,sample,mk,{opp,pos,dvp:DVP,avgs:AVG,lgConv}),p,mk);const pr=lineProbs("),
+    ("r.adj.f<1.05||r.adj.n<3)continue;", "r.adj.f<1.05||(r.adj.n<3&&!r.adj.pr))continue;"),
+]
+
+
+def _patch_prior(source):
+    """Yildiz OUT ve 'o yokken' ornegi yok (n=0): eski sabit ~%7 yerine, cikanin o marketteki payina gore
+    sinirli (en cok %12) on kabul. Ornek varsa (n>0) eski hesap aynen kalir. Sakatlik firsati n<3 kapisini
+    sadece bu on kabul icin (pr) gevsetir; EV kapisi (>= .08) ayni."""
+    if MARK_P in source:
+        return source
+    for old, _new in PRIOR_EDITS:
+        if source.count(old) != 1:
+            raise RuntimeError('Vitrin V2 on kabul: beklenen kod tam 1 kez bulunamadi: ' + old[:70])
+    for old, new in PRIOR_EDITS:
+        source = source.replace(old, new, 1)
+    return source.replace('function scanRows(){', PRIOR_FN + 'function scanRows(){', 1)
+
+
 def patch_model(source):
-    return _patch_donus(_patch_v2(source))
+    return _patch_prior(_patch_donusad(_patch_donus(_patch_v2(source))))
 
 
 def _patch_v2(source):

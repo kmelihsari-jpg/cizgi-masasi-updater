@@ -19,6 +19,11 @@ def main():
     assert v2.MARK_D not in canli
     yeni = v2.patch_model(canli)
     assert yeni.count(v2.MARK_D) == 1 and yeni == chained and v2.patch_model(yeni) == yeni, 'canli modele donus kapisi eklenemedi'
+    assert chained.count(v2.MARK_A) == 1 and chained.count(v2.MARK_P) == 1 and 'cmAdjE(e,P[S.pid],mk)' in chained
+    assert 'r.adj.n<3&&!r.adj.pr' in chained
+    # 23:37 yayinindan sonraki canli model (donus kapisi var, onkabul yok) -> yeni yamalar eklenir
+    onceki = v2._patch_donus(v2._patch_v2(ok.patch_model(kr.patch_text(src, []))))
+    assert v2.MARK_A not in onceki and v2.MARK_P not in onceki and v2.patch_model(onceki) == chained
     # oran kademesi olmadan uygulanmaz (yanlis sirada sessizce yarim yama olmasin)
     try:
         v2.patch_model(src); raise SystemExit('oran kademesi yokken yama uygulandi')
@@ -49,6 +54,12 @@ def main():
     assert res['donusAvail']['pass'] == [] and res['donusQ']['pass'] == [], (res['donusAvail'], res['donusQ'])   # donuyor / Q: elenir
     assert res['donusOut']['pass'] == ['2|PTS|saglam'] and res['donusD']['pass'] == ['2|PTS|saglam'], (res['donusOut'], res['donusD'])
     assert res['donusTek']['pass'] == ['2|PTS|saglam'] and res['donusYok']['pass'] == ['2|PTS|saglam']
+    pr = res['prior']
+    assert pr['pr0'] is True and pr['f0'] > 1.07 and pr['f0'] <= 1.12 and pr['mu0'] > 5 * 1.07, pr       # n=0: onkabul
+    assert pr['pr1'] is False and pr['f1'] == 1.07, pr                                                    # n>0: eski hesap
+    a, p_, z = res['priorCap']
+    assert 1.07 < a <= 1.12 and p_ <= 1.12 and z == 1, res['priorCap']
+    assert res['donusAd'] == ['Reaves', None] and res['donusAdOut'] is None, (res['donusAd'], res['donusAdOut'])
     print('OK: vitrin_v2')
 
 if __name__ == '__main__':
